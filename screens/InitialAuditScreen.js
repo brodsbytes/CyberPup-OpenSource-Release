@@ -10,6 +10,7 @@ import {
   ScrollView,
   Dimensions,
   Alert,
+  Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -17,7 +18,6 @@ const { width } = Dimensions.get('window');
 
 const InitialAuditScreen = ({ navigation }) => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [firstName, setFirstName] = useState('');
   const [answers, setAnswers] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -112,16 +112,31 @@ const InitialAuditScreen = ({ navigation }) => {
   };
 
   const handleNext = () => {
-    if (currentStep === 0 && !firstName.trim()) {
-      Alert.alert('Please enter your first name');
-      return;
-    }
-    
-    if (currentStep <= auditQuestions.length) {
+    if (currentStep === 0) {
+      // Welcome step -> Assessment intro
+      setCurrentStep(1);
+    } else if (currentStep === 1) {
+      // Assessment intro -> First question
+      setCurrentStep(2);
+    } else if (currentStep > 1 && currentStep <= auditQuestions.length + 1) {
+      // Questions -> Next question or recommendation
       setCurrentStep(currentStep + 1);
-    } else {
+    } else if (currentStep === auditQuestions.length + 2) {
+      // Recommendation step -> Submit and go to welcome
       handleSubmit();
     }
+  };
+
+  const canProceed = () => {
+    if (currentStep === 0 || currentStep === 1 || currentStep === auditQuestions.length + 2) {
+      // Welcome, intro, and recommendation steps can always proceed
+      return true;
+    } else if (currentStep > 1 && currentStep <= auditQuestions.length + 1) {
+      // Question steps - check if current question has been answered
+      const question = auditQuestions[currentStep - 2];
+      return answers[question.id] !== undefined;
+    }
+    return true;
   };
 
   const handleBack = () => {
@@ -170,7 +185,6 @@ const InitialAuditScreen = ({ navigation }) => {
     try {
       // Save audit data
       const auditData = {
-        firstName: firstName.trim(),
         answers,
         completedAt: new Date().toISOString(),
         recommendedCategory: calculateRecommendation(),
@@ -189,30 +203,52 @@ const InitialAuditScreen = ({ navigation }) => {
     }
   };
 
-  const renderNameStep = () => (
-    <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>Welcome to CyberPup!</Text>
-      <Text style={styles.stepDescription}>
-        Let's start with a quick security assessment to personalize your learning experience.
-      </Text>
+  const handleSkip = async () => {
+    try {
+      // Save that the audit was skipped
+      await AsyncStorage.setItem('audit_completed', 'true');
+      await AsyncStorage.setItem('audit_skipped', 'true');
       
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>What's your first name?</Text>
-        <TextInput
-          style={styles.textInput}
-          value={firstName}
-          onChangeText={setFirstName}
-          placeholder="Enter your first name"
-          placeholderTextColor="#a0aec0"
-          autoFocus
-          autoCapitalize="words"
-        />
+      // Navigate to welcome screen
+      navigation.replace('Welcome');
+    } catch (error) {
+      console.log('Error saving skip status:', error);
+      // Still navigate even if save fails
+      navigation.replace('Welcome');
+    }
+  };
+
+  const renderWelcomeStep = () => (
+    <View style={styles.stepContainer}>
+      {/* Cyber Dog Mascot */}
+      <View style={styles.mascotContainer}>
+        <View style={styles.mascotWrapper}>
+          <Image
+            source={require('../assets/images/cyberpup-mascot.png')}
+            style={styles.mascotImage}
+            resizeMode="contain"
+          />
+        </View>
       </View>
+      
+      <Text style={styles.stepTitle}>Hey there, I'm CyberPup!</Text>
+      <Text style={styles.stepDescription}>
+        I'm your personal Cybersecurity coach. I'll be with you along this journey to help you become more secure.
+      </Text>
+    </View>
+  );
+
+  const renderAssessmentIntroStep = () => (
+    <View style={styles.stepContainer}>
+      <Text style={styles.stepTitle}>Ready to Begin?</Text>
+      <Text style={styles.stepDescription}>
+        Let's start with a few quick questions so we know how to prioritize your Cybersecurity health check.
+      </Text>
     </View>
   );
 
   const renderQuestionStep = () => {
-    const question = auditQuestions[currentStep - 1];
+    const question = auditQuestions[currentStep - 2]; // Adjust for the new intermediate step
     const currentAnswer = answers[question.id];
 
     return (
@@ -222,12 +258,12 @@ const InitialAuditScreen = ({ navigation }) => {
             <View 
               style={[
                 styles.progressFill, 
-                { width: `${(currentStep / auditQuestions.length) * 100}%` }
+                { width: `${((currentStep - 1) / auditQuestions.length) * 100}%` }
               ]} 
             />
           </View>
           <Text style={styles.progressText}>
-            {currentStep} of {auditQuestions.length}
+            {currentStep - 1} of {auditQuestions.length}
           </Text>
         </View>
 
@@ -308,11 +344,11 @@ const InitialAuditScreen = ({ navigation }) => {
       
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Security Assessment</Text>
+        <Text style={styles.headerTitle}></Text>
         {currentStep > 0 && (
           <TouchableOpacity
             style={styles.skipButton}
-            onPress={() => navigation.replace('Welcome')}
+            onPress={handleSkip}
             activeOpacity={0.8}
           >
             <Text style={styles.skipButtonText}>Skip</Text>
@@ -323,37 +359,28 @@ const InitialAuditScreen = ({ navigation }) => {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           {console.log('Rendering step:', currentStep, 'Questions length:', auditQuestions.length)}
-          {currentStep === 0 && renderNameStep()}
-          {currentStep > 0 && currentStep <= auditQuestions.length && renderQuestionStep()}
-          {currentStep > auditQuestions.length && renderRecommendationStep()}
+          {currentStep === 0 && renderWelcomeStep()}
+          {currentStep === 1 && renderAssessmentIntroStep()}
+          {currentStep > 1 && currentStep <= auditQuestions.length + 1 && renderQuestionStep()}
+          {currentStep === auditQuestions.length + 2 && renderRecommendationStep()}
         </View>
       </ScrollView>
 
       {/* Navigation Footer */}
-      <View style={styles.footer}>
-        {currentStep > 0 && (
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={handleBack}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.backButtonText}>Back</Text>
-          </TouchableOpacity>
-        )}
-        
+      <View style={styles.fullWidthFooter}>
         <TouchableOpacity
           style={[
-            styles.nextButton,
-            isSubmitting && styles.nextButtonDisabled
+            styles.fullWidthButton,
+            (isSubmitting || !canProceed()) && styles.nextButtonDisabled
           ]}
           onPress={handleNext}
-          disabled={isSubmitting}
+          disabled={isSubmitting || !canProceed()}
           activeOpacity={0.8}
         >
           <Text style={styles.nextButtonText}>
             {isSubmitting ? 'Saving...' : 
              currentStep === 0 ? 'Start Assessment' :
-             currentStep <= auditQuestions.length ? 'Next' : 'Get Started'}
+             currentStep === auditQuestions.length + 2 ? 'Get Started' : 'Next'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -401,6 +428,21 @@ const styles = StyleSheet.create({
   stepContainer: {
     minHeight: 400,
     justifyContent: 'center',
+  },
+  mascotContainer: {
+    alignItems: 'center',
+    marginBottom: 32,
+    marginTop: 20,
+  },
+  mascotWrapper: {
+    width: 266,
+    height: 266,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mascotImage: {
+    width: 266,
+    height: 266,
   },
   stepTitle: {
     fontSize: 28,
@@ -546,6 +588,13 @@ const styles = StyleSheet.create({
     borderTopColor: '#2d5a87',
     backgroundColor: '#1a365d',
   },
+  fullWidthFooter: {
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#2d5a87',
+    backgroundColor: '#1a365d',
+  },
   backButton: {
     backgroundColor: '#2d5a87',
     paddingHorizontal: 24,
@@ -566,6 +615,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     minWidth: 120,
     alignItems: 'center',
+  },
+  fullWidthButton: {
+    backgroundColor: '#4a90e2',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    width: '100%',
   },
   nextButtonDisabled: {
     backgroundColor: '#4a5568',

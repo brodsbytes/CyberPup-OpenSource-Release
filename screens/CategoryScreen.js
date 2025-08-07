@@ -9,52 +9,17 @@ import {
   ScrollView,
   Dimensions,
 } from 'react-native';
+import { categories } from '../data/courseData';
+import BottomNavigation from '../components/BottomNavigation';
 
 const { width } = Dimensions.get('window');
 
 const CategoryScreen = ({ navigation }) => {
-  const categories = [
-    {
-      id: 1,
-      title: 'Password Security & Authentication',
-      description: 'Learn to create strong passwords and secure your accounts with multi-factor authentication.',
-      icon: '🔐',
-      color: '#4a90e2',
-    },
-    {
-      id: 2,
-      title: 'Phishing & Scam Awareness',
-      description: 'Identify and avoid phishing attempts, scams, and social engineering attacks.',
-      icon: '🎣',
-      color: '#e74c3c',
-    },
-    {
-      id: 3,
-      title: 'Device & Network Security',
-      description: 'Protect your devices and secure your home network from cyber threats.',
-      icon: '🛡️',
-      color: '#27ae60',
-    },
-    {
-      id: 4,
-      title: 'Online Privacy & Social Media',
-      description: 'Manage your digital footprint and protect your privacy on social platforms.',
-      icon: '🔒',
-      color: '#9b59b6',
-    },
-    {
-      id: 5,
-      title: 'Secure Finances & Identity Protection',
-      description: 'Safeguard your financial information and prevent identity theft.',
-      icon: '💰',
-      color: '#f39c12',
-    },
-  ];
 
   const CategoryCard = ({ category }) => (
     <TouchableOpacity
       style={styles.categoryCard}
-      onPress={() => navigation.navigate('ModuleListScreen', { category })}
+      onPress={() => navigation.navigate('CategoryIntroScreen', { category })}
       activeOpacity={0.8}
     >
       <View style={styles.cardContent}>
@@ -105,6 +70,20 @@ const CategoryScreen = ({ navigation }) => {
         {/* Bottom spacing */}
         <View style={styles.bottomSpacing} />
       </ScrollView>
+      
+      {/* Bottom Navigation */}
+      <BottomNavigation 
+        activeTab="learn"
+        onTabPress={(screen) => {
+          if (screen === 'Welcome') {
+            navigation.navigate('Welcome');
+          } else if (screen === 'Dictionary') {
+            navigation.navigate('DictionaryScreen');
+          } else if (screen === 'Profile') {
+            navigation.navigate('ProfileScreen');
+          }
+        }}
+      />
     </SafeAreaView>
   );
 };
@@ -147,6 +126,24 @@ const styles = StyleSheet.create({
   headerSpacer: {
     width: 40,
   },
+  tabContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 24,
+    marginBottom: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2d5a87',
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderBottomWidth: 3,
+    borderBottomColor: 'transparent',
+  },
+  activeTab: {
+    borderBottomColor: '#4a90e2',
+  },
+
   scrollView: {
     flex: 1,
   },

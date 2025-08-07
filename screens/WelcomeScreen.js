@@ -13,6 +13,9 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
+import { getAllModules, getLessonsByModule } from '../data/courseData';
+import CircularProgress from '../components/CircularProgress';
+import BottomNavigation from '../components/BottomNavigation';
 
 const { width } = Dimensions.get('window');
 
@@ -21,44 +24,13 @@ const WelcomeScreen = ({ navigation }) => {
   const [completedModules, setCompletedModules] = useState(0);
   const [totalModules, setTotalModules] = useState(0);
   const [categoriesInProgress, setCategoriesInProgress] = useState([]);
-  const [userName, setUserName] = useState('Brodie');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  // Sample module data to calculate total modules
-  const getAllModules = () => {
-    return [
-      // Password Security & Authentication (4 modules)
-      { id: '1-1', title: 'Creating Strong Passwords', categoryId: 1, categoryName: 'Password Security & Authentication' },
-      { id: '1-2', title: 'Password Managers', categoryId: 1, categoryName: 'Password Security & Authentication' },
-      { id: '1-3', title: 'Multi-Factor Authentication', categoryId: 1, categoryName: 'Password Security & Authentication' },
-      { id: '1-4', title: 'Password Recovery', categoryId: 1, categoryName: 'Password Security & Authentication' },
-      
-      // Phishing & Scam Awareness (4 modules)
-      { id: '2-1', title: 'Identifying Phishing Emails', categoryId: 2, categoryName: 'Phishing & Scam Awareness' },
-      { id: '2-2', title: 'Social Engineering Tactics', categoryId: 2, categoryName: 'Phishing & Scam Awareness' },
-      { id: '2-3', title: 'Safe Link Practices', categoryId: 2, categoryName: 'Phishing & Scam Awareness' },
-      { id: '2-4', title: 'Reporting Scams', categoryId: 2, categoryName: 'Phishing & Scam Awareness' },
-      
-      // Device & Network Security (4 modules)
-      { id: '3-1', title: 'Device Updates & Patches', categoryId: 3, categoryName: 'Device & Network Security' },
-      { id: '3-2', title: 'Home Network Security', categoryId: 3, categoryName: 'Device & Network Security' },
-      { id: '3-3', title: 'Antivirus & Firewalls', categoryId: 3, categoryName: 'Device & Network Security' },
-      { id: '3-4', title: 'Mobile Device Security', categoryId: 3, categoryName: 'Device & Network Security' },
-      
-      // Online Privacy & Social Media (4 modules)
-      { id: '4-1', title: 'Social Media Privacy Settings', categoryId: 4, categoryName: 'Online Privacy & Social Media' },
-      { id: '4-2', title: 'Digital Footprint Management', categoryId: 4, categoryName: 'Online Privacy & Social Media' },
-      { id: '4-3', title: 'Data Sharing Awareness', categoryId: 4, categoryName: 'Online Privacy & Social Media' },
-      { id: '4-4', title: 'Privacy-Focused Tools', categoryId: 4, categoryName: 'Online Privacy & Social Media' },
-      
-      // Secure Finances & Identity Protection (4 modules)
-      { id: '5-1', title: 'Secure Online Banking', categoryId: 5, categoryName: 'Secure Finances & Identity Protection' },
-      { id: '5-2', title: 'Credit Monitoring', categoryId: 5, categoryName: 'Secure Finances & Identity Protection' },
-      { id: '5-3', title: 'Safe Online Shopping', categoryId: 5, categoryName: 'Secure Finances & Identity Protection' },
-      { id: '5-4', title: 'Identity Theft Response', categoryId: 5, categoryName: 'Secure Finances & Identity Protection' },
-    ];
+  // Get module data from our course data
+  const getModuleData = () => {
+    return getAllModules();
   };
 
   const getCategoryInfo = (categoryId) => {
@@ -77,7 +49,6 @@ const WelcomeScreen = ({ navigation }) => {
     React.useCallback(() => {
       calculateOverallProgress();
       loadCategoriesInProgress();
-      loadUserName();
     }, [])
   );
 
@@ -93,7 +64,7 @@ const WelcomeScreen = ({ navigation }) => {
   }, [searchQuery]);
 
   const performSearch = (query) => {
-    const allModules = getAllModules();
+    const allModules = getModuleData();
     const results = [];
 
     // Search through modules
@@ -151,7 +122,7 @@ const WelcomeScreen = ({ navigation }) => {
 
   const calculateOverallProgress = async () => {
     try {
-      const allModules = getAllModules();
+      const allModules = getModuleData();
       setTotalModules(allModules.length);
       
       let completedCount = 0;
@@ -160,49 +131,100 @@ const WelcomeScreen = ({ navigation }) => {
 
       // Check each module for completion
       for (const module of allModules) {
-        const moduleCompleted = await AsyncStorage.getItem(`module_${module.id}_completed`);
-        if (moduleCompleted === 'true') {
-          completedCount++;
+        let moduleProgress = 0;
+        
+        if (module.id === '1-1') {
+          // Special handling for Creating Strong Passwords module
+          const strongPasswordsProgress = await AsyncStorage.getItem('strong_passwords_progress');
+          if (strongPasswordsProgress) {
+            const progressData = JSON.parse(strongPasswordsProgress);
+            if (progressData.isCompleted) {
+              completedCount++;
+              moduleProgress = 4; // 4 sections completed
+            } else {
+              let completedSections = 0;
+              if (progressData.checklistItems) {
+                const completedChecklistItems = progressData.checklistItems.filter(item => item.completed).length;
+                if (completedChecklistItems > 0) completedSections++;
+              }
+              if (progressData.quizAnswers) {
+                const answeredQuestions = Object.values(progressData.quizAnswers).filter(answer => answer !== null).length;
+                if (answeredQuestions > 0) completedSections++;
+              }
+              moduleProgress = completedSections;
+            }
+          }
+        } else if (module.id === '1-2') {
+          // Password Managers module
+          const progressData = await AsyncStorage.getItem('password_managers_progress');
+          if (progressData === 'completed') {
+            completedCount++;
+            moduleProgress = 5; // 5 sections completed
+          } else {
+            moduleProgress = 0;
+          }
+        } else if (module.id === '1-3') {
+          // Multi-Factor Authentication module
+          const progressData = await AsyncStorage.getItem('mfa_progress');
+          if (progressData === 'completed') {
+            completedCount++;
+            moduleProgress = 3; // 3 sections completed
+          } else {
+            moduleProgress = 0;
+          }
+        } else if (module.id === '1-4') {
+          // Password Recovery module
+          const progressData = await AsyncStorage.getItem('password_recovery_progress');
+          if (progressData === 'completed') {
+            completedCount++;
+            moduleProgress = 2; // 2 sections completed
+          } else {
+            moduleProgress = 0;
+          }
+        } else {
+          // Standard module handling
+          const moduleCompleted = await AsyncStorage.getItem(`module_${module.id}_completed`);
+          if (moduleCompleted === 'true') {
+            completedCount++;
+          }
+
+          // Get step completion for this module
+          const completedStepsData = await AsyncStorage.getItem(`module_${module.id}_completed_steps`);
+          if (completedStepsData) {
+            const steps = JSON.parse(completedStepsData);
+            moduleProgress = steps.length;
+          }
         }
 
-        // Get step completion for this module
-        const completedStepsData = await AsyncStorage.getItem(`module_${module.id}_completed_steps`);
-        if (completedStepsData) {
-          const steps = JSON.parse(completedStepsData);
-          completedSteps += steps.length;
-        }
+        completedSteps += moduleProgress;
 
-        // Add total steps for this module (we'll use a default of 4 steps per module)
-        totalSteps += 4; // Most modules have 4 steps
+        // Get actual lesson count for this module
+        const lessons = getLessonsByModule(module.id);
+        totalSteps += lessons.length;
       }
 
       setCompletedModules(completedCount);
       
       // Calculate overall progress as percentage of completed steps
       const progress = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
+      console.log('Progress calculation:', {
+        completedSteps,
+        totalSteps,
+        progress,
+        completedCount,
+        totalModules: allModules.length
+      });
       setOverallProgress(progress);
     } catch (error) {
       console.log('Error calculating progress:', error);
     }
   };
 
-  const loadUserName = async () => {
-    try {
-      const auditData = await AsyncStorage.getItem('user_audit_data');
-      if (auditData) {
-        const parsedData = JSON.parse(auditData);
-        if (parsedData.firstName) {
-          setUserName(parsedData.firstName);
-        }
-      }
-    } catch (error) {
-      console.log('Error loading user name:', error);
-    }
-  };
+
 
   const loadCategoriesInProgress = async () => {
     try {
-      const allModules = getAllModules();
+      const allModules = getModuleData();
       const categoryProgress = {};
 
       // Group modules by category and calculate progress
@@ -219,21 +241,80 @@ const WelcomeScreen = ({ navigation }) => {
 
         categoryProgress[categoryId].totalModules++;
 
-        // Check if module is completed
-        const moduleCompleted = await AsyncStorage.getItem(`module_${module.id}_completed`);
-        if (moduleCompleted === 'true') {
+        let moduleProgress = 0;
+        let moduleCompleted = false;
+
+        if (module.id === '1-1') {
+          // Special handling for Creating Strong Passwords module
+          const strongPasswordsProgress = await AsyncStorage.getItem('strong_passwords_progress');
+          if (strongPasswordsProgress) {
+            const progressData = JSON.parse(strongPasswordsProgress);
+            if (progressData.isCompleted) {
+              moduleCompleted = true;
+              moduleProgress = 4; // 4 sections completed
+            } else {
+              let completedSections = 0;
+              if (progressData.checklistItems) {
+                const completedChecklistItems = progressData.checklistItems.filter(item => item.completed).length;
+                if (completedChecklistItems > 0) completedSections++;
+              }
+              if (progressData.quizAnswers) {
+                const answeredQuestions = Object.values(progressData.quizAnswers).filter(answer => answer !== null).length;
+                if (answeredQuestions > 0) completedSections++;
+              }
+              moduleProgress = completedSections;
+            }
+          }
+        } else if (module.id === '1-2') {
+          // Password Managers module
+          const progressData = await AsyncStorage.getItem('password_managers_progress');
+          if (progressData === 'completed') {
+            moduleCompleted = true;
+            moduleProgress = 5; // 5 sections completed
+          } else {
+            moduleProgress = 0;
+          }
+        } else if (module.id === '1-3') {
+          // Multi-Factor Authentication module
+          const progressData = await AsyncStorage.getItem('mfa_progress');
+          if (progressData === 'completed') {
+            moduleCompleted = true;
+            moduleProgress = 3; // 3 sections completed
+          } else {
+            moduleProgress = 0;
+          }
+        } else if (module.id === '1-4') {
+          // Password Recovery module
+          const progressData = await AsyncStorage.getItem('password_recovery_progress');
+          if (progressData === 'completed') {
+            moduleCompleted = true;
+            moduleProgress = 2; // 2 sections completed
+          } else {
+            moduleProgress = 0;
+          }
+        } else {
+          // Standard module handling
+          const moduleCompletedData = await AsyncStorage.getItem(`module_${module.id}_completed`);
+          if (moduleCompletedData === 'true') {
+            moduleCompleted = true;
+          }
+
+          // Get step completion for this module
+          const completedStepsData = await AsyncStorage.getItem(`module_${module.id}_completed_steps`);
+          if (completedStepsData) {
+            const steps = JSON.parse(completedStepsData);
+            moduleProgress = steps.length;
+          }
+        }
+
+        if (moduleCompleted) {
           categoryProgress[categoryId].completedModules++;
         }
+        categoryProgress[categoryId].completedSteps += moduleProgress;
 
-        // Get step completion for this module
-        const completedStepsData = await AsyncStorage.getItem(`module_${module.id}_completed_steps`);
-        if (completedStepsData) {
-          const steps = JSON.parse(completedStepsData);
-          categoryProgress[categoryId].completedSteps += steps.length;
-        }
-
-        // Add total steps (assuming 4 steps per module)
-        categoryProgress[categoryId].totalSteps += 4;
+        // Get actual lesson count for this module
+        const lessons = getLessonsByModule(module.id);
+        categoryProgress[categoryId].totalSteps += lessons.length;
       }
 
       // Create categories in progress (only show categories with some progress but not 100% complete)
@@ -266,7 +347,7 @@ const WelcomeScreen = ({ navigation }) => {
 
   const getWelcomeMessage = () => {
     if (overallProgress === 0) {
-      return "Welcome to CyberPup! Let's start your cybersecurity journey.";
+      return "Let's start your cybersecurity journey.";
     } else if (overallProgress < 25) {
       return "Great start! You're building a strong foundation.";
     } else if (overallProgress < 50) {
@@ -379,125 +460,123 @@ const WelcomeScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#1a365d" />
       
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Welcome back, {userName}!</Text>
-        <Text style={styles.welcomeMessage}>{getWelcomeMessage()}</Text>
-      </View>
-
-      {/* Overall Progress Section */}
-      <View style={styles.overallProgressSection}>
-        <View style={styles.overallProgressHeader}>
-          <Text style={styles.overallProgressTitle}>Your Learning Progress</Text>
-          <Text style={styles.overallProgressSubtitle}>
-            {completedModules} of {totalModules} modules completed
-          </Text>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Welcome to CyberPup!</Text>
+          <Text style={styles.welcomeMessage}>{getWelcomeMessage()}</Text>
         </View>
-        
-        <View style={styles.overallProgressCard}>
-          <View style={styles.overallProgressBar}>
-            <View 
-              style={[
-                styles.overallProgressFill, 
-                { width: `${overallProgress}%` }
-              ]} 
+
+        {/* Overall Progress Section */}
+        <View style={styles.overallProgressSection}>
+          <View style={styles.overallProgressHeader}>
+            <Text style={styles.overallProgressTitle}>Your Secure Score</Text>
+            <Text style={styles.overallProgressSubtitle}>
+              {completedModules} of {totalModules} modules completed
+            </Text>
+          </View>
+          
+          <View style={styles.overallProgressCard}>
+            <View style={styles.circularProgressContainer}>
+              <CircularProgress 
+                key={`overall-${overallProgress}`}
+                progress={overallProgress}
+                size={140}
+                strokeWidth={10}
+                color="#4a90e2"
+                backgroundColor="#1a365d"
+                showIcon={true}
+                showPercentage={true}
+              />
+            </View>
+            <Text style={styles.overallProgressText}>{overallProgress}% Complete</Text>
+          </View>
+        </View>
+
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <View style={styles.searchBar}>
+            <TextInput
+              style={styles.searchInput}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search for security tips, modules, or categories..."
+              placeholderTextColor="#a0aec0"
+              autoCapitalize="none"
+              autoCorrect={false}
             />
           </View>
-          <Text style={styles.overallProgressText}>{overallProgress}% Complete</Text>
         </View>
-      </View>
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <TextInput
-            style={styles.searchInput}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Search for security tips, modules, or categories..."
-            placeholderTextColor="#a0aec0"
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-        </View>
-      </View>
-
-      {/* Search Results */}
-      {isSearching && (
-        <View style={styles.searchResultsContainer}>
-          <Text style={styles.searchResultsTitle}>
-            {searchResults.length > 0 ? `Found ${searchResults.length} result${searchResults.length === 1 ? '' : 's'}` : 'No results found'}
-          </Text>
-          <FlatList
-            data={searchResults}
-            renderItem={renderSearchResult}
-            keyExtractor={(item) => item.id}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.searchResultsList}
-          />
-        </View>
-      )}
-
-      {/* Featured Callout */}
-      {!isSearching && (
-        <View style={styles.featuredContainer}>
-          <View style={styles.featuredCard}>
-            <View style={styles.featuredContent}>
-              <Text style={styles.featuredTitle}>Start your first health check!</Text>
-              <Text style={styles.featuredSubtitle}>CyberPup is your personal security coach</Text>
-              <TouchableOpacity
-                style={styles.categoriesButton}
-                onPress={() => navigation.navigate('CategoryScreen')}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.categoriesButtonText}>Categories</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.illustrationContainer}>
-              <View style={styles.illustration}>
-                <Text style={styles.illustrationText}>💻</Text>
-              </View>
-            </View>
+        {/* Search Results */}
+        {isSearching && (
+          <View style={styles.searchResultsContainer}>
+            <Text style={styles.searchResultsTitle}>
+              {searchResults.length > 0 ? `Found ${searchResults.length} result${searchResults.length === 1 ? '' : 's'}` : 'No results found'}
+            </Text>
+            <FlatList
+              data={searchResults}
+              renderItem={renderSearchResult}
+              keyExtractor={(item) => item.id}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.searchResultsList}
+            />
           </View>
-        </View>
-      )}
+        )}
 
-      {/* Checks in Progress Section */}
-      {!isSearching && (
-        <View style={styles.progressSection}>
-          <Text style={styles.sectionTitle}>Checks in Progress</Text>
-          
-          {categoriesInProgress.length > 0 ? (
-            categoriesInProgress.map((category) => (
-              <ProgressCard
-                key={category.id}
-                icon={category.icon}
-                title={category.title}
-                subtitle={`${category.completedModules} checks done, ${category.totalModules - category.completedModules} remaining`}
-                progress={category.progress}
-                categoryId={parseInt(category.id)}
-              />
-            ))
-          ) : (
-            <View style={styles.emptyProgressCard}>
-              <Text style={styles.emptyProgressTitle}>No categories in progress</Text>
-              <Text style={styles.emptyProgressSubtitle}>
-                Start learning to see your progress here
-              </Text>
-              <TouchableOpacity
-                style={styles.startLearningButton}
-                onPress={() => navigation.navigate('CategoryScreen')}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.startLearningButtonText}>Start Learning</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-      )}
 
-      {/* Bottom spacing */}
-      <View style={styles.bottomSpacing} />
+
+        {/* Checks in Progress Section */}
+        {!isSearching && (
+          <View style={styles.progressSection}>
+            <Text style={styles.sectionTitle}>Checks in Progress</Text>
+            
+            {categoriesInProgress.length > 0 ? (
+              categoriesInProgress.map((category) => (
+                <ProgressCard
+                  key={category.id}
+                  icon={category.icon}
+                  title={category.title}
+                  subtitle={`${category.completedModules} checks done, ${category.totalModules - category.completedModules} remaining`}
+                  progress={category.progress}
+                  categoryId={parseInt(category.id)}
+                />
+              ))
+            ) : (
+              <View style={styles.emptyProgressCard}>
+                <Text style={styles.emptyProgressTitle}>No categories in progress</Text>
+                <Text style={styles.emptyProgressSubtitle}>
+                  Start learning to see your progress here
+                </Text>
+                <TouchableOpacity
+                  style={styles.startLearningButton}
+                  onPress={() => navigation.navigate('CategoryScreen')}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.startLearningButtonText}>Start Learning</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Bottom spacing for tab navigation */}
+        <View style={styles.bottomSpacing} />
+      </ScrollView>
+
+      {/* Bottom Navigation */}
+      <BottomNavigation 
+        activeTab="home"
+        onTabPress={(screen) => {
+          if (screen === 'Category') {
+            navigation.navigate('CategoryScreen');
+          } else if (screen === 'Dictionary') {
+            navigation.navigate('DictionaryScreen');
+          } else if (screen === 'Profile') {
+            navigation.navigate('ProfileScreen');
+          }
+        }}
+      />
     </SafeAreaView>
   );
 };
@@ -524,6 +603,7 @@ const styles = StyleSheet.create({
     color: '#a0aec0',
     lineHeight: 22,
   },
+
   overallProgressSection: {
     paddingHorizontal: 24,
     marginBottom: 24,
@@ -553,18 +633,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 6,
+    alignItems: 'center',
   },
-  overallProgressBar: {
-    height: 12,
-    backgroundColor: '#1a365d',
-    borderRadius: 6,
-    overflow: 'hidden',
-    marginBottom: 12,
-  },
-  overallProgressFill: {
-    height: '100%',
-    backgroundColor: '#4a90e2',
-    borderRadius: 6,
+  circularProgressContainer: {
+    marginBottom: 16,
+    alignItems: 'center',
   },
   overallProgressText: {
     fontSize: 16,
@@ -651,71 +724,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
-  },
-  featuredContainer: {
-    paddingHorizontal: 24,
-    marginBottom: 32,
-  },
-  featuredCard: {
-    backgroundColor: 'linear-gradient(135deg, #4a90e2 0%, #357abd 100%)',
-    borderRadius: 20,
-    padding: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 12,
-  },
-  featuredContent: {
-    flex: 1,
-    marginRight: 16,
-  },
-  featuredTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#ffffff',
-    marginBottom: 8,
-    lineHeight: 26,
-  },
-  featuredSubtitle: {
-    fontSize: 14,
-    color: '#e2e8f0',
-    marginBottom: 20,
-    lineHeight: 20,
-  },
-  categoriesButton: {
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-    alignSelf: 'flex-start',
-  },
-  categoriesButtonText: {
-    color: '#4a90e2',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  illustrationContainer: {
-    width: 60,
-    height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  illustration: {
-    width: 50,
-    height: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  illustrationText: {
-    fontSize: 24,
   },
   progressSection: {
     paddingHorizontal: 24,
@@ -826,6 +834,9 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 14,
     fontWeight: '600',
+  },
+  scrollView: {
+    flex: 1,
   },
   bottomSpacing: {
     height: 40,

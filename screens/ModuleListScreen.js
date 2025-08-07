@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
+import { getModulesByCategory } from '../data/courseData';
 
 const { width } = Dimensions.get('window');
 
@@ -18,162 +19,9 @@ const ModuleListScreen = ({ navigation, route }) => {
   const { category } = route.params || {};
   const [modules, setModules] = useState([]);
 
-  // Sample module data - in a real app, this would come from an API or database
+  // Get modules for the selected category
   const getModulesForCategory = (categoryId) => {
-    const modulesData = {
-      1: [ // Password Security & Authentication
-        {
-          id: '1-1',
-          title: 'Creating Strong Passwords',
-          description: 'Learn the fundamentals of creating secure, memorable passwords that protect your accounts.',
-          duration: '10 min',
-          lessons: 4,
-        },
-        {
-          id: '1-2',
-          title: 'Password Managers',
-          description: 'Discover how password managers can simplify your security while keeping you safe.',
-          duration: '15 min',
-          lessons: 5,
-        },
-        {
-          id: '1-3',
-          title: 'Multi-Factor Authentication',
-          description: 'Set up and use 2FA to add an extra layer of protection to your accounts.',
-          duration: '12 min',
-          lessons: 3,
-        },
-        {
-          id: '1-4',
-          title: 'Password Recovery',
-          description: 'Learn safe practices for recovering lost passwords without compromising security.',
-          duration: '8 min',
-          lessons: 2,
-        },
-      ],
-      2: [ // Phishing & Scam Awareness
-        {
-          id: '2-1',
-          title: 'Identifying Phishing Emails',
-          description: 'Spot the telltale signs of phishing attempts in your email inbox.',
-          duration: '12 min',
-          lessons: 4,
-        },
-        {
-          id: '2-2',
-          title: 'Social Engineering Tactics',
-          description: 'Understand how attackers manipulate human psychology to gain access.',
-          duration: '15 min',
-          lessons: 5,
-        },
-        {
-          id: '2-3',
-          title: 'Safe Link Practices',
-          description: 'Learn to verify links and avoid malicious websites.',
-          duration: '10 min',
-          lessons: 3,
-        },
-        {
-          id: '2-4',
-          title: 'Reporting Scams',
-          description: 'Know how to report suspicious activity and help protect others.',
-          duration: '8 min',
-          lessons: 2,
-        },
-      ],
-      3: [ // Device & Network Security
-        {
-          id: '3-1',
-          title: 'Device Updates & Patches',
-          description: 'Keep your devices secure by staying up to date with the latest security patches.',
-          duration: '10 min',
-          lessons: 3,
-        },
-        {
-          id: '3-2',
-          title: 'Home Network Security',
-          description: 'Secure your Wi-Fi network and protect all connected devices.',
-          duration: '18 min',
-          lessons: 5,
-        },
-        {
-          id: '3-3',
-          title: 'Antivirus & Firewalls',
-          description: 'Choose and configure the right security software for your needs.',
-          duration: '14 min',
-          lessons: 4,
-        },
-        {
-          id: '3-4',
-          title: 'Mobile Device Security',
-          description: 'Protect your smartphone and tablet from threats.',
-          duration: '12 min',
-          lessons: 3,
-        },
-      ],
-      4: [ // Online Privacy & Social Media
-        {
-          id: '4-1',
-          title: 'Social Media Privacy Settings',
-          description: 'Configure your social media accounts to protect your personal information.',
-          duration: '15 min',
-          lessons: 4,
-        },
-        {
-          id: '4-2',
-          title: 'Digital Footprint Management',
-          description: 'Understand and control what information about you is available online.',
-          duration: '12 min',
-          lessons: 3,
-        },
-        {
-          id: '4-3',
-          title: 'Data Sharing Awareness',
-          description: 'Learn what data you\'re sharing and how to minimize unnecessary exposure.',
-          duration: '10 min',
-          lessons: 3,
-        },
-        {
-          id: '4-4',
-          title: 'Privacy-Focused Tools',
-          description: 'Discover tools and services that prioritize your privacy.',
-          duration: '14 min',
-          lessons: 4,
-        },
-      ],
-      5: [ // Secure Finances & Identity Protection
-        {
-          id: '5-1',
-          title: 'Secure Online Banking',
-          description: 'Protect your financial accounts when banking online.',
-          duration: '12 min',
-          lessons: 3,
-        },
-        {
-          id: '5-2',
-          title: 'Credit Monitoring',
-          description: 'Set up credit monitoring to detect potential identity theft early.',
-          duration: '10 min',
-          lessons: 3,
-        },
-        {
-          id: '5-3',
-          title: 'Safe Online Shopping',
-          description: 'Shop safely online and protect your payment information.',
-          duration: '14 min',
-          lessons: 4,
-        },
-        {
-          id: '5-4',
-          title: 'Identity Theft Response',
-          description: 'Know what to do if your identity is compromised.',
-          duration: '16 min',
-          lessons: 4,
-        },
-      ],
-    };
-
-    return modulesData[categoryId] || [];
+    return getModulesByCategory(categoryId);
   };
 
   // Load modules and their progress when component mounts or screen is focused
@@ -189,12 +37,61 @@ const ModuleListScreen = ({ navigation, route }) => {
       const modulesWithProgress = [];
 
       for (const module of baseModules) {
-        // Get completed steps for this module
-        const completedStepsData = await AsyncStorage.getItem(`module_${module.id}_completed_steps`);
-        const completedSteps = completedStepsData ? JSON.parse(completedStepsData) : [];
+        let progress = 0;
         
-        // Calculate progress percentage
-        const progress = module.lessons > 0 ? Math.round((completedSteps.length / module.lessons) * 100) : 0;
+        // Special handling for the Creating Strong Passwords module (1-1)
+        if (module.id === '1-1') {
+          const strongPasswordsProgress = await AsyncStorage.getItem('strong_passwords_progress');
+          if (strongPasswordsProgress) {
+            const progressData = JSON.parse(strongPasswordsProgress);
+            // Check if the lesson is completed
+            if (progressData.isCompleted) {
+              progress = 100;
+            } else {
+              // Calculate partial progress based on completed sections
+              let completedSections = 0;
+              if (progressData.checklistItems) {
+                const completedChecklistItems = progressData.checklistItems.filter(item => item.completed).length;
+                if (completedChecklistItems > 0) completedSections++;
+              }
+              if (progressData.quizAnswers) {
+                const answeredQuestions = Object.values(progressData.quizAnswers).filter(answer => answer !== null).length;
+                if (answeredQuestions > 0) completedSections++;
+              }
+              // 4 total sections: intro, checklist, quiz, practice
+              progress = Math.round((completedSections / 4) * 100);
+            }
+          }
+        } else if (module.id === '1-2') {
+          // Password Managers module
+          const progressData = await AsyncStorage.getItem('password_managers_progress');
+          if (progressData === 'completed') {
+            progress = 100;
+          } else {
+            progress = 0;
+          }
+        } else if (module.id === '1-3') {
+          // Multi-Factor Authentication module
+          const progressData = await AsyncStorage.getItem('mfa_progress');
+          if (progressData === 'completed') {
+            progress = 100;
+          } else {
+            progress = 0;
+          }
+        } else if (module.id === '1-4') {
+          // Password Recovery module
+          const progressData = await AsyncStorage.getItem('password_recovery_progress');
+          if (progressData === 'completed') {
+            progress = 100;
+          } else {
+            progress = 0;
+          }
+        } else {
+          // Standard progress calculation for other modules
+          const completedStepsData = await AsyncStorage.getItem(`module_${module.id}_completed_steps`);
+          const completedSteps = completedStepsData ? JSON.parse(completedStepsData) : [];
+          progress = module.lessons > 0 ? Math.round((completedSteps.length / module.lessons) * 100) : 0;
+        }
         
         modulesWithProgress.push({
           ...module,
@@ -208,12 +105,39 @@ const ModuleListScreen = ({ navigation, route }) => {
     }
   };
 
-  const renderModuleItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.moduleCard}
-      onPress={() => navigation.navigate('LessonScreen', { module: item, category })}
-      activeOpacity={0.8}
-    >
+  const renderModuleItem = ({ item }) => {
+    const getNavigationTarget = (moduleId) => {
+      switch (moduleId) {
+        case '1-1': return 'PasswordIntroScreen';
+        case '1-2': return 'PasswordManagersIntroScreen';
+        case '1-3': return 'MFATutorialScreen';
+        case '1-4': return 'PasswordRecoveryIntroScreen';
+        case '2-1': return 'PhishingEmailsIntroScreen';
+        case '2-2': return 'SocialEngineeringIntroScreen';
+        case '2-3': return 'SafeLinkIntroScreen';
+        case '2-4': return 'ReportingScamsIntroScreen';
+        case '3-1': return 'DeviceUpdatesIntroScreen';
+        case '3-2': return 'HomeNetworkIntroScreen';
+        case '3-3': return 'AntivirusIntroScreen';
+        case '3-4': return 'MobileSecurityIntroScreen';
+        case '4-1': return 'SocialMediaIntroScreen';
+        case '4-2': return 'DigitalFootprintIntroScreen';
+        case '4-3': return 'DataSharingIntroScreen';
+        case '4-4': return 'PrivacyToolsIntroScreen';
+        case '5-1': return 'SecureBankingIntroScreen';
+        case '5-2': return 'CreditMonitoringIntroScreen';
+        case '5-3': return 'SafeShoppingIntroScreen';
+        case '5-4': return 'IdentityTheftIntroScreen';
+        default: return 'Welcome'; // Fallback to WelcomeScreen
+      }
+    };
+
+    return (
+      <TouchableOpacity
+        style={styles.moduleCard}
+        onPress={() => navigation.navigate(getNavigationTarget(item.id), { category })}
+        activeOpacity={0.8}
+      >
       <View style={styles.moduleHeader}>
         <View style={styles.moduleInfo}>
           <Text style={styles.moduleTitle}>{item.title}</Text>
@@ -256,7 +180,8 @@ const ModuleListScreen = ({ navigation, route }) => {
         </View>
       </View>
     </TouchableOpacity>
-  );
+    );
+  };
 
   const renderHeader = () => (
     <View style={styles.headerSection}>
@@ -270,7 +195,7 @@ const ModuleListScreen = ({ navigation, route }) => {
         </View>
       </View>
       <Text style={styles.headerDescription}>
-        Complete all modules to master this security topic
+        {category?.headerMessage || 'Complete all modules to master this security topic'}
       </Text>
     </View>
   );
@@ -283,7 +208,7 @@ const ModuleListScreen = ({ navigation, route }) => {
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.navigate('Welcome')}
           activeOpacity={0.8}
         >
           <Text style={styles.backButtonText}>‹</Text>
