@@ -128,6 +128,7 @@ const ModuleListScreen = ({ navigation, route }) => {
         case '5-2': return 'CreditMonitoringIntroScreen';
         case '5-3': return 'SafeShoppingIntroScreen';
         case '5-4': return 'IdentityTheftIntroScreen';
+          case '6-1': return 'WelcomeAbordIntroScreen';
         default: return 'Welcome'; // Fallback to WelcomeScreen
       }
     };

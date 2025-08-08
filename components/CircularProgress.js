@@ -62,7 +62,7 @@ const CircularProgress = ({
         )}
         {showPercentage && (
           <Text style={styles.percentageText}>
-            {Math.round(progress)}%
+            {Math.round(progress)}/100
           </Text>
         )}
       </View>

@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "CyberCheck",
-    "slug": "CyberCheck",
+    "name": "CyberPup",
+    "slug": "CyberPup",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",

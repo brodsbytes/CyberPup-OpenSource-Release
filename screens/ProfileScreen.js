@@ -21,8 +21,6 @@ const ProfileScreen = ({ navigation }) => {
             navigation.navigate('Welcome');
           } else if (screen === 'Category') {
             navigation.navigate('CategoryScreen');
-          } else if (screen === 'Dictionary') {
-            navigation.navigate('DictionaryScreen');
           }
         }}
       />

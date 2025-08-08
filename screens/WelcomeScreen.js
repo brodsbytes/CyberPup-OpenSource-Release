@@ -489,7 +489,6 @@ const WelcomeScreen = ({ navigation }) => {
                 showPercentage={true}
               />
             </View>
-            <Text style={styles.overallProgressText}>{overallProgress}% Complete</Text>
           </View>
         </View>
 
@@ -570,8 +569,6 @@ const WelcomeScreen = ({ navigation }) => {
         onTabPress={(screen) => {
           if (screen === 'Category') {
             navigation.navigate('CategoryScreen');
-          } else if (screen === 'Dictionary') {
-            navigation.navigate('DictionaryScreen');
           } else if (screen === 'Profile') {
             navigation.navigate('ProfileScreen');
           }

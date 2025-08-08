@@ -80,9 +80,10 @@ import {
   SafeShoppingPracticesScreen,
   IdentityTheftIntroScreen,
   IdentityTheftResponseScreen,
+  WelcomeAbordIntroScreen,
+  WelcomeAbordTipsScreen,
 } from './screens/lessons';
 import InitialAuditScreen from './screens/InitialAuditScreen';
-import DictionaryScreen from './screens/DictionaryScreen';
 import ProfileScreen from './screens/ProfileScreen';
 
 const Stack = createNativeStackNavigator();
@@ -134,6 +135,9 @@ export default function App() {
         <Stack.Screen name="CategoryScreen" component={CategoryScreen} />
         <Stack.Screen name="CategoryIntroScreen" component={CategoryIntroScreen} />
         <Stack.Screen name="ModuleListScreen" component={ModuleListScreen} />
+        {/* Welcome Aboard category screens */}
+        <Stack.Screen name="WelcomeAbordIntroScreen" component={WelcomeAbordIntroScreen} />
+        <Stack.Screen name="WelcomeAbordTipsScreen" component={WelcomeAbordTipsScreen} />
 
         <Stack.Screen name="PasswordIntroScreen" component={PasswordIntroScreen} />
         <Stack.Screen name="PasswordChecklistScreen" component={PasswordChecklistScreen} />
@@ -210,7 +214,6 @@ export default function App() {
         <Stack.Screen name="IdentityTheftIntroScreen" component={IdentityTheftIntroScreen} />
         <Stack.Screen name="IdentityTheftResponseScreen" component={IdentityTheftResponseScreen} />
         
-        <Stack.Screen name="DictionaryScreen" component={DictionaryScreen} />
         <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
       </Stack.Navigator>
     </NavigationContainer>

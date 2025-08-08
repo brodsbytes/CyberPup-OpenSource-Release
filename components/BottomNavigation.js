@@ -17,12 +17,6 @@ const BottomNavigation = ({ activeTab, onTabPress }) => {
       screen: 'Category'
     },
     {
-      id: 'dictionary',
-      title: 'Dictionary',
-      icon: 'library-outline',
-      screen: 'Dictionary'
-    },
-    {
       id: 'profile',
       title: 'Profile',
       icon: 'person-outline',

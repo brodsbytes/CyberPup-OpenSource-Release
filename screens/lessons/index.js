@@ -4,3 +4,5 @@ export * from './phishing-awareness';
 export * from './device-security';
 export * from './privacy-social';
 export * from './finance-identity'; 
+export * from './welcome-abord';
+export * from './welcome-abord';

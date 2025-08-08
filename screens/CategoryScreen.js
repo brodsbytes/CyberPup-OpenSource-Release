@@ -77,8 +77,6 @@ const CategoryScreen = ({ navigation }) => {
         onTabPress={(screen) => {
           if (screen === 'Welcome') {
             navigation.navigate('Welcome');
-          } else if (screen === 'Dictionary') {
-            navigation.navigate('DictionaryScreen');
           } else if (screen === 'Profile') {
             navigation.navigate('ProfileScreen');
           }

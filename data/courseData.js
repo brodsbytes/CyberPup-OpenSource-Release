@@ -53,6 +53,16 @@ export const categories = [
     icon: '💰',
     color: '#f39c12',
   },
+  {
+    id: 6,
+    title: 'Welcome Aboard',
+    description: 'A quick introduction to CyberPup and how to get the most out of it.',
+    headerMessage: 'Start here to learn what CyberPup is and how it helps you stay safe online',
+    whyItMatters: 'Beginning with a clear understanding of the app ensures you get maximum value from every module and feature, focusing your time where it has the biggest impact.',
+    whatYoullLearn: 'You\'ll learn what CyberPup covers, how progress works, and tips to get the most value from your learning time.',
+    icon: '👋',
+    color: '#00bcd4',
+  },
 ];
 
 export const modules = {
@@ -224,6 +234,16 @@ export const modules = {
       duration: '16 min',
       lessons: 4,
       categoryId: 5,
+    },
+  ],
+  6: [ // Welcome Aboard
+    {
+      id: '6-1',
+      title: 'Welcome to CyberPup',
+      description: 'Overview and how to get the most out of the app.',
+      duration: '5 min',
+      lessons: 2,
+      categoryId: 6,
     },
   ],
 };
@@ -681,6 +701,20 @@ export const lessons = {
       title: 'Practice: Identity Theft Plan',
       content: 'Create a plan for what you would do if you became a victim of identity theft. Include contact information for your bank, credit card companies, and relevant government agencies.',
       type: 'exercise',
+    },
+  ],
+  '6-1': [ // Welcome to CyberPup
+    {
+      id: '6-1-1',
+      title: 'Welcome to CyberPup',
+      content: 'Welcome to CyberPup! This brief introduction explains what the app is designed to do and how to navigate through categories and modules to build your security skills.',
+      type: 'instruction',
+    },
+    {
+      id: '6-1-2',
+      title: 'Getting the Most Out of CyberPup',
+      content: 'Tips for success: set aside short, regular sessions, complete modules in order, and apply the practical steps right away. Track your progress and revisit topics as needed.',
+      type: 'instruction',
     },
   ],
 };
