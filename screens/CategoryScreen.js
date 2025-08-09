@@ -9,35 +9,36 @@ import {
   ScrollView,
   Dimensions,
 } from 'react-native';
-import { categories } from '../data/courseData';
+import { categories, getModulesByCategory } from '../data/courseData';
 import BottomNavigation from '../components/BottomNavigation';
 
 const { width } = Dimensions.get('window');
 
 const CategoryScreen = ({ navigation }) => {
 
-  const CategoryCard = ({ category }) => (
-    <TouchableOpacity
-      style={styles.categoryCard}
-      onPress={() => navigation.navigate('CategoryIntroScreen', { category })}
-      activeOpacity={0.8}
-    >
-      <View style={styles.cardContent}>
-        <View style={styles.cardHeader}>
-          <View style={[styles.iconContainer, { backgroundColor: category.color }]}>
+  const CategoryCard = ({ category, displayIndex }) => {
+    const moduleCount = getModulesByCategory(category.id).length;
+    return (
+      <TouchableOpacity
+        style={[styles.categoryCard, { borderColor: category.color }]}
+        onPress={() => navigation.navigate('CategoryIntroScreen', { category })}
+        activeOpacity={0.85}
+      >
+        <View style={styles.cardLeft}>
+          <View style={[styles.categoryChip, { backgroundColor: category.color }]}>
+            <Text style={styles.categoryChipText}>{`Category ${displayIndex}`}</Text>
+          </View>
+          <Text style={styles.cardTitle}>{category.title}</Text>
+          <Text style={styles.cardSubline}>{moduleCount} modules</Text>
+        </View>
+        <View style={styles.cardRight}>
+          <View style={[styles.iconRing, { borderColor: category.color }]}> 
             <Text style={styles.iconText}>{category.icon}</Text>
           </View>
-          <View style={styles.titleContainer}>
-            <Text style={styles.cardTitle}>{category.title}</Text>
-          </View>
         </View>
-        <Text style={styles.cardDescription}>{category.description}</Text>
-      </View>
-      <View style={styles.arrowContainer}>
-        <Text style={styles.arrowText}>›</Text>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -59,12 +60,20 @@ const CategoryScreen = ({ navigation }) => {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           <Text style={styles.subtitle}>
-            Choose a category to start learning about cybersecurity
+            Choose a category to run focused security checks
           </Text>
           
-          {categories.map((category) => (
-            <CategoryCard key={category.id} category={category} />
-          ))}
+          {(() => {
+            // Reorder so that Welcome Aboard (id 6) displays first
+            const reordered = [...categories].sort((a, b) => {
+              if (a.id === 6) return -1;
+              if (b.id === 6) return 1;
+              return a.id - b.id;
+            });
+            return reordered.map((category, idx) => (
+              <CategoryCard key={category.id} category={category} displayIndex={idx + 1} />
+            ));
+          })()}
         </View>
         
         {/* Bottom spacing */}
@@ -159,66 +168,58 @@ const styles = StyleSheet.create({
   categoryCard: {
     backgroundColor: '#2d5a87',
     borderRadius: 16,
-    padding: 20,
+    padding: 16,
     marginBottom: 16,
     flexDirection: 'row',
     alignItems: 'center',
+    borderWidth: 1,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 6,
   },
-  cardContent: {
+  cardLeft: {
     flex: 1,
+    paddingRight: 12,
   },
-  cardHeader: {
-    flexDirection: 'row',
+  cardRight: {
     alignItems: 'center',
-    marginBottom: 8,
-  },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
     justifyContent: 'center',
+  },
+  iconRing: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 2,
+    backgroundColor: 'rgba(255,255,255,0.06)',
     alignItems: 'center',
-    marginRight: 16,
+    justifyContent: 'center',
   },
   iconText: {
-    fontSize: 20,
-  },
-  titleContainer: {
-    flex: 1,
+    fontSize: 24,
   },
   cardTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
     color: '#ffffff',
     lineHeight: 24,
   },
-  cardDescription: {
+  cardSubline: {
     fontSize: 14,
     color: '#a0aec0',
-    lineHeight: 20,
-    marginLeft: 64, // Align with title text
+    marginTop: 4,
   },
-  arrowContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 12,
+  categoryChip: {
+    alignSelf: 'flex-start',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: 8,
   },
-  arrowText: {
-    fontSize: 18,
-    color: '#ffffff',
-    fontWeight: '600',
+  categoryChipText: {
+    color: '#0b1b2b',
+    fontWeight: '700',
+    fontSize: 12,
   },
   bottomSpacing: {
     height: 40,

@@ -1,13 +1,21 @@
 import React from 'react';
 import { View, Text } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import BaseLessonScreen from '../BaseLessonScreen';
 import { lessonStyles } from '../lessonStyles';
 
 const WelcomeAbordTipsScreen = ({ navigation, route }) => {
   const { category } = route.params;
 
-  const handleNext = () => {
-    // End of intro module → back to module list
+  const handleNext = async () => {
+    try {
+      // Mark Welcome Aboard module as completed for all progress systems used in the app
+      await AsyncStorage.setItem('welcome_abord_progress', 'completed');
+      await AsyncStorage.setItem('module_6-1_completed', 'true');
+      await AsyncStorage.setItem('module_6-1_completed_steps', JSON.stringify(['6-1-1', '6-1-2']));
+    } catch (e) {
+      // no-op: proceed with navigation even if write fails
+    }
     navigation.navigate('ModuleListScreen', { category });
   };
 

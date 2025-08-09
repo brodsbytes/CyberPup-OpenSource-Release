@@ -1,12 +1,18 @@
 import React from 'react';
 import { View, Text } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import BaseLessonScreen from '../BaseLessonScreen';
 import { lessonStyles } from '../lessonStyles';
 
 const WelcomeAbordIntroScreen = ({ navigation, route }) => {
   const { category } = route.params;
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    try {
+      // mark first step as completed so progress reflects movement through module
+      const steps = ['6-1-1'];
+      await AsyncStorage.setItem('module_6-1_completed_steps', JSON.stringify(steps));
+    } catch (e) {}
     navigation.navigate('WelcomeAbordTipsScreen', { category });
   };
 

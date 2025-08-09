@@ -11,9 +11,10 @@ import {
   Dimensions,
   FlatList,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
-import { getAllModules, getLessonsByModule } from '../data/courseData';
+import { categories, getAllModules, getLessonsByModule, getModulesByCategory } from '../data/courseData';
 import CircularProgress from '../components/CircularProgress';
 import BottomNavigation from '../components/BottomNavigation';
 
@@ -23,10 +24,13 @@ const WelcomeScreen = ({ navigation }) => {
   const [overallProgress, setOverallProgress] = useState(0);
   const [completedModules, setCompletedModules] = useState(0);
   const [totalModules, setTotalModules] = useState(0);
-  const [categoriesInProgress, setCategoriesInProgress] = useState([]);
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [activeCategoryModules, setActiveCategoryModules] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [isLoadingActiveCategory, setIsLoadingActiveCategory] = useState(true);
+  const [nextCategory, setNextCategory] = useState(null);
 
   // Get module data from our course data
   const getModuleData = () => {
@@ -44,11 +48,30 @@ const WelcomeScreen = ({ navigation }) => {
     return categoryData[categoryId] || { icon: '📚', color: '#4a90e2', title: 'Unknown Category' };
   };
 
+  const getDisplayIndexForCategory = (categoryId) => {
+    const ordered = [
+      6,
+      ...categories
+        .filter((c) => c.id !== 6)
+        .map((c) => c.id)
+        .sort((a, b) => a - b),
+    ];
+    const index = ordered.indexOf(categoryId);
+    return index >= 0 ? index + 1 : 1;
+  };
+
+  const getOrderedCategories = () => {
+    return [
+      ...categories.filter((c) => c.id === 6),
+      ...categories.filter((c) => c.id !== 6).sort((a, b) => a.id - b.id),
+    ];
+  };
+
   // Load progress when component mounts or screen is focused
   useFocusEffect(
     React.useCallback(() => {
       calculateOverallProgress();
-      loadCategoriesInProgress();
+      loadActiveCategoryView();
     }, [])
   );
 
@@ -220,142 +243,142 @@ const WelcomeScreen = ({ navigation }) => {
     }
   };
 
-
-
-  const loadCategoriesInProgress = async () => {
+  // Determine active category (first by id that is not fully complete) and load its modules with progress
+  const loadActiveCategoryView = async () => {
     try {
-      const allModules = getModuleData();
-      const categoryProgress = {};
-
-      // Group modules by category and calculate progress
-      for (const module of allModules) {
-        const categoryId = module.categoryId;
-        if (!categoryProgress[categoryId]) {
-          categoryProgress[categoryId] = {
-            totalModules: 0,
-            completedModules: 0,
-            totalSteps: 0,
-            completedSteps: 0,
-          };
-        }
-
-        categoryProgress[categoryId].totalModules++;
-
-        let moduleProgress = 0;
-        let moduleCompleted = false;
+      setIsLoadingActiveCategory(true);
+      // Helper to compute if a module is completed and steps completed count
+      const getModuleStatus = async (module) => {
+        const totalLessons = getLessonsByModule(module.id).length;
+        let completedStepsCount = 0;
+        let isCompleted = false;
 
         if (module.id === '1-1') {
-          // Special handling for Creating Strong Passwords module
-          const strongPasswordsProgress = await AsyncStorage.getItem('strong_passwords_progress');
-          if (strongPasswordsProgress) {
-            const progressData = JSON.parse(strongPasswordsProgress);
-            if (progressData.isCompleted) {
-              moduleCompleted = true;
-              moduleProgress = 4; // 4 sections completed
+          const strong = await AsyncStorage.getItem('strong_passwords_progress');
+          if (strong) {
+            const data = JSON.parse(strong);
+            if (data.isCompleted) {
+              isCompleted = true;
+              completedStepsCount = totalLessons;
             } else {
-              let completedSections = 0;
-              if (progressData.checklistItems) {
-                const completedChecklistItems = progressData.checklistItems.filter(item => item.completed).length;
-                if (completedChecklistItems > 0) completedSections++;
+              let sections = 0;
+              if (data.checklistItems) {
+                const completedChecklistItems = data.checklistItems.filter(item => item.completed).length;
+                if (completedChecklistItems > 0) sections++;
               }
-              if (progressData.quizAnswers) {
-                const answeredQuestions = Object.values(progressData.quizAnswers).filter(answer => answer !== null).length;
-                if (answeredQuestions > 0) completedSections++;
+              if (data.quizAnswers) {
+                const answeredQuestions = Object.values(data.quizAnswers).filter(answer => answer !== null).length;
+                if (answeredQuestions > 0) sections++;
               }
-              moduleProgress = completedSections;
+              completedStepsCount = Math.min(sections, totalLessons);
             }
           }
         } else if (module.id === '1-2') {
-          // Password Managers module
-          const progressData = await AsyncStorage.getItem('password_managers_progress');
-          if (progressData === 'completed') {
-            moduleCompleted = true;
-            moduleProgress = 5; // 5 sections completed
-          } else {
-            moduleProgress = 0;
+          const pd = await AsyncStorage.getItem('password_managers_progress');
+          if (pd === 'completed') {
+            isCompleted = true;
+            completedStepsCount = totalLessons;
           }
         } else if (module.id === '1-3') {
-          // Multi-Factor Authentication module
-          const progressData = await AsyncStorage.getItem('mfa_progress');
-          if (progressData === 'completed') {
-            moduleCompleted = true;
-            moduleProgress = 3; // 3 sections completed
-          } else {
-            moduleProgress = 0;
+          const pd = await AsyncStorage.getItem('mfa_progress');
+          if (pd === 'completed') {
+            isCompleted = true;
+            completedStepsCount = totalLessons;
           }
         } else if (module.id === '1-4') {
-          // Password Recovery module
-          const progressData = await AsyncStorage.getItem('password_recovery_progress');
-          if (progressData === 'completed') {
-            moduleCompleted = true;
-            moduleProgress = 2; // 2 sections completed
-          } else {
-            moduleProgress = 0;
+          const pd = await AsyncStorage.getItem('password_recovery_progress');
+          if (pd === 'completed') {
+            isCompleted = true;
+            completedStepsCount = totalLessons;
+          }
+        } else if (module.id === '6-1') {
+          const pd = await AsyncStorage.getItem('welcome_abord_progress');
+          if (pd === 'completed') {
+            isCompleted = true;
+            completedStepsCount = totalLessons;
           }
         } else {
-          // Standard module handling
-          const moduleCompletedData = await AsyncStorage.getItem(`module_${module.id}_completed`);
-          if (moduleCompletedData === 'true') {
-            moduleCompleted = true;
-          }
-
-          // Get step completion for this module
           const completedStepsData = await AsyncStorage.getItem(`module_${module.id}_completed_steps`);
-          if (completedStepsData) {
-            const steps = JSON.parse(completedStepsData);
-            moduleProgress = steps.length;
+          const steps = completedStepsData ? JSON.parse(completedStepsData) : [];
+          completedStepsCount = Math.min(steps.length, totalLessons);
+          isCompleted = completedStepsCount >= totalLessons && totalLessons > 0;
+        }
+
+        const percentage = totalLessons > 0 ? Math.round((completedStepsCount / totalLessons) * 100) : 0;
+        return { completedStepsCount, totalLessons, percentage, isCompleted };
+      };
+
+      // Find first incomplete category by display order
+      let selectedCategory = null;
+      const orderedCategories = getOrderedCategories();
+      for (const cat of orderedCategories) {
+        const catModules = getModulesByCategory(cat.id);
+        let allComplete = true;
+        for (const m of catModules) {
+          const status = await getModuleStatus(m);
+          if (!status.isCompleted) {
+            allComplete = false;
+            break;
           }
         }
-
-        if (moduleCompleted) {
-          categoryProgress[categoryId].completedModules++;
-        }
-        categoryProgress[categoryId].completedSteps += moduleProgress;
-
-        // Get actual lesson count for this module
-        const lessons = getLessonsByModule(module.id);
-        categoryProgress[categoryId].totalSteps += lessons.length;
-      }
-
-      // Create categories in progress (only show categories with some progress but not 100% complete)
-      const categoriesInProgressData = [];
-      for (const [categoryId, progress] of Object.entries(categoryProgress)) {
-        const categoryPercentage = progress.totalSteps > 0 ? Math.round((progress.completedSteps / progress.totalSteps) * 100) : 0;
-        
-        // Only show categories with some progress but not fully completed
-        if (categoryPercentage > 0 && categoryPercentage < 100) {
-          const categoryInfo = getCategoryInfo(parseInt(categoryId));
-          categoriesInProgressData.push({
-            id: categoryId,
-            icon: categoryInfo.icon,
-            title: categoryInfo.title,
-            color: categoryInfo.color,
-            progress: categoryPercentage,
-            completedModules: progress.completedModules,
-            totalModules: progress.totalModules,
-          });
+        if (!allComplete) {
+          selectedCategory = cat;
+          break;
         }
       }
 
-      // Sort by progress (highest first) and limit to 3 categories
-      categoriesInProgressData.sort((a, b) => b.progress - a.progress);
-      setCategoriesInProgress(categoriesInProgressData.slice(0, 3));
+      if (!selectedCategory) {
+        setActiveCategory(null);
+        setActiveCategoryModules([]);
+        return;
+      }
+
+      const catModules = getModulesByCategory(selectedCategory.id);
+      const enriched = [];
+      for (const m of catModules) {
+        const status = await getModuleStatus(m);
+        enriched.push({ ...m, ...status });
+      }
+
+      setActiveCategory(selectedCategory);
+      setActiveCategoryModules(enriched);
+
+      // Determine next category preview
+      const currentIndex = orderedCategories.findIndex((c) => c.id === selectedCategory.id);
+      let preview = null;
+      for (let i = currentIndex + 1; i < orderedCategories.length; i++) {
+        const cand = orderedCategories[i];
+        const candMods = getModulesByCategory(cand.id);
+        let allDone = true;
+        for (const mm of candMods) {
+          const st = await getModuleStatus(mm);
+          if (!st.isCompleted) { allDone = false; break; }
+        }
+        if (!allDone) { preview = cand; break; }
+      }
+      setNextCategory(preview);
     } catch (error) {
-      console.log('Error loading categories in progress:', error);
+      console.log('Error loading active category view:', error);
+    }
+    finally {
+      setIsLoadingActiveCategory(false);
     }
   };
 
   const getWelcomeMessage = () => {
+    const nextLabel = activeCategory?.title || 'the next check';
     if (overallProgress === 0) {
-      return "Let's start your cybersecurity journey.";
+      return "Let’s begin your security health check. Start with the first check to set a secure baseline.";
     } else if (overallProgress < 25) {
-      return "Great start! You're building a strong foundation.";
+      return `Good start. Continue your audit with ${nextLabel}.`;
     } else if (overallProgress < 50) {
-      return "Excellent progress! You're becoming more security-aware.";
+      return `You're midway through your security audit. Keep reducing risk with ${nextLabel}.`;
     } else if (overallProgress < 75) {
-      return "Impressive! You're well on your way to cybersecurity mastery.";
+      return `Strong progress. Close the remaining gaps — next: ${nextLabel}.`;
+    } else if (overallProgress < 100) {
+      return 'Almost done. Finish the last checks to lock in your secure baseline.';
     } else {
-      return "Outstanding! You're a cybersecurity champion!";
+      return 'All checks complete. Re-run key checks regularly and when things change.';
     }
   };
 
@@ -456,6 +479,53 @@ const WelcomeScreen = ({ navigation }) => {
     </TouchableOpacity>
   );
 
+  // Navigate to next incomplete lesson inside a module
+  const navigateToNextLesson = async (module) => {
+    // Map module id to its intro/lesson screen sequence
+    const moduleIntroRoutes = {
+      '1-1': 'PasswordIntroScreen',
+      '1-2': 'PasswordManagersIntroScreen',
+      '1-3': 'MFATutorialScreen',
+      '1-4': 'PasswordRecoveryIntroScreen',
+      '2-1': 'PhishingEmailsIntroScreen',
+      '2-2': 'SocialEngineeringIntroScreen',
+      '2-3': 'SafeLinkIntroScreen',
+      '2-4': 'ReportingScamsIntroScreen',
+      '3-1': 'DeviceUpdatesIntroScreen',
+      '3-2': 'HomeNetworkIntroScreen',
+      '3-3': 'AntivirusIntroScreen',
+      '3-4': 'MobileSecurityIntroScreen',
+      '4-1': 'SocialMediaIntroScreen',
+      '4-2': 'DigitalFootprintIntroScreen',
+      '4-3': 'DataSharingIntroScreen',
+      '4-4': 'PrivacyToolsIntroScreen',
+      '5-1': 'SecureBankingIntroScreen',
+      '5-2': 'CreditMonitoringIntroScreen',
+      '5-3': 'SafeShoppingIntroScreen',
+      '5-4': 'IdentityTheftIntroScreen',
+      '6-1': 'WelcomeAbordIntroScreen',
+    };
+
+    const lessons = getLessonsByModule(module.id);
+    const totalLessons = lessons.length;
+
+    // Storage key scheme for "standard" modules already used elsewhere
+    let completedSteps = [];
+    try {
+      const completedStepsData = await AsyncStorage.getItem(`module_${module.id}_completed_steps`);
+      completedSteps = completedStepsData ? JSON.parse(completedStepsData) : [];
+    } catch (e) {
+      completedSteps = [];
+    }
+
+    // Determine if module is complete
+    const isModuleComplete = completedSteps.length >= totalLessons && totalLessons > 0;
+
+    // If not complete, navigate to the module intro screen
+    const routeName = moduleIntroRoutes[module.id] || 'Welcome';
+    navigation.navigate(routeName, { category: activeCategory });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#1a365d" />
@@ -484,9 +554,10 @@ const WelcomeScreen = ({ navigation }) => {
                 size={140}
                 strokeWidth={10}
                 color="#4a90e2"
-                backgroundColor="#1a365d"
+                backgroundColor="#2d5a87"
                 showIcon={true}
                 showPercentage={true}
+                showBackground={true}
               />
             </View>
           </View>
@@ -495,6 +566,7 @@ const WelcomeScreen = ({ navigation }) => {
         {/* Search Bar */}
         <View style={styles.searchContainer}>
           <View style={styles.searchBar}>
+            <Ionicons name="search" size={18} color="#a0aec0" style={{ marginRight: 8 }} />
             <TextInput
               style={styles.searchInput}
               value={searchQuery}
@@ -525,34 +597,111 @@ const WelcomeScreen = ({ navigation }) => {
 
 
 
-        {/* Checks in Progress Section */}
+        {/* Active Category Module List (replaces Checks in Progress) */}
         {!isSearching && (
-          <View style={styles.progressSection}>
-            <Text style={styles.sectionTitle}>Checks in Progress</Text>
-            
-            {categoriesInProgress.length > 0 ? (
-              categoriesInProgress.map((category) => (
-                <ProgressCard
-                  key={category.id}
-                  icon={category.icon}
-                  title={category.title}
-                  subtitle={`${category.completedModules} checks done, ${category.totalModules - category.completedModules} remaining`}
-                  progress={category.progress}
-                  categoryId={parseInt(category.id)}
-                />
-              ))
+          <View style={styles.activeCategorySection}>
+            {activeCategory ? (
+              <>
+                <View style={[styles.activeCategoryHeader, { borderColor: activeCategory.color }] }>
+                  <View style={styles.activeCategoryHeaderLeft}>
+                    <View style={[styles.categoryChip, { backgroundColor: activeCategory.color }]}>
+                      <Text style={styles.categoryChipText}>{`Category ${getDisplayIndexForCategory(activeCategory.id)}`}</Text>
+                    </View>
+                    <Text style={styles.activeCategoryTitle}>{activeCategory.title}</Text>
+                    <View style={styles.activeCategoryMetaRow}>
+                      <Text style={styles.activeCategorySubtitle}>modules</Text>
+                    </View>
+                  </View>
+                  <View style={styles.activeCategoryRight}>
+                    <TouchableOpacity
+                      onPress={() => navigation.navigate('CategoryScreen')}
+                      style={styles.overflowButton}
+                      activeOpacity={0.8}
+                      accessibilityLabel="Open categories"
+                    >
+                      <Ionicons name="reorder-three-outline" size={24} color="#ffffff" />
+                    </TouchableOpacity>
+                    <View style={[styles.activeCategoryIconWrap, { borderColor: activeCategory.color }]}>
+                      <Text style={styles.activeCategoryIconText}>{activeCategory.icon}</Text>
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.moduleListContainer}>
+                  <View style={styles.verticalConnectorWrap} pointerEvents="none">
+                    <View style={[styles.verticalConnector, { backgroundColor: activeCategory.color }]} />
+                  </View>
+                {activeCategoryModules.map((m, idx) => {
+              const isStart = m.percentage === 0;
+              const cta = isStart ? 'START' : 'CONTINUE';
+              return (
+                <>
+                  <TouchableOpacity
+                    key={m.id}
+                    style={[
+                      styles.moduleCardNew,
+                      { borderColor: activeCategory.color, shadowColor: activeCategory.color }
+                    ]}
+                    activeOpacity={0.85}
+                    onPress={() => navigateToNextLesson(m)}
+                  >
+                    <View style={styles.moduleHeaderNew}>
+                      <View style={styles.moduleBadge}> 
+                        <Text style={styles.moduleBadgeText}>{`Module ${idx + 1}`}</Text>
+                      </View>
+                      <View style={[styles.moduleCtaBubble, { borderColor: activeCategory.color }]}> 
+                        <Text style={styles.moduleCtaText}>{cta}</Text>
+                      </View>
+                    </View>
+                    <View style={[styles.timelineDot, { backgroundColor: activeCategory.color }]} />
+                    <Text style={[styles.moduleTitleNew, { marginLeft: 8 }]}>{m.title}</Text>
+                    <Text style={styles.moduleSubtitleNew}>{`${m.completedStepsCount} of ${m.totalLessons} lessons completed`}</Text>
+                    <View style={styles.moduleProgressBar}> 
+                      <View style={[styles.moduleProgressFill, { width: `${m.percentage}%`, backgroundColor: activeCategory.color }]} />
+                    </View>
+                    <Text style={styles.moduleProgressPercent}>{m.percentage}%</Text>
+                  </TouchableOpacity>
+                  {idx < activeCategoryModules.length - 1 && (
+                    <View style={styles.cardSeparator} />
+                  )}
+                </>
+              );
+                })}
+                </View>
+
+                {nextCategory && (
+                  <View style={styles.nextCategoryCard}>
+                    <View style={styles.nextDividerRow}>
+                      <View style={styles.nextDivider} />
+                      <Text style={styles.nextTinyText}>{`Next in Category ${getDisplayIndexForCategory(nextCategory.id)}`}</Text>
+                      <View style={styles.nextDivider} />
+                    </View>
+
+                    <View style={styles.nextIconRow}>
+                      <View style={[styles.nextIconRing, { borderColor: nextCategory.color }]}>
+                        <Text style={styles.activeCategoryIconText}>{getCategoryInfo(nextCategory.id).icon}</Text>
+                      </View>
+                    </View>
+
+                    <Text style={styles.nextTitle}>{nextCategory.title}</Text>
+                    <Text style={styles.nextSubtitle}>Preview the upcoming checks in this category.</Text>
+
+                    <TouchableOpacity
+                      style={[styles.skipAheadButton, { borderColor: nextCategory.color }]}
+                      onPress={() => navigation.navigate('ModuleListScreen', { category: { id: nextCategory.id, title: nextCategory.title, icon: getCategoryInfo(nextCategory.id).icon, color: nextCategory.color } })}
+                      activeOpacity={0.85}
+                    >
+                      <Text style={styles.skipAheadText}>Skip Ahead</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </>
             ) : (
-              <View style={styles.emptyProgressCard}>
-                <Text style={styles.emptyProgressTitle}>No categories in progress</Text>
-                <Text style={styles.emptyProgressSubtitle}>
-                  Start learning to see your progress here
-                </Text>
-                <TouchableOpacity
-                  style={styles.startLearningButton}
-                  onPress={() => navigation.navigate('CategoryScreen')}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.startLearningButtonText}>Start Learning</Text>
+              <View style={styles.allDoneCard}>
+                <Text style={styles.allDoneTitle}>All categories complete 🎉</Text>
+                <Text style={styles.allDoneSubtitle}>Review modules or explore topics from the Learn tab.</Text>
+                <TouchableOpacity style={styles.startLearningButton} onPress={() => navigation.navigate('CategoryScreen')}>
+                  <Text style={styles.startLearningButtonText}>View All Categories</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -619,21 +768,13 @@ const styles = StyleSheet.create({
     color: '#a0aec0',
   },
   overallProgressCard: {
-    backgroundColor: '#2d5a87',
+    backgroundColor: 'transparent',
     borderRadius: 16,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
+    padding: 0,
     alignItems: 'center',
   },
   circularProgressContainer: {
-    marginBottom: 16,
+    marginBottom: 0,
     alignItems: 'center',
   },
   overallProgressText: {
@@ -641,6 +782,157 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#4a90e2',
     textAlign: 'center',
+  },
+  activeCategorySection: {
+    paddingHorizontal: 24,
+  },
+  moduleListContainer: {
+    position: 'relative',
+    paddingVertical: 6,
+    alignItems: 'stretch',
+  },
+  verticalConnectorWrap: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+  verticalConnector: {
+    width: 3,
+    flex: 1,
+    opacity: 0.35,
+    borderRadius: 2,
+  },
+  activeCategoryHeader: {
+    backgroundColor: '#2d5a87',
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+  },
+  activeCategoryHeaderLeft: {
+    flex: 1,
+    paddingRight: 12,
+  },
+  activeCategoryTitle: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#ffffff',
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  activeCategorySubtitle: {
+    fontSize: 16,
+    color: '#a0aec0',
+  },
+  activeCategoryIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    backgroundColor: 'rgba(255,255,255,0.08)'
+  },
+  activeCategoryIconText: {
+    fontSize: 26,
+  },
+  categoryChip: {
+    alignSelf: 'flex-start',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  categoryChipText: {
+    color: '#0b1b2b',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  moduleCardNew: {
+    backgroundColor: '#2d5a87',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  cardSeparator: {
+    height: 10,
+    backgroundColor: 'transparent',
+  },
+  timelineDot: {
+    position: 'absolute',
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    left: '50%',
+    marginLeft: -5,
+    top: 22,
+    opacity: 0.7,
+  },
+  moduleHeaderNew: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  moduleBadge: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  moduleBadgeText: {
+    color: '#a0aec0',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  moduleCtaBubble: {
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    backgroundColor: 'rgba(0,0,0,0.1)'
+  },
+  moduleCtaText: {
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  moduleTitleNew: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#ffffff',
+    marginBottom: 6,
+  },
+  moduleSubtitleNew: {
+    fontSize: 14,
+    color: '#a0aec0',
+    marginBottom: 10,
+  },
+  moduleProgressBar: {
+    height: 6,
+    backgroundColor: '#1a365d',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  moduleProgressFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  moduleProgressPercent: {
+    marginTop: 6,
+    fontSize: 12,
+    color: '#a0aec0',
+    textAlign: 'right',
   },
   searchContainer: {
     paddingHorizontal: 24,
@@ -650,14 +942,120 @@ const styles = StyleSheet.create({
     backgroundColor: '#2d5a87',
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderWidth: 1,
     borderColor: '#4a90e2',
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 44,
+  },
+  activeCategoryMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  activeCategoryRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  overflowButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+    backgroundColor: 'rgba(255,255,255,0.06)'
+  },
+  viewAllLink: {
+    color: '#4a90e2',
+    fontWeight: '700',
+  },
+  allDoneCard: {
+    backgroundColor: '#2d5a87',
+    borderRadius: 20,
+    padding: 20,
+    alignItems: 'center',
+  },
+  allDoneTitle: {
+    color: '#ffffff',
+    fontWeight: '800',
+    fontSize: 18,
+    marginBottom: 6,
+  },
+  allDoneSubtitle: {
+    color: '#a0aec0',
+    fontSize: 14,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  nextCategoryCard: {
+    marginTop: 12,
+    backgroundColor: '#2d5a87',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+  },
+  nextDividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 12,
+  },
+  nextDivider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.2)'
+  },
+  nextTinyText: {
+    color: '#a0aec0',
+    fontSize: 12,
+    marginHorizontal: 8,
+  },
+  nextIconRow: {
+    marginBottom: 12,
+  },
+  nextIconRing: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)'
+  },
+  nextTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#ffffff',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  nextSubtitle: {
+    color: '#a0aec0',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  skipAheadButton: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  skipAheadText: {
+    color: '#ffffff',
+    fontWeight: '700',
+    textAlign: 'center',
   },
   searchInput: {
     color: '#ffffff',
     fontSize: 16,
     fontWeight: '500',
+    flex: 1,
+    paddingVertical: 0,
+    textAlignVertical: 'center',
   },
   searchResultsContainer: {
     flex: 1,
