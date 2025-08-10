@@ -13,6 +13,7 @@ import {
   Image,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Colors } from '../theme';
 
 const { width } = Dimensions.get('window');
 
@@ -71,7 +72,7 @@ const InitialAuditScreen = ({ navigation }) => {
       id: 1,
       title: 'Password Security & Authentication',
       icon: '🔐',
-      color: '#4a90e2',
+      color: Colors.accent,
       description: 'Start here to master password security and protect your accounts.',
     },
     phishing_awareness: {
@@ -148,12 +149,12 @@ const InitialAuditScreen = ({ navigation }) => {
   const calculateRecommendation = () => {
     const categoryScores = {};
     
-    console.log('Calculating recommendation with answers:', answers);
+
     
     // Calculate scores for each category
     auditQuestions.forEach(question => {
       const answer = answers[question.id];
-      console.log(`Question ${question.id}: ${answer}, Category: ${question.category}, Weight: ${question.weight}`);
+      
       if (answer === false) { // Only count "No" answers as areas needing improvement
         if (!categoryScores[question.category]) {
           categoryScores[question.category] = 0;
@@ -162,7 +163,7 @@ const InitialAuditScreen = ({ navigation }) => {
       }
     });
 
-    console.log('Category scores:', categoryScores);
+    
 
     // Find category with highest score (most areas needing improvement)
     let recommendedCategory = 'password_security'; // Default
@@ -175,7 +176,7 @@ const InitialAuditScreen = ({ navigation }) => {
       }
     });
 
-    console.log('Recommended category:', recommendedCategory, 'with score:', highestScore);
+    
     return categoryRecommendations[recommendedCategory];
   };
 
@@ -308,9 +309,7 @@ const InitialAuditScreen = ({ navigation }) => {
 
   const renderRecommendationStep = () => {
     const recommendation = calculateRecommendation();
-    console.log('Recommendation calculated:', recommendation);
-    console.log('Current step:', currentStep);
-    console.log('Answers:', answers);
+    
     
     return (
       <View style={styles.stepContainer}>
@@ -340,7 +339,7 @@ const InitialAuditScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1a365d" />
+      <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
       
       {/* Header */}
       <View style={styles.header}>
@@ -358,7 +357,7 @@ const InitialAuditScreen = ({ navigation }) => {
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          {console.log('Rendering step:', currentStep, 'Questions length:', auditQuestions.length)}
+    
           {currentStep === 0 && renderWelcomeStep()}
           {currentStep === 1 && renderAssessmentIntroStep()}
           {currentStep > 1 && currentStep <= auditQuestions.length + 1 && renderQuestionStep()}
@@ -391,7 +390,7 @@ const InitialAuditScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a365d',
+    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -401,12 +400,12 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#2d5a87',
+    borderBottomColor: Colors.border,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#ffffff',
+    color: Colors.textPrimary,
   },
   skipButton: {
     paddingHorizontal: 16,
@@ -414,7 +413,7 @@ const styles = StyleSheet.create({
   },
   skipButtonText: {
     fontSize: 16,
-    color: '#a0aec0',
+    color: Colors.textSecondary,
     fontWeight: '500',
   },
   scrollView: {
@@ -447,13 +446,13 @@ const styles = StyleSheet.create({
   stepTitle: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#ffffff',
+    color: Colors.textPrimary,
     marginBottom: 16,
     textAlign: 'center',
   },
   stepDescription: {
     fontSize: 16,
-    color: '#a0aec0',
+    color: Colors.textSecondary,
     textAlign: 'center',
     marginBottom: 32,
     lineHeight: 22,
@@ -464,43 +463,43 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#ffffff',
+    color: Colors.textPrimary,
     marginBottom: 12,
   },
   textInput: {
-    backgroundColor: '#2d5a87',
+    backgroundColor: Colors.surface,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 16,
     fontSize: 16,
-    color: '#ffffff',
+    color: Colors.textPrimary,
     borderWidth: 1,
-    borderColor: '#4a90e2',
+    borderColor: Colors.accent,
   },
   progressContainer: {
     marginBottom: 32,
   },
   progressBar: {
     height: 8,
-    backgroundColor: '#2d5a87',
+    backgroundColor: Colors.track,
     borderRadius: 4,
     overflow: 'hidden',
     marginBottom: 8,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#4a90e2',
+    backgroundColor: Colors.accent,
     borderRadius: 4,
   },
   progressText: {
     fontSize: 14,
-    color: '#a0aec0',
+    color: Colors.textSecondary,
     textAlign: 'center',
   },
   questionTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#ffffff',
+    color: Colors.textPrimary,
     textAlign: 'center',
     marginBottom: 32,
     lineHeight: 32,
@@ -512,7 +511,7 @@ const styles = StyleSheet.create({
   },
   answerButton: {
     flex: 1,
-    backgroundColor: '#2d5a87',
+    backgroundColor: Colors.surface,
     borderRadius: 16,
     paddingVertical: 20,
     alignItems: 'center',
@@ -520,19 +519,19 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   answerButtonSelected: {
-    backgroundColor: '#4a90e2',
-    borderColor: '#4a90e2',
+    backgroundColor: Colors.accent,
+    borderColor: Colors.accent,
   },
   answerButtonText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#ffffff',
+    color: Colors.textPrimary,
   },
   answerButtonTextSelected: {
-    color: '#ffffff',
+    color: Colors.textPrimary,
   },
   recommendationCard: {
-    backgroundColor: '#2d5a87',
+    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 24,
     flexDirection: 'row',
@@ -564,17 +563,17 @@ const styles = StyleSheet.create({
   recommendationTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#ffffff',
+    color: Colors.textPrimary,
     marginBottom: 8,
   },
   recommendationDescription: {
     fontSize: 14,
-    color: '#a0aec0',
+    color: Colors.textSecondary,
     lineHeight: 20,
   },
   recommendationNote: {
     fontSize: 14,
-    color: '#a0aec0',
+    color: Colors.textSecondary,
     textAlign: 'center',
     fontStyle: 'italic',
     lineHeight: 20,
@@ -585,18 +584,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 20,
     borderTopWidth: 1,
-    borderTopColor: '#2d5a87',
-    backgroundColor: '#1a365d',
+    borderTopColor: Colors.border,
+    backgroundColor: Colors.background,
   },
   fullWidthFooter: {
     paddingHorizontal: 24,
     paddingVertical: 20,
     borderTopWidth: 1,
-    borderTopColor: '#2d5a87',
-    backgroundColor: '#1a365d',
+    borderTopColor: Colors.border,
+    backgroundColor: Colors.background,
   },
   backButton: {
-    backgroundColor: '#2d5a87',
+    backgroundColor: Colors.surface,
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 12,
@@ -606,10 +605,10 @@ const styles = StyleSheet.create({
   backButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ffffff',
+    color: Colors.textPrimary,
   },
   nextButton: {
-    backgroundColor: '#4a90e2',
+    backgroundColor: Colors.accent,
     paddingHorizontal: 32,
     paddingVertical: 12,
     borderRadius: 12,
@@ -617,19 +616,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   fullWidthButton: {
-    backgroundColor: '#4a90e2',
+    backgroundColor: Colors.accent,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
     width: '100%',
   },
   nextButtonDisabled: {
-    backgroundColor: '#4a5568',
+    backgroundColor: Colors.track,
   },
   nextButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ffffff',
+    color: Colors.textPrimary,
   },
 });
 

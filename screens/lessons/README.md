@@ -1,58 +1,68 @@
-# Lesson Screens Organization
+# Lessons Directory
 
-This directory contains all lesson-related screens organized by category for better maintainability and scalability.
+This directory contains all lesson screens and reusable components for the CyberPup app.
 
 ## Structure
 
 ```
-screens/lessons/
-├── BaseLessonScreen.js          # Reusable base component for lesson screens
-├── lessonStyles.js              # Shared styles for lesson components
-├── index.js                     # Main export file for all lesson screens
-├── README.md                    # This documentation file
-└── password-security/           # Password Security & Authentication lessons
-    ├── index.js                 # Category-specific exports
-    ├── PasswordIntroScreen.js
-    ├── PasswordChecklistScreen.js
-    ├── PasswordQuizScreen.js
-    └── PasswordPracticeScreen.js
+lessons/
+├── level-1/                    # Level 1 (Beginner) check screens
+│   ├── Check1_1_StrongPasswordsScreen.js
+│   ├── Check1_2_HighValueAccountsScreen.js
+│   ├── Check1_3_PasswordManagersScreen.js
+│   ├── PhishingPracticeScreen.js
+│   └── index.js
+├── BaseLessonScreen.js         # Reusable base component for lesson screens
+├── lessonStyles.js            # Shared styles for lesson screens
+├── index.js                   # Main export file
+└── README.md                  # This file
 ```
 
-## Adding New Lesson Categories
+## Level 1 Check Screens
 
-When adding new lesson categories (e.g., Phishing Awareness, Device Security):
+### Check 1.1: Strong Passwords & Passphrases
+- **File**: `Check1_1_StrongPasswordsScreen.js`
+- **Purpose**: Interactive checklist for creating strong passwords
+- **Features**: Checklist items, "I did it" buttons, completion tracking
 
-1. Create a new folder: `screens/lessons/phishing-awareness/`
-2. Add your lesson screens to that folder
-3. Create an `index.js` file in the new folder to export the screens
-4. Update `screens/lessons/index.js` to export from the new category
-5. Update `App.js` to import the new screens
+### Check 1.2: High-Value Accounts
+- **File**: `Check1_2_HighValueAccountsScreen.js`
+- **Purpose**: Prioritizing banking and email security
+- **Features**: OS integration, settings navigation
 
-## Example for New Category
+### Check 1.3: Password Managers
+- **File**: `Check1_3_PasswordManagersScreen.js`
+- **Purpose**: Setting up and using password managers
+- **Features**: Installation guidance, biometric setup
 
-```javascript
-// screens/lessons/phishing-awareness/index.js
-export { default as PhishingIntroScreen } from './PhishingIntroScreen';
-export { default as PhishingQuizScreen } from './PhishingQuizScreen';
+## Reusable Components
 
-// screens/lessons/index.js
-export * from './password-security';
-export * from './phishing-awareness'; // Add this line
+### BaseLessonScreen
+- **File**: `BaseLessonScreen.js`
+- **Purpose**: Base component for all lesson screens
+- **Features**: Common layout, navigation, progress tracking
 
-// App.js
-import {
-  PasswordIntroScreen,
-  PasswordChecklistScreen,
-  // ... other password screens
-  PhishingIntroScreen,
-  PhishingQuizScreen,
-} from './screens/lessons';
-```
+### PhishingPracticeScreen
+- **File**: `PhishingPracticeScreen.js`
+- **Purpose**: Reusable practice screen for phishing scenarios
+- **Features**: Interactive scenarios, scoring, feedback
 
-## Benefits
+## Progress Tracking
 
-- **Scalable**: Easy to add new lesson categories without cluttering the main screens folder
-- **Organized**: Related screens are grouped together
-- **Maintainable**: Clear structure makes it easy to find and update specific lessons
-- **Reusable**: BaseLessonScreen and shared styles reduce code duplication
-- **Clean Imports**: Single import statement for all lesson screens 
+All check screens use AsyncStorage with the following key pattern:
+- `check_X-Y-Z_progress`: Stores checklist progress and completion status
+- `check_X-Y-Z_completed`: Marks the check as fully completed
+
+## Navigation
+
+Check screens are registered in `App.js` and can be navigated to using:
+- `navigation.navigate('Check1_1_StrongPasswordsScreen')`
+- `navigation.navigate('Check1_2_HighValueAccountsScreen')`
+- `navigation.navigate('Check1_3_PasswordManagersScreen')`
+
+## Future Development
+
+Additional check screens will be added to the `level-1/` directory following the same pattern:
+- `Check1_4_MFASetupScreen.js`
+- `Check1_5_BreachCheckScreen.js`
+- etc. 

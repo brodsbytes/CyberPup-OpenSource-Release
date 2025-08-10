@@ -12,9 +12,10 @@ import {
   FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Colors } from '../theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
-import { categories, getAllModules, getLessonsByModule, getModulesByCategory } from '../data/courseData';
+import { levels, getAllChecks, getChecksByArea, getAreasByLevel } from '../data/courseData';
 import CircularProgress from '../components/CircularProgress';
 import BottomNavigation from '../components/BottomNavigation';
 
@@ -22,56 +23,42 @@ const { width } = Dimensions.get('window');
 
 const WelcomeScreen = ({ navigation }) => {
   const [overallProgress, setOverallProgress] = useState(0);
-  const [completedModules, setCompletedModules] = useState(0);
-  const [totalModules, setTotalModules] = useState(0);
-  const [activeCategory, setActiveCategory] = useState(null);
-  const [activeCategoryModules, setActiveCategoryModules] = useState([]);
+  const [completedChecks, setCompletedChecks] = useState(0);
+  const [totalChecks, setTotalChecks] = useState(0);
+  const [activeLevel, setActiveLevel] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [isLoadingActiveCategory, setIsLoadingActiveCategory] = useState(true);
-  const [nextCategory, setNextCategory] = useState(null);
+  const [isLoadingActiveLevel, setIsLoadingActiveLevel] = useState(true);
+  const [nextLevel, setNextLevel] = useState(null);
 
-  // Get module data from our course data
-  const getModuleData = () => {
-    return getAllModules();
+  // Get check data from our course data
+  const getCheckData = () => {
+    return getAllChecks();
   };
 
-  const getCategoryInfo = (categoryId) => {
-    const categoryData = {
-      1: { icon: '🔐', color: '#4a90e2', title: 'Password Security & Authentication' },
-      2: { icon: '🎣', color: '#e74c3c', title: 'Phishing & Scam Awareness' },
-      3: { icon: '🛡️', color: '#27ae60', title: 'Device & Network Security' },
-      4: { icon: '🔒', color: '#9b59b6', title: 'Online Privacy & Social Media' },
-      5: { icon: '💰', color: '#f39c12', title: 'Secure Finances & Identity Protection' },
-    };
-    return categoryData[categoryId] || { icon: '📚', color: '#4a90e2', title: 'Unknown Category' };
+  const getLevelInfo = (levelId) => {
+    return levels.find(level => level.id === levelId) || { icon: '📚', color: Colors.accent, title: 'Unknown Level' };
   };
 
-  const getDisplayIndexForCategory = (categoryId) => {
-    const ordered = [
-      6,
-      ...categories
-        .filter((c) => c.id !== 6)
-        .map((c) => c.id)
-        .sort((a, b) => a - b),
-    ];
-    const index = ordered.indexOf(categoryId);
-    return index >= 0 ? index + 1 : 1;
+  const getDisplayIndexForLevel = (levelId) => {
+    return levelId;
   };
 
-  const getOrderedCategories = () => {
-    return [
-      ...categories.filter((c) => c.id === 6),
-      ...categories.filter((c) => c.id !== 6).sort((a, b) => a.id - b.id),
-    ];
+  const getOrderedLevels = () => {
+    return levels.sort((a, b) => a.id - b.id);
+  };
+
+  // Legacy function for backward compatibility - maps to getLevelInfo
+  const getCategoryInfo = (levelId) => {
+    return getLevelInfo(levelId);
   };
 
   // Load progress when component mounts or screen is focused
   useFocusEffect(
     React.useCallback(() => {
       calculateOverallProgress();
-      loadActiveCategoryView();
+      loadActiveLevelView();
     }, [])
   );
 
@@ -87,56 +74,56 @@ const WelcomeScreen = ({ navigation }) => {
   }, [searchQuery]);
 
   const performSearch = (query) => {
-    const allModules = getModuleData();
+    const allChecks = getCheckData();
     const results = [];
 
-    // Search through modules
-    allModules.forEach(module => {
-      const matchesTitle = module.title.toLowerCase().includes(query.toLowerCase());
-      const matchesCategory = module.categoryName.toLowerCase().includes(query.toLowerCase());
+    // Search through checks
+    allChecks.forEach(check => {
+      const matchesTitle = check.title.toLowerCase().includes(query.toLowerCase());
+      const matchesLevel = check.levelTitle.toLowerCase().includes(query.toLowerCase());
       
-      if (matchesTitle || matchesCategory) {
-        const categoryInfo = getCategoryInfo(module.categoryId);
+      if (matchesTitle || matchesLevel) {
+        const levelInfo = getLevelInfo(check.levelId);
         results.push({
-          type: 'module',
-          id: module.id,
-          title: module.title,
-          categoryId: module.categoryId,
-          categoryName: module.categoryName,
-          categoryIcon: categoryInfo.icon,
-          categoryColor: categoryInfo.color,
+          type: 'check',
+          id: check.id,
+          title: check.title,
+          levelId: check.levelId,
+          levelTitle: check.levelTitle,
+          levelIcon: levelInfo.icon,
+          levelColor: levelInfo.color,
         });
       }
     });
 
-    // Search through categories
-    const categoryIds = [...new Set(allModules.map(m => m.categoryId))];
-    categoryIds.forEach(categoryId => {
-      const categoryInfo = getCategoryInfo(categoryId);
-      const matchesCategory = categoryInfo.title.toLowerCase().includes(query.toLowerCase());
+    // Search through levels
+    const levelIds = [...new Set(allChecks.map(c => c.levelId))];
+    levelIds.forEach(levelId => {
+      const levelInfo = getLevelInfo(levelId);
+      const matchesLevel = levelInfo.title.toLowerCase().includes(query.toLowerCase());
       
-      if (matchesCategory) {
-        const categoryModules = allModules.filter(m => m.categoryId === categoryId);
+      if (matchesLevel) {
+        const levelChecks = allChecks.filter(c => c.levelId === levelId);
         results.push({
-          type: 'category',
-          id: `category-${categoryId}`,
-          title: categoryInfo.title,
-          categoryId: categoryId,
-          categoryIcon: categoryInfo.icon,
-          categoryColor: categoryInfo.color,
-          moduleCount: categoryModules.length,
+          type: 'level',
+          id: `level-${levelId}`,
+          title: levelInfo.title,
+          levelId: levelId,
+          levelIcon: levelInfo.icon,
+          levelColor: levelInfo.color,
+          checkCount: levelChecks.length,
         });
       }
     });
 
-    // Remove duplicates and sort (categories first, then modules)
+    // Remove duplicates and sort (levels first, then checks)
     const uniqueResults = results.filter((item, index, self) => 
       index === self.findIndex(t => t.id === item.id)
     );
     
     const sortedResults = uniqueResults.sort((a, b) => {
-      if (a.type === 'category' && b.type === 'module') return -1;
-      if (a.type === 'module' && b.type === 'category') return 1;
+      if (a.type === 'level' && b.type === 'check') return -1;
+      if (a.type === 'check' && b.type === 'level') return 1;
       return a.title.localeCompare(b.title);
     });
 
@@ -145,228 +132,149 @@ const WelcomeScreen = ({ navigation }) => {
 
   const calculateOverallProgress = async () => {
     try {
-      const allModules = getModuleData();
-      setTotalModules(allModules.length);
+      const allChecks = getCheckData();
+      setTotalChecks(allChecks.length);
       
       let completedCount = 0;
-      let totalSteps = 0;
-      let completedSteps = 0;
 
-      // Check each module for completion
-      for (const module of allModules) {
-        let moduleProgress = 0;
+      // Check each check for completion
+      for (const check of allChecks) {
+        const progressKey = `check_${check.id}_completed`;
+        const progressData = await AsyncStorage.getItem(progressKey);
         
-        if (module.id === '1-1') {
-          // Special handling for Creating Strong Passwords module
-          const strongPasswordsProgress = await AsyncStorage.getItem('strong_passwords_progress');
-          if (strongPasswordsProgress) {
-            const progressData = JSON.parse(strongPasswordsProgress);
-            if (progressData.isCompleted) {
-              completedCount++;
-              moduleProgress = 4; // 4 sections completed
-            } else {
-              let completedSections = 0;
-              if (progressData.checklistItems) {
-                const completedChecklistItems = progressData.checklistItems.filter(item => item.completed).length;
-                if (completedChecklistItems > 0) completedSections++;
-              }
-              if (progressData.quizAnswers) {
-                const answeredQuestions = Object.values(progressData.quizAnswers).filter(answer => answer !== null).length;
-                if (answeredQuestions > 0) completedSections++;
-              }
-              moduleProgress = completedSections;
-            }
-          }
-        } else if (module.id === '1-2') {
-          // Password Managers module
-          const progressData = await AsyncStorage.getItem('password_managers_progress');
           if (progressData === 'completed') {
             completedCount++;
-            moduleProgress = 5; // 5 sections completed
-          } else {
-            moduleProgress = 0;
-          }
-        } else if (module.id === '1-3') {
-          // Multi-Factor Authentication module
-          const progressData = await AsyncStorage.getItem('mfa_progress');
-          if (progressData === 'completed') {
-            completedCount++;
-            moduleProgress = 3; // 3 sections completed
-          } else {
-            moduleProgress = 0;
-          }
-        } else if (module.id === '1-4') {
-          // Password Recovery module
-          const progressData = await AsyncStorage.getItem('password_recovery_progress');
-          if (progressData === 'completed') {
-            completedCount++;
-            moduleProgress = 2; // 2 sections completed
-          } else {
-            moduleProgress = 0;
-          }
-        } else {
-          // Standard module handling
-          const moduleCompleted = await AsyncStorage.getItem(`module_${module.id}_completed`);
-          if (moduleCompleted === 'true') {
-            completedCount++;
-          }
-
-          // Get step completion for this module
-          const completedStepsData = await AsyncStorage.getItem(`module_${module.id}_completed_steps`);
-          if (completedStepsData) {
-            const steps = JSON.parse(completedStepsData);
-            moduleProgress = steps.length;
-          }
         }
-
-        completedSteps += moduleProgress;
-
-        // Get actual lesson count for this module
-        const lessons = getLessonsByModule(module.id);
-        totalSteps += lessons.length;
       }
 
-      setCompletedModules(completedCount);
+      setCompletedChecks(completedCount);
       
-      // Calculate overall progress as percentage of completed steps
-      const progress = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
-      console.log('Progress calculation:', {
-        completedSteps,
-        totalSteps,
-        progress,
-        completedCount,
-        totalModules: allModules.length
-      });
+      // Calculate overall progress as percentage of completed checks
+      const progress = allChecks.length > 0 ? Math.round((completedCount / allChecks.length) * 100) : 0;
       setOverallProgress(progress);
     } catch (error) {
       console.log('Error calculating progress:', error);
     }
   };
 
-  // Determine active category (first by id that is not fully complete) and load its modules with progress
-  const loadActiveCategoryView = async () => {
+  // Determine active level (first by id that is not fully complete) and load its checks with progress
+  const loadActiveLevelView = async () => {
     try {
-      setIsLoadingActiveCategory(true);
-      // Helper to compute if a module is completed and steps completed count
-      const getModuleStatus = async (module) => {
-        const totalLessons = getLessonsByModule(module.id).length;
-        let completedStepsCount = 0;
+      setIsLoadingActiveLevel(true);
+      
+      // Helper to compute if a check is completed
+      const getCheckStatus = async (check) => {
         let isCompleted = false;
+        let progressPercentage = 0;
 
-        if (module.id === '1-1') {
-          const strong = await AsyncStorage.getItem('strong_passwords_progress');
-          if (strong) {
-            const data = JSON.parse(strong);
-            if (data.isCompleted) {
-              isCompleted = true;
-              completedStepsCount = totalLessons;
+        // Check for completion using new check keys
+        const progressKey = `check_${check.id}_completed`;
+        const progressData = await AsyncStorage.getItem(progressKey);
+        
+        if (progressData === 'completed') {
+          isCompleted = true;
+          progressPercentage = 100;
             } else {
-              let sections = 0;
+          // Check for partial progress
+          const partialProgressKey = `check_${check.id}_progress`;
+          const partialProgressData = await AsyncStorage.getItem(partialProgressKey);
+          
+          if (partialProgressData) {
+            try {
+              const data = JSON.parse(partialProgressData);
               if (data.checklistItems) {
-                const completedChecklistItems = data.checklistItems.filter(item => item.completed).length;
-                if (completedChecklistItems > 0) sections++;
+                const completedItems = data.checklistItems.filter(item => item.completed).length;
+                const totalItems = data.checklistItems.length;
+                progressPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
               }
-              if (data.quizAnswers) {
-                const answeredQuestions = Object.values(data.quizAnswers).filter(answer => answer !== null).length;
-                if (answeredQuestions > 0) sections++;
-              }
-              completedStepsCount = Math.min(sections, totalLessons);
+            } catch (error) {
+              console.log('Error parsing progress data:', error);
             }
           }
-        } else if (module.id === '1-2') {
-          const pd = await AsyncStorage.getItem('password_managers_progress');
-          if (pd === 'completed') {
-            isCompleted = true;
-            completedStepsCount = totalLessons;
-          }
-        } else if (module.id === '1-3') {
-          const pd = await AsyncStorage.getItem('mfa_progress');
-          if (pd === 'completed') {
-            isCompleted = true;
-            completedStepsCount = totalLessons;
-          }
-        } else if (module.id === '1-4') {
-          const pd = await AsyncStorage.getItem('password_recovery_progress');
-          if (pd === 'completed') {
-            isCompleted = true;
-            completedStepsCount = totalLessons;
-          }
-        } else if (module.id === '6-1') {
-          const pd = await AsyncStorage.getItem('welcome_abord_progress');
-          if (pd === 'completed') {
-            isCompleted = true;
-            completedStepsCount = totalLessons;
-          }
-        } else {
-          const completedStepsData = await AsyncStorage.getItem(`module_${module.id}_completed_steps`);
-          const steps = completedStepsData ? JSON.parse(completedStepsData) : [];
-          completedStepsCount = Math.min(steps.length, totalLessons);
-          isCompleted = completedStepsCount >= totalLessons && totalLessons > 0;
         }
 
-        const percentage = totalLessons > 0 ? Math.round((completedStepsCount / totalLessons) * 100) : 0;
-        return { completedStepsCount, totalLessons, percentage, isCompleted };
+        return { isCompleted, progressPercentage };
       };
 
-      // Find first incomplete category by display order
-      let selectedCategory = null;
-      const orderedCategories = getOrderedCategories();
-      for (const cat of orderedCategories) {
-        const catModules = getModulesByCategory(cat.id);
+      // Helper to compute area progress
+      const getAreaProgress = async (area) => {
+        let completedChecks = 0;
+        let totalChecks = area.checks.length;
+        
+        for (const check of area.checks) {
+          const status = await getCheckStatus(check);
+          if (status.isCompleted) {
+            completedChecks++;
+          }
+        }
+        
+        return { completedChecks, totalChecks };
+      };
+
+      // Find first incomplete level by display order
+      let selectedLevel = null;
+      let nextLevelInfo = null;
+      const orderedLevels = getOrderedLevels();
+      
+      for (let i = 0; i < orderedLevels.length; i++) {
+        const level = orderedLevels[i];
+        const levelAreas = getAreasByLevel(level.id);
         let allComplete = true;
-        for (const m of catModules) {
-          const status = await getModuleStatus(m);
-          if (!status.isCompleted) {
+        
+        for (const area of levelAreas) {
+          const areaProgress = await getAreaProgress(area);
+          if (areaProgress.completedChecks < areaProgress.totalChecks) {
             allComplete = false;
             break;
           }
         }
+        
         if (!allComplete) {
-          selectedCategory = cat;
+          selectedLevel = level;
+          // Check if there's a next level
+          if (i + 1 < orderedLevels.length) {
+            nextLevelInfo = orderedLevels[i + 1];
+          }
           break;
         }
       }
 
-      if (!selectedCategory) {
-        setActiveCategory(null);
-        setActiveCategoryModules([]);
+      // If all levels are complete, show completion message
+      if (!selectedLevel) {
+        setActiveLevel(null);
+        setNextLevel(null);
+        setIsLoadingActiveLevel(false);
         return;
       }
 
-      const catModules = getModulesByCategory(selectedCategory.id);
-      const enriched = [];
-      for (const m of catModules) {
-        const status = await getModuleStatus(m);
-        enriched.push({ ...m, ...status });
+      // Load areas for the selected level with their progress
+      const levelAreas = getAreasByLevel(selectedLevel.id);
+      const areasWithProgress = [];
+
+      for (const area of levelAreas) {
+        const areaProgress = await getAreaProgress(area);
+        areasWithProgress.push({
+          ...area,
+          completedChecks: areaProgress.completedChecks,
+          totalChecks: areaProgress.totalChecks,
+        });
       }
 
-      setActiveCategory(selectedCategory);
-      setActiveCategoryModules(enriched);
-
-      // Determine next category preview
-      const currentIndex = orderedCategories.findIndex((c) => c.id === selectedCategory.id);
-      let preview = null;
-      for (let i = currentIndex + 1; i < orderedCategories.length; i++) {
-        const cand = orderedCategories[i];
-        const candMods = getModulesByCategory(cand.id);
-        let allDone = true;
-        for (const mm of candMods) {
-          const st = await getModuleStatus(mm);
-          if (!st.isCompleted) { allDone = false; break; }
-        }
-        if (!allDone) { preview = cand; break; }
-      }
-      setNextCategory(preview);
+      setActiveLevel({
+        ...selectedLevel,
+        areas: areasWithProgress,
+      });
+      
+      setNextLevel(nextLevelInfo);
+      setIsLoadingActiveLevel(false);
     } catch (error) {
-      console.log('Error loading active category view:', error);
-    }
-    finally {
-      setIsLoadingActiveCategory(false);
+      console.log('Error loading active level view:', error);
+      setIsLoadingActiveLevel(false);
     }
   };
 
   const getWelcomeMessage = () => {
-    const nextLabel = activeCategory?.title || 'the next check';
+    const nextLabel = activeLevel?.title || 'the next check';
     if (overallProgress === 0) {
       return "Let’s begin your security health check. Start with the first check to set a secure baseline.";
     } else if (overallProgress < 25) {
@@ -383,31 +291,31 @@ const WelcomeScreen = ({ navigation }) => {
   };
 
   const renderSearchResult = ({ item }) => {
-    if (item.type === 'category') {
+    if (item.type === 'level') {
       return (
         <TouchableOpacity
           style={styles.searchResultCard}
           onPress={() => {
             navigation.navigate('ModuleListScreen', {
               category: {
-                id: item.categoryId,
+                id: item.levelId,
                 title: item.title,
-                icon: item.categoryIcon,
-                color: item.categoryColor,
+                icon: item.levelIcon,
+                color: item.levelColor,
               }
             });
             setSearchQuery('');
           }}
           activeOpacity={0.8}
         >
-          <View style={[styles.searchResultIcon, { backgroundColor: item.categoryColor }]}>
-            <Text style={styles.searchResultIconText}>{item.categoryIcon}</Text>
+          <View style={[styles.searchResultIcon, { backgroundColor: item.levelColor }]}>
+            <Text style={styles.searchResultIconText}>{item.levelIcon}</Text>
           </View>
           <View style={styles.searchResultContent}>
             <Text style={styles.searchResultTitle}>{item.title}</Text>
-            <Text style={styles.searchResultSubtitle}>{item.moduleCount} modules</Text>
+            <Text style={styles.searchResultSubtitle}>{item.checkCount} checks</Text>
           </View>
-          <Text style={styles.searchResultType}>Category</Text>
+          <Text style={styles.searchResultType}>Level</Text>
         </TouchableOpacity>
       );
     } else {
@@ -415,47 +323,55 @@ const WelcomeScreen = ({ navigation }) => {
         <TouchableOpacity
           style={styles.searchResultCard}
           onPress={() => {
-            const categoryInfo = getCategoryInfo(item.categoryId);
-            navigation.navigate('LessonScreen', {
-              module: {
-                id: item.id,
-                title: item.title,
-              },
-              category: {
-                id: item.categoryId,
-                title: item.categoryName,
-                icon: item.categoryIcon,
-                color: item.categoryColor,
+            const levelInfo = getLevelInfo(item.levelId);
+            // Map check id to its screen
+            const checkRoutes = {
+              '1-1-1': 'Check1_1_StrongPasswordsScreen',
+              '1-1-2': 'Check1_2_HighValueAccountsScreen',
+              '1-1-3': 'Check1_3_PasswordManagersScreen',
+              '1-1-4': 'Check1_4_MFASetupScreen',
+              '1-1-5': 'Check1_5_BreachCheckScreen',
+              '1-2-1': 'Check1_2_1_ScreenLockScreen',
+              // TODO: Add more check screens as they are created
+            };
+            
+            const routeName = checkRoutes[item.id] || 'Welcome';
+            navigation.navigate(routeName, { 
+              level: {
+                id: item.levelId,
+                title: item.levelTitle,
+                icon: item.levelIcon,
+                color: item.levelColor,
               }
             });
             setSearchQuery('');
           }}
           activeOpacity={0.8}
         >
-          <View style={[styles.searchResultIcon, { backgroundColor: item.categoryColor }]}>
-            <Text style={styles.searchResultIconText}>{item.categoryIcon}</Text>
+          <View style={[styles.searchResultIcon, { backgroundColor: item.levelColor }]}>
+            <Text style={styles.searchResultIconText}>{item.levelIcon}</Text>
           </View>
           <View style={styles.searchResultContent}>
             <Text style={styles.searchResultTitle}>{item.title}</Text>
-            <Text style={styles.searchResultSubtitle}>{item.categoryName}</Text>
+            <Text style={styles.searchResultSubtitle}>{item.levelTitle}</Text>
           </View>
-          <Text style={styles.searchResultType}>Module</Text>
+          <Text style={styles.searchResultType}>Check</Text>
         </TouchableOpacity>
       );
     }
   };
 
-  const ProgressCard = ({ icon, title, subtitle, progress, categoryId }) => (
+  const ProgressCard = ({ icon, title, subtitle, progress, levelId }) => (
     <TouchableOpacity
       style={styles.progressCard}
       onPress={() => {
-        const categoryInfo = getCategoryInfo(categoryId);
+        const levelInfo = getLevelInfo(levelId);
         navigation.navigate('ModuleListScreen', {
           category: {
-            id: categoryId,
-            title: categoryInfo.title,
-            icon: categoryInfo.icon,
-            color: categoryInfo.color,
+            id: levelId,
+            title: levelInfo.title,
+            icon: levelInfo.icon,
+            color: levelInfo.color,
           }
         });
       }}
@@ -479,71 +395,50 @@ const WelcomeScreen = ({ navigation }) => {
     </TouchableOpacity>
   );
 
-  // Navigate to next incomplete lesson inside a module
-  const navigateToNextLesson = async (module) => {
-    // Map module id to its intro/lesson screen sequence
-    const moduleIntroRoutes = {
-      '1-1': 'PasswordIntroScreen',
-      '1-2': 'PasswordManagersIntroScreen',
-      '1-3': 'MFATutorialScreen',
-      '1-4': 'PasswordRecoveryIntroScreen',
-      '2-1': 'PhishingEmailsIntroScreen',
-      '2-2': 'SocialEngineeringIntroScreen',
-      '2-3': 'SafeLinkIntroScreen',
-      '2-4': 'ReportingScamsIntroScreen',
-      '3-1': 'DeviceUpdatesIntroScreen',
-      '3-2': 'HomeNetworkIntroScreen',
-      '3-3': 'AntivirusIntroScreen',
-      '3-4': 'MobileSecurityIntroScreen',
-      '4-1': 'SocialMediaIntroScreen',
-      '4-2': 'DigitalFootprintIntroScreen',
-      '4-3': 'DataSharingIntroScreen',
-      '4-4': 'PrivacyToolsIntroScreen',
-      '5-1': 'SecureBankingIntroScreen',
-      '5-2': 'CreditMonitoringIntroScreen',
-      '5-3': 'SafeShoppingIntroScreen',
-      '5-4': 'IdentityTheftIntroScreen',
-      '6-1': 'WelcomeAbordIntroScreen',
+  // Navigate to first incomplete check within an area
+  const navigateToArea = async (area) => {
+    // Map check id to its screen
+    const checkRoutes = {
+      '1-1-1': 'Check1_1_StrongPasswordsScreen',
+      '1-1-2': 'Check1_2_HighValueAccountsScreen',
+      '1-1-3': 'Check1_3_PasswordManagersScreen',
+      '1-1-4': 'Check1_4_MFASetupScreen',
+      '1-1-5': 'Check1_5_BreachCheckScreen',
+      '1-2-1': 'Check1_2_1_ScreenLockScreen',
+      // TODO: Add more check screens as they are created
     };
 
-    const lessons = getLessonsByModule(module.id);
-    const totalLessons = lessons.length;
-
-    // Storage key scheme for "standard" modules already used elsewhere
-    let completedSteps = [];
-    try {
-      const completedStepsData = await AsyncStorage.getItem(`module_${module.id}_completed_steps`);
-      completedSteps = completedStepsData ? JSON.parse(completedStepsData) : [];
-    } catch (e) {
-      completedSteps = [];
+    // Find the first incomplete check in the area
+    for (const check of area.checks) {
+      const progressKey = `check_${check.id}_completed`;
+      const progressData = await AsyncStorage.getItem(progressKey);
+      
+      if (progressData !== 'completed') {
+        // Navigate to the first incomplete check
+        const routeName = checkRoutes[check.id] || 'Welcome';
+        navigation.navigate(routeName, { level: activeLevel });
+        return;
+      }
     }
 
-    // Determine if module is complete
-    const isModuleComplete = completedSteps.length >= totalLessons && totalLessons > 0;
-
-    // If not complete, navigate to the module intro screen
-    const routeName = moduleIntroRoutes[module.id] || 'Welcome';
-    navigation.navigate(routeName, { category: activeCategory });
+    // If all checks are complete, navigate to the first check
+    if (area.checks.length > 0) {
+      const routeName = checkRoutes[area.checks[0].id] || 'Welcome';
+      navigation.navigate(routeName, { level: activeLevel });
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1a365d" />
+      <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Welcome to CyberPup!</Text>
-          <Text style={styles.welcomeMessage}>{getWelcomeMessage()}</Text>
-        </View>
+        {/* Header removed as requested */}
 
         {/* Overall Progress Section */}
         <View style={styles.overallProgressSection}>
           <View style={styles.overallProgressHeader}>
             <Text style={styles.overallProgressTitle}>Your Secure Score</Text>
-            <Text style={styles.overallProgressSubtitle}>
-              {completedModules} of {totalModules} modules completed
-            </Text>
           </View>
           
           <View style={styles.overallProgressCard}>
@@ -553,26 +448,29 @@ const WelcomeScreen = ({ navigation }) => {
                 progress={overallProgress}
                 size={140}
                 strokeWidth={10}
-                color="#4a90e2"
-                backgroundColor="#2d5a87"
+                color={Colors.accent}
+                backgroundColor={Colors.track}
                 showIcon={true}
                 showPercentage={true}
                 showBackground={true}
               />
             </View>
+            <Text style={styles.overallProgressSubtitle}>
+              {completedChecks} of {totalChecks} checks completed
+            </Text>
           </View>
         </View>
 
         {/* Search Bar */}
         <View style={styles.searchContainer}>
           <View style={styles.searchBar}>
-            <Ionicons name="search" size={18} color="#a0aec0" style={{ marginRight: 8 }} />
+            <Ionicons name="search" size={18} color={Colors.textSecondary} style={{ marginRight: 8 }} />
             <TextInput
               style={styles.searchInput}
               value={searchQuery}
               onChangeText={setSearchQuery}
-              placeholder="Search for security tips, modules, or categories..."
-              placeholderTextColor="#a0aec0"
+              placeholder="Search for security tips, areas, or levels..."
+              placeholderTextColor={Colors.textSecondary}
               autoCapitalize="none"
               autoCorrect={false}
             />
@@ -597,98 +495,104 @@ const WelcomeScreen = ({ navigation }) => {
 
 
 
-        {/* Active Category Module List (replaces Checks in Progress) */}
+        {/* Active Level Check List (replaces Checks in Progress) */}
         {!isSearching && (
-          <View style={styles.activeCategorySection}>
-            {activeCategory ? (
+          <View style={styles.activeLevelSection}>
+            <Text style={[styles.welcomeMessage, styles.welcomeMessageSpacing]}>{getWelcomeMessage()}</Text>
+            {activeLevel ? (
               <>
-                <View style={[styles.activeCategoryHeader, { borderColor: activeCategory.color }] }>
-                  <View style={styles.activeCategoryHeaderLeft}>
-                    <View style={[styles.categoryChip, { backgroundColor: activeCategory.color }]}>
-                      <Text style={styles.categoryChipText}>{`Category ${getDisplayIndexForCategory(activeCategory.id)}`}</Text>
+                <View style={[styles.activeLevelHeader, { borderColor: activeLevel.color }] }>
+                  <View style={styles.activeLevelHeaderLeft}>
+                    <View style={[styles.levelChip, { backgroundColor: activeLevel.color }]}>
+                      <Text style={styles.levelChipText}>{`Level ${getDisplayIndexForLevel(activeLevel.id)}`}</Text>
                     </View>
-                    <Text style={styles.activeCategoryTitle}>{activeCategory.title}</Text>
-                    <View style={styles.activeCategoryMetaRow}>
-                      <Text style={styles.activeCategorySubtitle}>modules</Text>
-                    </View>
+                    <Text style={styles.activeLevelTitle}>CyberPup Scout 🐾</Text>
                   </View>
-                  <View style={styles.activeCategoryRight}>
-                    <TouchableOpacity
-                      onPress={() => navigation.navigate('CategoryScreen')}
+                  <View style={styles.activeLevelRight}>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('CategoryScreen')}
                       style={styles.overflowButton}
-                      activeOpacity={0.8}
-                      accessibilityLabel="Open categories"
-                    >
-                      <Ionicons name="reorder-three-outline" size={24} color="#ffffff" />
-                    </TouchableOpacity>
-                    <View style={[styles.activeCategoryIconWrap, { borderColor: activeCategory.color }]}>
-                      <Text style={styles.activeCategoryIconText}>{activeCategory.icon}</Text>
-                    </View>
+                  activeOpacity={0.8}
+                      accessibilityLabel="Open levels"
+                >
+                      <Ionicons name="reorder-three-outline" size={24} color={Colors.textPrimary} />
+                </TouchableOpacity>
+                    <View style={[styles.activeLevelIconWrap, { borderColor: activeLevel.color }]}>
+                      <Text style={styles.activeLevelIconText}>{activeLevel.icon}</Text>
+              </View>
                   </View>
                 </View>
 
-                <View style={styles.moduleListContainer}>
+                <View style={styles.checkListContainer}>
                   <View style={styles.verticalConnectorWrap} pointerEvents="none">
-                    <View style={[styles.verticalConnector, { backgroundColor: activeCategory.color }]} />
+                    <View style={[styles.verticalConnector, { backgroundColor: activeLevel.color }]} />
                   </View>
-                {activeCategoryModules.map((m, idx) => {
-              const isStart = m.percentage === 0;
-              const cta = isStart ? 'START' : 'CONTINUE';
-              return (
-                <>
+                {(() => {
+                  const firstIncompleteIndex = activeLevel.areas.findIndex(area => area.completedChecks < area.totalChecks);
+                  return activeLevel.areas.map((area, idx) => {
+                    const isCompleted = area.completedChecks === area.totalChecks;
+                    const isLocked = !isCompleted && firstIncompleteIndex !== -1 && idx > firstIncompleteIndex;
+                    const progressPercentage = area.totalChecks > 0 ? Math.round((area.completedChecks / area.totalChecks) * 100) : 0;
+                    const cta = isCompleted ? 'COMPLETED' : (progressPercentage === 0 ? 'START' : 'CONTINUE');
+                    const ctaBorderColor = isCompleted || isLocked ? Colors.disabled : activeLevel.color;
+                    const ctaTextStyle = isCompleted || isLocked ? styles.checkCtaTextDisabled : styles.checkCtaText;
+                    const badgeStyle = [styles.checkBadge, (isCompleted || isLocked) && styles.checkBadgeDisabled];
+                    return (
+                <React.Fragment key={area.id}>
                   <TouchableOpacity
-                    key={m.id}
                     style={[
-                      styles.moduleCardNew,
-                      { borderColor: activeCategory.color, shadowColor: activeCategory.color }
+                      styles.checkCardNew,
+                      { borderColor: activeLevel.color }
                     ]}
                     activeOpacity={0.85}
-                    onPress={() => navigateToNextLesson(m)}
+                    onPress={() => navigateToArea(area)}
                   >
-                    <View style={styles.moduleHeaderNew}>
-                      <View style={styles.moduleBadge}> 
-                        <Text style={styles.moduleBadgeText}>{`Module ${idx + 1}`}</Text>
-                      </View>
-                      <View style={[styles.moduleCtaBubble, { borderColor: activeCategory.color }]}> 
-                        <Text style={styles.moduleCtaText}>{cta}</Text>
-                      </View>
+                    <View style={styles.checkHeaderNew}>
+                          <View style={badgeStyle}> 
+                            <Text style={styles.checkBadgeText}>{`Area ${idx + 1}`}</Text>
+                          </View>
+                          <Text style={[styles.checkTitleNew, styles.checkTitleInline]}>{area.title}</Text>
+                          <View style={[styles.checkCtaBubble, { borderColor: ctaBorderColor }]}> 
+                            <Text style={ctaTextStyle}>{cta}</Text>
+                          </View>
                     </View>
-                    <View style={[styles.timelineDot, { backgroundColor: activeCategory.color }]} />
-                    <Text style={[styles.moduleTitleNew, { marginLeft: 8 }]}>{m.title}</Text>
-                    <Text style={styles.moduleSubtitleNew}>{`${m.completedStepsCount} of ${m.totalLessons} lessons completed`}</Text>
-                    <View style={styles.moduleProgressBar}> 
-                      <View style={[styles.moduleProgressFill, { width: `${m.percentage}%`, backgroundColor: activeCategory.color }]} />
-                    </View>
-                    <Text style={styles.moduleProgressPercent}>{m.percentage}%</Text>
+                    <Text style={styles.checkSubtitleNew}>{area.description}</Text>
+                        <View style={styles.checkProgressRow}>
+                          <View style={styles.checkProgressBar}> 
+                            <View style={[styles.checkProgressFill, { width: `${progressPercentage}%`, backgroundColor: activeLevel.color }]} />
+                          </View>
+                          <Text style={styles.checkProgressPercent}>{area.completedChecks} of {area.totalChecks} checks</Text>
+                        </View>
                   </TouchableOpacity>
-                  {idx < activeCategoryModules.length - 1 && (
+                  {idx < activeLevel.areas.length - 1 && (
                     <View style={styles.cardSeparator} />
                   )}
-                </>
-              );
-                })}
+                </React.Fragment>
+                    );
+                  });
+                })()}
                 </View>
 
-                {nextCategory && (
-                  <View style={styles.nextCategoryCard}>
+                {nextLevel && (
+                  <View style={styles.nextLevelCard}>
                     <View style={styles.nextDividerRow}>
                       <View style={styles.nextDivider} />
-                      <Text style={styles.nextTinyText}>{`Next in Category ${getDisplayIndexForCategory(nextCategory.id)}`}</Text>
+                      <Text style={styles.nextTinyText}>{`Next in Level ${getDisplayIndexForLevel(nextLevel.id)}`}</Text>
                       <View style={styles.nextDivider} />
                     </View>
 
                     <View style={styles.nextIconRow}>
-                      <View style={[styles.nextIconRing, { borderColor: nextCategory.color }]}>
-                        <Text style={styles.activeCategoryIconText}>{getCategoryInfo(nextCategory.id).icon}</Text>
+                      <View style={[styles.nextIconRing, { borderColor: Colors.accent }]}>
+                        <Text style={styles.nextLevelIconText}>{getLevelInfo(nextLevel.id).icon}</Text>
                       </View>
                     </View>
 
-                    <Text style={styles.nextTitle}>{nextCategory.title}</Text>
-                    <Text style={styles.nextSubtitle}>Preview the upcoming checks in this category.</Text>
+                    <Text style={styles.nextTitle}>{nextLevel.title}</Text>
+                    <Text style={styles.nextSubtitle}>{nextLevel.description}</Text>
 
                     <TouchableOpacity
-                      style={[styles.skipAheadButton, { borderColor: nextCategory.color }]}
-                      onPress={() => navigation.navigate('ModuleListScreen', { category: { id: nextCategory.id, title: nextCategory.title, icon: getCategoryInfo(nextCategory.id).icon, color: nextCategory.color } })}
+                      style={[styles.skipAheadButton, { borderColor: Colors.accent }]}
+                      onPress={() => navigation.navigate('CategoryScreen')}
                       activeOpacity={0.85}
                     >
                       <Text style={styles.skipAheadText}>Skip Ahead</Text>
@@ -698,8 +602,8 @@ const WelcomeScreen = ({ navigation }) => {
               </>
             ) : (
               <View style={styles.allDoneCard}>
-                <Text style={styles.allDoneTitle}>All categories complete 🎉</Text>
-                <Text style={styles.allDoneSubtitle}>Review modules or explore topics from the Learn tab.</Text>
+                <Text style={styles.allDoneTitle}>All levels complete 🎉</Text>
+                <Text style={styles.allDoneSubtitle}>Review checks or explore topics from the Toolkit tab.</Text>
                 <TouchableOpacity style={styles.startLearningButton} onPress={() => navigation.navigate('CategoryScreen')}>
                   <Text style={styles.startLearningButtonText}>View All Categories</Text>
                 </TouchableOpacity>
@@ -707,6 +611,8 @@ const WelcomeScreen = ({ navigation }) => {
             )}
           </View>
         )}
+
+
 
         {/* Bottom spacing for tab navigation */}
         <View style={styles.bottomSpacing} />
@@ -730,24 +636,16 @@ const WelcomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a365d',
-  },
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#ffffff',
-    letterSpacing: 0.5,
-    marginBottom: 8,
+    backgroundColor: Colors.background,
   },
   welcomeMessage: {
     fontSize: 16,
-    color: '#a0aec0',
+    color: Colors.textSecondary,
     lineHeight: 22,
+  },
+  welcomeMessageSpacing: {
+    paddingHorizontal: 24,
+    marginBottom: 8,
   },
 
   overallProgressSection: {
@@ -755,17 +653,22 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   overallProgressHeader: {
-    marginBottom: 16,
+    marginBottom: 8,
+    alignItems: 'center',
   },
   overallProgressTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#ffffff',
-    marginBottom: 4,
+    color: Colors.textPrimary,
+    marginBottom: 8,
+    paddingTop: 8,
+    textAlign: 'center',
   },
   overallProgressSubtitle: {
     fontSize: 14,
-    color: '#a0aec0',
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    marginTop: 10,
   },
   overallProgressCard: {
     backgroundColor: 'transparent',
@@ -780,13 +683,13 @@ const styles = StyleSheet.create({
   overallProgressText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#4a90e2',
+    color: Colors.accent,
     textAlign: 'center',
   },
-  activeCategorySection: {
+  activeLevelSection: {
     paddingHorizontal: 24,
   },
-  moduleListContainer: {
+  checkListContainer: {
     position: 'relative',
     paddingVertical: 6,
     alignItems: 'stretch',
@@ -805,8 +708,8 @@ const styles = StyleSheet.create({
     opacity: 0.35,
     borderRadius: 2,
   },
-  activeCategoryHeader: {
-    backgroundColor: '#2d5a87',
+  activeLevelHeader: {
+    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 14,
     marginBottom: 12,
@@ -815,22 +718,22 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderWidth: 1,
   },
-  activeCategoryHeaderLeft: {
+  activeLevelHeaderLeft: {
     flex: 1,
     paddingRight: 12,
   },
-  activeCategoryTitle: {
+  activeLevelTitle: {
     fontSize: 26,
     fontWeight: '800',
-    color: '#ffffff',
+    color: Colors.textPrimary,
     marginTop: 6,
     marginBottom: 4,
   },
-  activeCategorySubtitle: {
+  activeLevelSubtitle: {
     fontSize: 16,
-    color: '#a0aec0',
+    color: Colors.textSecondary,
   },
-  activeCategoryIconWrap: {
+  activeLevelIconWrap: {
     width: 56,
     height: 56,
     borderRadius: 28,
@@ -839,29 +742,26 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     backgroundColor: 'rgba(255,255,255,0.08)'
   },
-  activeCategoryIconText: {
+  activeLevelIconText: {
     fontSize: 26,
   },
-  categoryChip: {
+  levelChip: {
     alignSelf: 'flex-start',
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
-  categoryChipText: {
+  levelChipText: {
     color: '#0b1b2b',
     fontWeight: '700',
     fontSize: 12,
   },
-  moduleCardNew: {
-    backgroundColor: '#2d5a87',
+  checkCardNew: {
+    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 16,
     marginBottom: 24,
     borderWidth: 1,
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
     elevation: 6,
   },
   cardSeparator: {
@@ -869,92 +769,104 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   timelineDot: {
-    position: 'absolute',
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    left: '50%',
-    marginLeft: -5,
-    top: 22,
-    opacity: 0.7,
+    display: 'none',
   },
-  moduleHeaderNew: {
+  checkHeaderNew: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
   },
-  moduleBadge: {
+  checkTitleInline: {
+    flex: 1,
+    marginHorizontal: 12,
+  },
+  checkBadge: {
     backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
-  moduleBadgeText: {
-    color: '#a0aec0',
+  checkBadgeDisabled: {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  checkBadgeText: {
+    color: Colors.textSecondary,
     fontWeight: '700',
     fontSize: 12,
   },
-  moduleCtaBubble: {
+  checkCtaBubble: {
     borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderWidth: 1,
     backgroundColor: 'rgba(0,0,0,0.1)'
   },
-  moduleCtaText: {
-    color: '#ffffff',
+  checkCtaText: {
+    color: Colors.textPrimary,
     fontWeight: '700',
     fontSize: 12,
   },
-  moduleTitleNew: {
+  checkCtaTextDisabled: {
+    color: Colors.textSecondary,
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  checkTitleNew: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#ffffff',
+    color: Colors.textPrimary,
     marginBottom: 6,
   },
-  moduleSubtitleNew: {
+  checkSubtitleNew: {
     fontSize: 14,
-    color: '#a0aec0',
+    color: Colors.textSecondary,
     marginBottom: 10,
   },
-  moduleProgressBar: {
+  checkProgressBar: {
+    flex: 1,
     height: 6,
-    backgroundColor: '#1a365d',
+    backgroundColor: Colors.track,
     borderRadius: 4,
     overflow: 'hidden',
+    marginRight: 8,
   },
-  moduleProgressFill: {
+  checkProgressRow: {
+    marginTop: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkProgressFill: {
     height: '100%',
     borderRadius: 4,
   },
-  moduleProgressPercent: {
-    marginTop: 6,
+  checkProgressPercent: {
     fontSize: 12,
-    color: '#a0aec0',
+    color: Colors.textSecondary,
     textAlign: 'right',
+    minWidth: 28,
   },
   searchContainer: {
     paddingHorizontal: 24,
     marginBottom: 24,
   },
   searchBar: {
-    backgroundColor: '#2d5a87',
+    backgroundColor: Colors.surface,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: '#4a90e2',
+    borderColor: Colors.accent,
     flexDirection: 'row',
     alignItems: 'center',
     minHeight: 44,
   },
-  activeCategoryMetaRow: {
+  activeLevelMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  activeCategoryRight: {
+  activeLevelRight: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
@@ -969,30 +881,30 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)'
   },
   viewAllLink: {
-    color: '#4a90e2',
+    color: Colors.accent,
     fontWeight: '700',
   },
   allDoneCard: {
-    backgroundColor: '#2d5a87',
+    backgroundColor: Colors.surface,
     borderRadius: 20,
     padding: 20,
     alignItems: 'center',
   },
   allDoneTitle: {
-    color: '#ffffff',
+    color: Colors.textPrimary,
     fontWeight: '800',
     fontSize: 18,
     marginBottom: 6,
   },
   allDoneSubtitle: {
-    color: '#a0aec0',
+    color: Colors.textSecondary,
     fontSize: 14,
     marginBottom: 12,
     textAlign: 'center',
   },
-  nextCategoryCard: {
+  nextLevelCard: {
     marginTop: 12,
-    backgroundColor: '#2d5a87',
+    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
@@ -1009,7 +921,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.2)'
   },
   nextTinyText: {
-    color: '#a0aec0',
+    color: Colors.textSecondary,
     fontSize: 12,
     marginHorizontal: 8,
   },
@@ -1028,12 +940,12 @@ const styles = StyleSheet.create({
   nextTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#ffffff',
+    color: Colors.textPrimary,
     marginBottom: 6,
     textAlign: 'center',
   },
   nextSubtitle: {
-    color: '#a0aec0',
+    color: Colors.textSecondary,
     fontSize: 14,
     textAlign: 'center',
     marginBottom: 12,
@@ -1045,12 +957,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   skipAheadText: {
-    color: '#ffffff',
+    color: Colors.textPrimary,
     fontWeight: '700',
     textAlign: 'center',
   },
   searchInput: {
-    color: '#ffffff',
+    color: Colors.textPrimary,
     fontSize: 16,
     fontWeight: '500',
     flex: 1,
@@ -1065,26 +977,20 @@ const styles = StyleSheet.create({
   searchResultsTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#a0aec0',
+    color: Colors.textSecondary,
     marginBottom: 16,
   },
   searchResultsList: {
     paddingBottom: 20,
   },
   searchResultCard: {
-    backgroundColor: '#2d5a87',
+    backgroundColor: Colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+
     elevation: 3,
   },
   searchResultIcon: {
@@ -1104,16 +1010,16 @@ const styles = StyleSheet.create({
   searchResultTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ffffff',
+    color: Colors.textPrimary,
     marginBottom: 2,
   },
   searchResultSubtitle: {
     fontSize: 14,
-    color: '#a0aec0',
+    color: Colors.textSecondary,
   },
   searchResultType: {
     fontSize: 12,
-    color: '#4a90e2',
+    color: Colors.accent,
     fontWeight: '600',
     backgroundColor: 'rgba(74, 144, 226, 0.1)',
     paddingHorizontal: 8,
@@ -1126,22 +1032,16 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#ffffff',
+    color: Colors.textPrimary,
     marginBottom: 20,
     letterSpacing: 0.5,
   },
   progressCard: {
-    backgroundColor: '#2d5a87',
+    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
+
     elevation: 6,
   },
   cardHeader: {
@@ -1152,7 +1052,7 @@ const styles = StyleSheet.create({
   iconPlaceholder: {
     width: 40,
     height: 40,
-    backgroundColor: '#4a90e2',
+    backgroundColor: Colors.accent,
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1167,12 +1067,12 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ffffff',
+    color: Colors.textPrimary,
     marginBottom: 4,
   },
   cardSubtitle: {
     fontSize: 14,
-    color: '#a0aec0',
+    color: Colors.textSecondary,
     lineHeight: 18,
   },
   progressContainer: {
@@ -1182,24 +1082,24 @@ const styles = StyleSheet.create({
   progressBar: {
     flex: 1,
     height: 6,
-    backgroundColor: '#1a365d',
+    backgroundColor: Colors.track,
     borderRadius: 3,
     marginRight: 12,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#4a90e2',
+    backgroundColor: Colors.accent,
     borderRadius: 3,
   },
   progressText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#4a90e2',
+    color: Colors.accent,
     minWidth: 35,
   },
   emptyProgressCard: {
-    backgroundColor: '#2d5a87',
+    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 24,
     alignItems: 'center',
@@ -1208,25 +1108,25 @@ const styles = StyleSheet.create({
   emptyProgressTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#ffffff',
+    color: Colors.textPrimary,
     marginBottom: 8,
     textAlign: 'center',
   },
   emptyProgressSubtitle: {
     fontSize: 14,
-    color: '#a0aec0',
+    color: Colors.textSecondary,
     textAlign: 'center',
     marginBottom: 16,
     lineHeight: 20,
   },
   startLearningButton: {
-    backgroundColor: '#4a90e2',
+    backgroundColor: Colors.accent,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
   },
   startLearningButtonText: {
-    color: '#ffffff',
+    color: Colors.textPrimary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -1235,6 +1135,9 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: 40,
+  },
+  nextLevelIconText: {
+    fontSize: 24,
   },
 });
 

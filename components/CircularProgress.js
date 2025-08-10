@@ -2,13 +2,14 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
+import { Colors } from '../theme';
 
 const CircularProgress = ({
   progress = 0,
   size = 120,
   strokeWidth = 8,
-  color = '#4a90e2',
-  backgroundColor = '#2d5a87',
+  color = Colors.accent,
+  backgroundColor = Colors.track,
   showIcon = true,
   showPercentage = true,
   showBackground = true,
@@ -66,7 +67,7 @@ const CircularProgress = ({
           <Ionicons 
             name="lock-closed" 
             size={size * 0.25} 
-            color="#ffffff" 
+            color={Colors.textPrimary} 
             style={styles.icon}
           />
         )}
@@ -97,7 +98,7 @@ const styles = StyleSheet.create({
   percentageText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#a0aec0',
+    color: Colors.textSecondary,
     textAlign: 'center',
   },
 });

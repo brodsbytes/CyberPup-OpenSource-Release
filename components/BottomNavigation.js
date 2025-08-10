@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Colors } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
 
 const BottomNavigation = ({ activeTab, onTabPress }) => {
@@ -38,7 +39,7 @@ const BottomNavigation = ({ activeTab, onTabPress }) => {
             <Ionicons
               name={isActive ? tab.icon.replace('-outline', '') : tab.icon}
               size={24}
-              color={isActive ? '#4a90e2' : '#a0aec0'}
+              color={isActive ? Colors.accent : Colors.textSecondary}
             />
             <Text style={[styles.tabText, isActive && styles.activeTabText]}>
               {tab.title}
@@ -53,9 +54,9 @@ const BottomNavigation = ({ activeTab, onTabPress }) => {
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: '#1a365d',
+    backgroundColor: Colors.surface,
     borderTopWidth: 1,
-    borderTopColor: '#2d5a87',
+    borderTopColor: Colors.border,
     paddingBottom: 20,
     paddingTop: 8,
   },
@@ -68,11 +69,11 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 12,
     marginTop: 4,
-    color: '#a0aec0',
+    color: Colors.textSecondary,
     fontWeight: '500',
   },
   activeTabText: {
-    color: '#4a90e2',
+    color: Colors.accent,
     fontWeight: '600',
   },
 });

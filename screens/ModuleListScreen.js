@@ -11,199 +11,129 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
-import { getModulesByCategory } from '../data/courseData';
+import { getAreasByLevel, getChecksByArea } from '../data/courseData';
+import { Colors } from '../theme';
 
 const { width } = Dimensions.get('window');
 
 const ModuleListScreen = ({ navigation, route }) => {
   const { category } = route.params || {};
-  const [modules, setModules] = useState([]);
+  const [areas, setAreas] = useState([]);
 
-  // Get modules for the selected category
-  const getModulesForCategory = (categoryId) => {
-    return getModulesByCategory(categoryId);
+  // Get areas for the selected level
+  const getAreasForLevel = (levelId) => {
+    return getAreasByLevel(levelId);
   };
 
-  // Load modules and their progress when component mounts or screen is focused
+  // Load areas and their progress when component mounts or screen is focused
   useFocusEffect(
     React.useCallback(() => {
-      loadModulesWithProgress();
+      loadAreasWithProgress();
     }, [category])
   );
 
-  const loadModulesWithProgress = async () => {
+  const loadAreasWithProgress = async () => {
     try {
-      const baseModules = getModulesForCategory(category?.id);
-      const modulesWithProgress = [];
-
-      for (const module of baseModules) {
-        let progress = 0;
-        
-        // Special handling for the Creating Strong Passwords module (1-1)
-        if (module.id === '1-1') {
-          const strongPasswordsProgress = await AsyncStorage.getItem('strong_passwords_progress');
-          if (strongPasswordsProgress) {
-            const progressData = JSON.parse(strongPasswordsProgress);
-            // Check if the lesson is completed
-            if (progressData.isCompleted) {
-              progress = 100;
-            } else {
-              // Calculate partial progress based on completed sections
-              let completedSections = 0;
-              if (progressData.checklistItems) {
-                const completedChecklistItems = progressData.checklistItems.filter(item => item.completed).length;
-                if (completedChecklistItems > 0) completedSections++;
-              }
-              if (progressData.quizAnswers) {
-                const answeredQuestions = Object.values(progressData.quizAnswers).filter(answer => answer !== null).length;
-                if (answeredQuestions > 0) completedSections++;
-              }
-              // 4 total sections: intro, checklist, quiz, practice
-              progress = Math.round((completedSections / 4) * 100);
-            }
-          }
-        } else if (module.id === '1-2') {
-          // Password Managers module
-          const progressData = await AsyncStorage.getItem('password_managers_progress');
-          if (progressData === 'completed') {
-            progress = 100;
-          } else {
-            progress = 0;
-          }
-        } else if (module.id === '1-3') {
-          // Multi-Factor Authentication module
-          const progressData = await AsyncStorage.getItem('mfa_progress');
-          if (progressData === 'completed') {
-            progress = 100;
-          } else {
-            progress = 0;
-          }
-        } else if (module.id === '1-4') {
-          // Password Recovery module
-          const progressData = await AsyncStorage.getItem('password_recovery_progress');
-          if (progressData === 'completed') {
-            progress = 100;
-          } else {
-            progress = 0;
-          }
-        } else {
-          // Standard progress calculation for other modules
-          const completedStepsData = await AsyncStorage.getItem(`module_${module.id}_completed_steps`);
-          const completedSteps = completedStepsData ? JSON.parse(completedStepsData) : [];
-          progress = module.lessons > 0 ? Math.round((completedSteps.length / module.lessons) * 100) : 0;
-        }
-        
-        modulesWithProgress.push({
-          ...module,
-          progress,
-        });
-      }
-
-      setModules(modulesWithProgress);
+      const areas = getAreasForLevel(category?.id);
+      const areasWithProgress = await Promise.all(
+        areas.map(async (area) => {
+          const checks = getChecksByArea(area.id);
+          const checksWithProgress = await Promise.all(
+            checks.map(async (check) => {
+              const progressKey = `check_${check.id}_completed`;
+              const isCompleted = await AsyncStorage.getItem(progressKey);
+              return {
+                ...check,
+                isCompleted: isCompleted === 'completed',
+              };
+            })
+          );
+          return {
+            ...area,
+            checks: checksWithProgress,
+          };
+        })
+      );
+      setAreas(areasWithProgress);
     } catch (error) {
-      console.log('Error loading modules with progress:', error);
+      console.log('Error loading areas with progress:', error);
     }
   };
 
-  const renderModuleItem = ({ item }) => {
-    const getNavigationTarget = (moduleId) => {
-      switch (moduleId) {
-        case '1-1': return 'PasswordIntroScreen';
-        case '1-2': return 'PasswordManagersIntroScreen';
-        case '1-3': return 'MFATutorialScreen';
-        case '1-4': return 'PasswordRecoveryIntroScreen';
-        case '2-1': return 'PhishingEmailsIntroScreen';
-        case '2-2': return 'SocialEngineeringIntroScreen';
-        case '2-3': return 'SafeLinkIntroScreen';
-        case '2-4': return 'ReportingScamsIntroScreen';
-        case '3-1': return 'DeviceUpdatesIntroScreen';
-        case '3-2': return 'HomeNetworkIntroScreen';
-        case '3-3': return 'AntivirusIntroScreen';
-        case '3-4': return 'MobileSecurityIntroScreen';
-        case '4-1': return 'SocialMediaIntroScreen';
-        case '4-2': return 'DigitalFootprintIntroScreen';
-        case '4-3': return 'DataSharingIntroScreen';
-        case '4-4': return 'PrivacyToolsIntroScreen';
-        case '5-1': return 'SecureBankingIntroScreen';
-        case '5-2': return 'CreditMonitoringIntroScreen';
-        case '5-3': return 'SafeShoppingIntroScreen';
-        case '5-4': return 'IdentityTheftIntroScreen';
-          case '6-1': return 'WelcomeAbordIntroScreen';
-        default: return 'Welcome'; // Fallback to WelcomeScreen
-      }
-    };
-
+  const renderAreaItem = ({ item }) => {
     return (
-      <TouchableOpacity
-        style={styles.moduleCard}
-        onPress={() => navigation.navigate(getNavigationTarget(item.id), { category })}
-        activeOpacity={0.8}
-      >
-      <View style={styles.moduleHeader}>
-        <View style={styles.moduleInfo}>
-          <Text style={styles.moduleTitle}>{item.title}</Text>
-          <Text style={styles.moduleDescription}>{item.description}</Text>
+      <View style={styles.areaSection}>
+        <View style={styles.areaHeader}>
+          <Text style={styles.areaTitle}>{item.title}</Text>
+          <Text style={styles.areaDescription}>{item.description}</Text>
         </View>
-        <View style={styles.moduleMeta}>
-          <Text style={styles.durationText}>{item.duration}</Text>
-          <Text style={styles.lessonsText}>{item.lessons} lessons</Text>
-        </View>
-      </View>
-      
-      <View style={styles.progressSection}>
-        <View style={styles.progressHeader}>
-          <Text style={styles.progressLabel}>Progress</Text>
-          <Text style={styles.progressText}>{item.progress}%</Text>
-        </View>
-        <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: `${item.progress}%` }]} />
-        </View>
-      </View>
-      
-      <View style={styles.cardFooter}>
-        <View style={styles.statusContainer}>
-          {item.progress === 0 ? (
-            <View style={styles.statusNotStarted}>
-              <Text style={styles.statusText}>Not Started</Text>
+        
+        {item.checks.map((check) => (
+          <TouchableOpacity
+            key={check.id}
+            style={[styles.checkCard, check.isCompleted && styles.checkCardCompleted]}
+            onPress={() => {
+              const routeName = getCheckNavigationTarget(check.id);
+              navigation.navigate(routeName, { check });
+            }}
+            activeOpacity={0.8}
+          >
+            <View style={styles.checkContent}>
+              <View style={styles.checkHeader}>
+                <Text style={styles.checkTitle}>{check.title}</Text>
+                <View style={styles.checkMeta}>
+                  <Text style={styles.checkDuration}>{check.duration}</Text>
+                  <Text style={styles.checkTasks}>{check.tasks} tasks</Text>
+                </View>
+              </View>
+              <Text style={styles.checkDescription}>{check.description}</Text>
+              
+              {check.isCompleted && (
+                <View style={styles.completedBadge}>
+                  <Ionicons name="checkmark-circle" size={20} color={Colors.accent} />
+                  <Text style={styles.completedText}>Completed</Text>
+                </View>
+              )}
             </View>
-          ) : item.progress === 100 ? (
-            <View style={styles.statusCompleted}>
-              <Text style={styles.statusText}>Completed</Text>
-            </View>
-          ) : (
-            <View style={styles.statusInProgress}>
-              <Text style={styles.statusText}>In Progress</Text>
-            </View>
-          )}
-        </View>
-        <View style={styles.arrowContainer}>
-          <Text style={styles.arrowText}>›</Text>
-        </View>
+          </TouchableOpacity>
+        ))}
       </View>
-    </TouchableOpacity>
     );
+  };
+
+  const getCheckNavigationTarget = (checkId) => {
+    switch (checkId) {
+      case '1-1-1': return 'Check1_1_StrongPasswordsScreen';
+      case '1-1-2': return 'Check1_2_HighValueAccountsScreen';
+      case '1-1-3': return 'Check1_3_PasswordManagersScreen';
+      case '1-1-4': return 'Check1_4_MFASetupScreen';
+      case '1-1-5': return 'Check1_5_BreachCheckScreen';
+      case '1-2-1': return 'Check1_2_1_ScreenLockScreen';
+      // TODO: Add more check screens as they are created
+      default: return 'Welcome'; // Fallback to WelcomeScreen
+    }
   };
 
   const renderHeader = () => (
     <View style={styles.headerSection}>
       <View style={styles.categoryInfo}>
-        <View style={[styles.categoryIcon, { backgroundColor: category?.color || '#4a90e2' }]}>
+                    <View style={[styles.categoryIcon, { backgroundColor: category?.color || Colors.accent }]}>
           <Text style={styles.categoryIconText}>{category?.icon || '📚'}</Text>
         </View>
         <View style={styles.categoryDetails}>
-          <Text style={styles.categoryTitle}>{category?.title || 'Category'}</Text>
-          <Text style={styles.moduleCount}>{modules.length} modules</Text>
+          <Text style={styles.categoryTitle}>{category?.title || 'Level'}</Text>
+          <Text style={styles.moduleCount}>{areas.length} areas</Text>
         </View>
       </View>
       <Text style={styles.headerDescription}>
-        {category?.headerMessage || 'Complete all modules to master this security topic'}
+        {category?.headerMessage || 'Complete all checks to master this security topic'}
       </Text>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1a365d" />
+      <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
       
       {/* Header */}
       <View style={styles.header}>
@@ -214,13 +144,13 @@ const ModuleListScreen = ({ navigation, route }) => {
         >
           <Text style={styles.backButtonText}>‹</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Modules</Text>
+        <Text style={styles.headerTitle}>Checks</Text>
         <View style={styles.headerSpacer} />
       </View>
 
       <FlatList
-        data={modules}
-        renderItem={renderModuleItem}
+        data={areas}
+        renderItem={renderAreaItem}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={renderHeader}
         showsVerticalScrollIndicator={false}
@@ -233,7 +163,7 @@ const ModuleListScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a365d',
+    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -243,25 +173,25 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#2d5a87',
+    borderBottomColor: Colors.border,
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#2d5a87',
+    backgroundColor: Colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
   backButtonText: {
     fontSize: 24,
-    color: '#ffffff',
+    color: Colors.textPrimary,
     fontWeight: '600',
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#ffffff',
+    color: Colors.textPrimary,
     flex: 1,
     textAlign: 'center',
   },
@@ -298,20 +228,95 @@ const styles = StyleSheet.create({
   categoryTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#ffffff',
+    color: Colors.textPrimary,
     marginBottom: 4,
   },
   moduleCount: {
     fontSize: 16,
-    color: '#a0aec0',
+    color: Colors.textSecondary,
   },
   headerDescription: {
     fontSize: 16,
-    color: '#a0aec0',
+    color: Colors.textSecondary,
     lineHeight: 22,
   },
+  areaSection: {
+    marginBottom: 32,
+  },
+  areaHeader: {
+    marginBottom: 16,
+  },
+  areaTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    marginBottom: 4,
+  },
+  areaDescription: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 20,
+  },
+  checkCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  checkCardCompleted: {
+    borderColor: Colors.accent,
+    backgroundColor: Colors.accentSoft,
+  },
+  checkContent: {
+    flex: 1,
+  },
+  checkHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  checkTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    flex: 1,
+    marginRight: 12,
+  },
+  checkMeta: {
+    alignItems: 'flex-end',
+  },
+  checkDuration: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.accent,
+    marginBottom: 2,
+  },
+  checkTasks: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
+  checkDescription: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  completedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+  },
+  completedText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.accent,
+    marginLeft: 4,
+  },
   moduleCard: {
-    backgroundColor: '#2d5a87',
+    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
@@ -336,13 +341,13 @@ const styles = StyleSheet.create({
   moduleTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#ffffff',
+    color: Colors.textPrimary,
     marginBottom: 8,
     lineHeight: 24,
   },
   moduleDescription: {
     fontSize: 14,
-    color: '#a0aec0',
+    color: Colors.textSecondary,
     lineHeight: 20,
   },
   moduleMeta: {
@@ -351,12 +356,12 @@ const styles = StyleSheet.create({
   durationText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#4a90e2',
+    color: Colors.accent,
     marginBottom: 4,
   },
   lessonsText: {
     fontSize: 12,
-    color: '#a0aec0',
+    color: Colors.textSecondary,
   },
   progressSection: {
     marginBottom: 16,
@@ -370,22 +375,22 @@ const styles = StyleSheet.create({
   progressLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#a0aec0',
+    color: Colors.textSecondary,
   },
   progressText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#4a90e2',
+    color: Colors.accent,
   },
   progressBar: {
     height: 6,
-    backgroundColor: '#1a365d',
+    backgroundColor: Colors.track,
     borderRadius: 3,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#4a90e2',
+    backgroundColor: Colors.accent,
     borderRadius: 3,
   },
   cardFooter: {
@@ -397,7 +402,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   statusNotStarted: {
-    backgroundColor: '#4a5568',
+    backgroundColor: Colors.track,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
@@ -420,7 +425,7 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#ffffff',
+    color: Colors.textPrimary,
   },
   arrowContainer: {
     width: 32,
@@ -432,7 +437,7 @@ const styles = StyleSheet.create({
   },
   arrowText: {
     fontSize: 18,
-    color: '#ffffff',
+    color: Colors.textPrimary,
     fontWeight: '600',
   },
 });

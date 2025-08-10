@@ -1,8 +1,5 @@
-// Main lessons index - exports all lesson screens
-export * from './password-security';
-export * from './phishing-awareness';
-export * from './device-security';
-export * from './privacy-social';
-export * from './finance-identity'; 
-export * from './welcome-abord';
-export * from './welcome-abord';
+// Export Level 1 Check screens
+export * from './level-1';
+
+// Export reusable practice screen
+export { default as PhishingPracticeScreen } from './level-1/PhishingPracticeScreen';

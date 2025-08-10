@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
 import BottomNavigation from '../components/BottomNavigation';
+import { Colors } from '../theme';
 
 const ProfileScreen = ({ navigation }) => {
   return (
@@ -31,7 +32,7 @@ const ProfileScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: Colors.background,
   },
   content: {
     flex: 1,
@@ -42,17 +43,17 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#1a365d',
+    color: Colors.textPrimary,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 18,
-    color: '#4a90e2',
+    color: Colors.accent,
     marginBottom: 16,
   },
   description: {
     fontSize: 16,
-    color: '#666',
+    color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
   },
