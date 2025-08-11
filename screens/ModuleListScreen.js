@@ -9,6 +9,7 @@ import {
   FlatList,
   Dimensions,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { getAreasByLevel, getChecksByArea } from '../data/courseData';
@@ -314,131 +315,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.accent,
     marginLeft: 4,
-  },
-  moduleCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  moduleHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  moduleInfo: {
-    flex: 1,
-    marginRight: 16,
-  },
-  moduleTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    marginBottom: 8,
-    lineHeight: 24,
-  },
-  moduleDescription: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    lineHeight: 20,
-  },
-  moduleMeta: {
-    alignItems: 'flex-end',
-  },
-  durationText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.accent,
-    marginBottom: 4,
-  },
-  lessonsText: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-  },
-  progressSection: {
-    marginBottom: 16,
-  },
-  progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  progressLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.textSecondary,
-  },
-  progressText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.accent,
-  },
-  progressBar: {
-    height: 6,
-    backgroundColor: Colors.track,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: Colors.accent,
-    borderRadius: 3,
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  statusContainer: {
-    flex: 1,
-  },
-  statusNotStarted: {
-    backgroundColor: Colors.track,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-  },
-  statusInProgress: {
-    backgroundColor: '#ed8936',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-  },
-  statusCompleted: {
-    backgroundColor: '#38a169',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-  },
-  arrowContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  arrowText: {
-    fontSize: 18,
-    color: Colors.textPrimary,
-    fontWeight: '600',
   },
 });
 

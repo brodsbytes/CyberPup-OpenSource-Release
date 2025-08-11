@@ -45,6 +45,10 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
   const [isCheckingBreach, setIsCheckingBreach] = useState(false);
   const [breachResult, setBreachResult] = useState(null);
   const [showBreachModal, setShowBreachModal] = useState(false);
+  
+  // Password manager guidance state
+  const [selectedPasswordManager, setSelectedPasswordManager] = useState('');
+  const [showGuidanceModal, setShowGuidanceModal] = useState(false);
 
   useEffect(() => {
     loadProgress();
@@ -66,6 +70,13 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
         setIsCompleted(data.isCompleted || false);
         setEmail(data.email || '');
         setBreachResult(data.breachResult || null);
+      }
+      
+      // Load password manager data from Check 1.3
+      const pmProgressData = await AsyncStorage.getItem('check_1-1-3_progress');
+      if (pmProgressData) {
+        const pmData = JSON.parse(pmProgressData);
+        setSelectedPasswordManager(pmData.selectedPasswordManager || '');
       }
     } catch (error) {
       console.log('Error loading progress:', error);
@@ -201,6 +212,145 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
   const handleExitLesson = () => {
     setShowExitModal(false);
     navigation.navigate('Welcome');
+  };
+
+  // Password manager guidance functions
+  const getPasswordManagerGuidance = () => {
+    const guidance = {
+      '1password': {
+        title: '1Password Password Change Guide',
+        steps: [
+          'Open 1Password and go to the affected website',
+          'Click the 1Password extension icon in your browser',
+          'Select "Generate Password" to create a strong passphrase',
+          'Use the generated password to update your account',
+          '1Password will automatically save the new password',
+          'Repeat for all affected accounts from the breach'
+        ],
+        tips: [
+          'Use 1Password\'s "Watchtower" feature to monitor for breaches',
+          'Enable 2FA on all accounts after changing passwords',
+          'Consider using passphrases for better security'
+        ]
+      },
+      'bitwarden': {
+        title: 'Bitwarden Password Change Guide',
+        steps: [
+          'Open Bitwarden and navigate to the affected website',
+          'Click the Bitwarden extension icon in your browser',
+          'Use the password generator to create a strong passphrase',
+          'Update your account with the new password',
+          'Bitwarden will prompt to save the updated credentials',
+          'Repeat for all affected accounts from the breach'
+        ],
+        tips: [
+          'Use Bitwarden\'s "Security Report" to check for weak passwords',
+          'Enable 2FA on all accounts after changing passwords',
+          'Consider using passphrases for better security'
+        ]
+      },
+      'lastpass': {
+        title: 'LastPass Password Change Guide',
+        steps: [
+          'Open LastPass and go to the affected website',
+          'Click the LastPass extension icon in your browser',
+          'Use the password generator to create a strong passphrase',
+          'Update your account with the new password',
+          'LastPass will automatically save the new credentials',
+          'Repeat for all affected accounts from the breach'
+        ],
+        tips: [
+          'Use LastPass\'s "Security Challenge" to identify weak passwords',
+          'Enable 2FA on all accounts after changing passwords',
+          'Consider using passphrases for better security'
+        ]
+      },
+      'dashlane': {
+        title: 'Dashlane Password Change Guide',
+        steps: [
+          'Open Dashlane and navigate to the affected website',
+          'Click the Dashlane extension icon in your browser',
+          'Use the password generator to create a strong passphrase',
+          'Update your account with the new password',
+          'Dashlane will prompt to save the updated credentials',
+          'Repeat for all affected accounts from the breach'
+        ],
+        tips: [
+          'Use Dashlane\'s "Password Health" feature to monitor security',
+          'Enable 2FA on all accounts after changing passwords',
+          'Consider using passphrases for better security'
+        ]
+      },
+      'nordpass': {
+        title: 'NordPass Password Change Guide',
+        steps: [
+          'Open NordPass and go to the affected website',
+          'Click the NordPass extension icon in your browser',
+          'Use the password generator to create a strong passphrase',
+          'Update your account with the new password',
+          'NordPass will automatically save the new credentials',
+          'Repeat for all affected accounts from the breach'
+        ],
+        tips: [
+          'Use NordPass\'s "Password Health" feature to check security',
+          'Enable 2FA on all accounts after changing passwords',
+          'Consider using passphrases for better security'
+        ]
+      },
+      'keeper': {
+        title: 'Keeper Password Change Guide',
+        steps: [
+          'Open Keeper and navigate to the affected website',
+          'Click the Keeper extension icon in your browser',
+          'Use the password generator to create a strong passphrase',
+          'Update your account with the new password',
+          'Keeper will prompt to save the updated credentials',
+          'Repeat for all affected accounts from the breach'
+        ],
+        tips: [
+          'Use Keeper\'s "Security Audit" feature to identify weak passwords',
+          'Enable 2FA on all accounts after changing passwords',
+          'Consider using passphrases for better security'
+        ]
+      },
+      'roboform': {
+        title: 'RoboForm Password Change Guide',
+        steps: [
+          'Open RoboForm and go to the affected website',
+          'Click the RoboForm extension icon in your browser',
+          'Use the password generator to create a strong passphrase',
+          'Update your account with the new password',
+          'RoboForm will automatically save the new credentials',
+          'Repeat for all affected accounts from the breach'
+        ],
+        tips: [
+          'Use RoboForm\'s "Security Center" to monitor password strength',
+          'Enable 2FA on all accounts after changing passwords',
+          'Consider using passphrases for better security'
+        ]
+      }
+    };
+    
+    return guidance[selectedPasswordManager] || {
+      title: 'General Password Change Guide',
+      steps: [
+        'Open your password manager and go to the affected website',
+        'Use your password manager\'s generator to create a strong passphrase',
+        'Update your account with the new password',
+        'Save the new credentials in your password manager',
+        'Repeat for all affected accounts from the breach'
+      ],
+      tips: [
+        'Use your password manager\'s security features to monitor for weak passwords',
+        'Enable 2FA on all accounts after changing passwords',
+        'Consider using passphrases for better security'
+      ]
+    };
+  };
+
+  const handleShowGuidance = () => {
+    setShowBreachModal(false);
+    setShowGuidanceModal(true);
   };
 
   const renderChecklistItem = (item) => (
@@ -345,19 +495,94 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
               <TouchableOpacity
                 style={styles.primaryButton}
                 onPress={() => {
-                  setShowBreachModal(false);
                   if (breachResult?.isBreached) {
-                    // Auto-complete the second checklist item if breached
-                    if (!checklistItems[1].completed) {
-                      toggleChecklistItem(2);
-                    }
+                    handleShowGuidance();
+                  } else {
+                    setShowBreachModal(false);
                   }
                 }}
                 activeOpacity={0.8}
               >
                 <Text style={styles.primaryButtonText}>
-                  {breachResult?.isBreached ? 'I\'ll Change My Passwords' : 'Got It'}
+                  {breachResult?.isBreached ? 'Show Me How' : 'Got It'}
                 </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Password Manager Guidance Modal */}
+      <Modal
+        visible={showGuidanceModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowGuidanceModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.guidanceModalContent}>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowGuidanceModal(false)}
+            >
+              <Ionicons name="close" size={24} color={Colors.textPrimary} />
+            </TouchableOpacity>
+
+            <ScrollView style={styles.guidanceScrollView} showsVerticalScrollIndicator={false}>
+              <View style={styles.guidanceHeader}>
+                <Ionicons name="shield-checkmark" size={48} color={Colors.accent} />
+                <Text style={styles.guidanceTitle}>
+                  {getPasswordManagerGuidance().title}
+                </Text>
+              </View>
+
+              <Text style={styles.guidanceMessage}>
+                Don't worry! Changing passwords after a breach is a normal part of digital security. 
+                This process will take some time, but your password manager will make it much easier. 
+                Here's how to update your passwords securely:
+              </Text>
+
+              <View style={styles.stepsSection}>
+                <Text style={styles.stepsTitle}>Step-by-Step Instructions:</Text>
+                {getPasswordManagerGuidance().steps.map((step, index) => (
+                  <View key={index} style={styles.stepItem}>
+                    <View style={styles.stepNumber}>
+                      <Text style={styles.stepNumberText}>{index + 1}</Text>
+                    </View>
+                    <Text style={styles.stepText}>{step}</Text>
+                  </View>
+                ))}
+              </View>
+
+              <View style={styles.tipsSection}>
+                <Text style={styles.tipsTitle}>💡 Security Tips:</Text>
+                {getPasswordManagerGuidance().tips.map((tip, index) => (
+                  <View key={index} style={styles.tipItem}>
+                    <Ionicons name="checkmark-circle" size={16} color={Colors.accent} />
+                    <Text style={styles.tipText}>{tip}</Text>
+                  </View>
+                ))}
+              </View>
+
+              <View style={styles.encouragementSection}>
+                <Text style={styles.encouragementTitle}>You've Got This! 💪</Text>
+                <Text style={styles.encouragementText}>
+                  Changing passwords after a breach is one of the most important security steps you can take. 
+                  Your password manager will handle the complexity, so you can focus on staying secure. 
+                  Take your time and be thorough - your future self will thank you!
+                </Text>
+              </View>
+            </ScrollView>
+
+            <View style={styles.guidanceModalButtons}>
+              <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={() => {
+                  setShowGuidanceModal(false);
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.primaryButtonText}>I'll Start Changing My Passwords</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -911,6 +1136,106 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: Colors.textPrimary,
+  },
+  // Guidance Modal Styles
+  guidanceModalContent: {
+    backgroundColor: Colors.surface,
+    borderRadius: 20,
+    marginHorizontal: 20,
+    maxHeight: '90%',
+    width: '90%',
+  },
+  guidanceScrollView: {
+    maxHeight: '80%',
+  },
+  guidanceHeader: {
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 16,
+    paddingHorizontal: 24,
+  },
+  guidanceTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    textAlign: 'center',
+    marginTop: 12,
+  },
+  guidanceMessage: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 20,
+    paddingHorizontal: 24,
+  },
+  stepsSection: {
+    marginBottom: 20,
+    paddingHorizontal: 24,
+  },
+  stepsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    marginBottom: 12,
+  },
+  stepItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+    gap: 12,
+  },
+  stepNumber: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: Colors.accent,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexShrink: 0,
+  },
+  stepNumberText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  stepText: {
+    fontSize: 16,
+    color: Colors.textPrimary,
+    lineHeight: 22,
+    flex: 1,
+  },
+  tipsSection: {
+    marginBottom: 20,
+    paddingHorizontal: 24,
+  },
+  tipsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    marginBottom: 12,
+  },
+  encouragementSection: {
+    backgroundColor: Colors.accentSoft,
+    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 24,
+    marginBottom: 20,
+  },
+  encouragementTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    marginBottom: 8,
+  },
+  encouragementText: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+    lineHeight: 22,
+  },
+  guidanceModalButtons: {
+    paddingHorizontal: 24,
+    paddingBottom: 24,
   },
 });
 

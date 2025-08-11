@@ -16,6 +16,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '../../../theme';
+import { checkForBadgeUnlocks } from '../../../utils/badgeStorage';
+import BadgeEarnedModal from '../../../components/BadgeEarnedModal';
 
 const Check1_1_StrongPasswordsScreen = ({ navigation, route }) => {
 
@@ -51,6 +53,10 @@ const Check1_1_StrongPasswordsScreen = ({ navigation, route }) => {
   const [isCompleted, setIsCompleted] = useState(false);
   const [scaleAnim] = useState(new Animated.Value(1));
   const [showExitModal, setShowExitModal] = useState(false);
+  
+  // Badge state
+  const [showBadgeModal, setShowBadgeModal] = useState(false);
+  const [earnedBadges, setEarnedBadges] = useState([]);
 
   useEffect(() => {
     loadProgress();
@@ -138,29 +144,34 @@ const Check1_1_StrongPasswordsScreen = ({ navigation, route }) => {
   };
 
   const celebrateCompletion = async () => {
-    // Progress is already saved in toggleChecklistItem, so we don't need to save again
+    // Check for badge unlocks
+    const unlockedBadges = await checkForBadgeUnlocks('1-1-1');
     
-    Alert.alert(
-      '🎉 Check Complete!',
-      'Great job! You\'ve mastered strong password creation. This is a crucial step in protecting your accounts.',
-      [
-        {
-          text: 'Continue to Next Check',
-          onPress: async () => {
-            // Progress is already saved, just navigate
-            navigation.navigate('Check1_2_HighValueAccountsScreen');
+    if (unlockedBadges.length > 0) {
+      setEarnedBadges(unlockedBadges);
+      setShowBadgeModal(true);
+    } else {
+      // Show regular completion alert if no badges earned
+      Alert.alert(
+        '🎉 Check Complete!',
+        'Great job! You\'ve mastered strong password creation. This is a crucial step in protecting your accounts.',
+        [
+          {
+            text: 'Continue to Next Check',
+            onPress: async () => {
+              navigation.navigate('Check1_2_HighValueAccountsScreen');
+            },
           },
-        },
-        {
-          text: 'Go Back',
-          style: 'cancel',
-          onPress: async () => {
-            // Progress is already saved, just navigate back
-            navigation.navigate('Welcome');
+          {
+            text: 'Go Back',
+            style: 'cancel',
+            onPress: async () => {
+              navigation.navigate('Welcome');
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const openSettings = () => {
@@ -436,6 +447,43 @@ const Check1_1_StrongPasswordsScreen = ({ navigation, route }) => {
           </View>
         </View>
       </Modal>
+
+      {/* Badge Earned Modal */}
+      {earnedBadges.length > 0 && (
+        <BadgeEarnedModal
+          visible={showBadgeModal}
+          badge={earnedBadges[0]} // Show first badge, could be enhanced to show multiple
+          onClose={() => {
+            setShowBadgeModal(false);
+            setEarnedBadges([]);
+            // Show regular completion alert after badge modal
+            Alert.alert(
+              '🎉 Check Complete!',
+              'Great job! You\'ve mastered strong password creation. This is a crucial step in protecting your accounts.',
+              [
+                {
+                  text: 'Continue to Next Check',
+                  onPress: async () => {
+                    navigation.navigate('Check1_2_HighValueAccountsScreen');
+                  },
+                },
+                {
+                  text: 'Go Back',
+                  style: 'cancel',
+                  onPress: async () => {
+                    navigation.navigate('Welcome');
+                  },
+                },
+              ]
+            );
+          }}
+          onContinue={() => {
+            setShowBadgeModal(false);
+            setEarnedBadges([]);
+            navigation.navigate('Check1_2_HighValueAccountsScreen');
+          }}
+        />
+      )}
 
       {showIntro ? renderIntro() : renderCheckContent()}
     </SafeAreaView>

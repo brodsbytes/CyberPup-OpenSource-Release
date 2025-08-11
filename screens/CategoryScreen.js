@@ -77,9 +77,10 @@ const CategoryScreen = ({ navigation }) => {
       <BottomNavigation 
         activeTab="learn"
         onTabPress={(screen) => {
+          console.log('CategoryScreen - Tab pressed:', screen);
           if (screen === 'Welcome') {
             navigation.navigate('Welcome');
-          } else if (screen === 'Profile') {
+          } else if (screen === 'ProfileScreen') {
             navigation.navigate('ProfileScreen');
           }
         }}

@@ -1,33 +1,45 @@
-# CyberCheck
+# CyberPup
 
-A React Native mobile application built with Expo for cybersecurity health assessments.
+A React Native mobile application built with Expo for comprehensive cybersecurity health assessments and education.
+
+## Mission
+
+CyberPup helps users complete a comprehensive cybersecurity health check with an action-first approach. The app is designed for non-technical audiences to understand and complete security improvements immediately, with learning provided only when absolutely required.
 
 ## Features
 
-- **Welcome Screen**: Clean, modern design with the CyberCheck title and welcome message
-- **Navigation**: Seamless navigation between screens using React Navigation
-- **Health Check Screen**: Placeholder for cybersecurity assessment functionality
-- **Modern UI**: Beautiful, responsive design with smooth animations and shadows
+- **Progressive Security Levels**: Three-tier system (Scout 🐾, Watchdog 👁️, Guardian 🛡)
+- **Interactive Checklists**: Step-by-step security actions with progress persistence
+- **Progress Tracking**: Visual progress indicators and completion celebrations
+- **Platform-Specific Guidance**: Tailored instructions for iOS/Android
+- **Action-First Design**: Direct integration with device settings where possible
+- **Modern UI**: Clean, professional design with smooth animations
 
 ## Screens
 
 ### Welcome Screen
-- Displays the "CyberCheck" title with a blue underline accent
-- Shows the welcome message: "Let's start your cybersecurity health check!"
-- Features a prominent "Begin" button that navigates to the Health Check screen
-- Clean, minimalist design with proper spacing and typography
+- Overall progress dashboard with circular progress indicator
+- Active level display with area-based check lists
+- Search functionality for finding specific checks
+- Real-time progress updates and completion tracking
 
-### Health Check Screen
-- Header with back navigation
-- Placeholder content for cybersecurity assessments
-- Modern card-based layout
-- Ready for future implementation of security check features
+### Check Screens
+- Interactive checklists with persistent progress saving
+- Platform-specific action buttons (e.g., open device settings)
+- Completion celebrations with navigation to next checks
+- "Learn more" collapsible content for additional education
+
+### Category Screen
+- Level-based organization of security checks
+- Visual progress indicators for each level
+- Badge system for completed areas
 
 ## Tech Stack
 
 - **React Native**: Cross-platform mobile development
 - **Expo**: Development platform and tools
-- **React Navigation**: Screen navigation
+- **React Navigation**: Screen navigation with focus effects
+- **AsyncStorage**: Persistent progress tracking
 - **React Native Screens**: Native screen components
 - **React Native Safe Area Context**: Safe area handling
 
@@ -72,15 +84,36 @@ npm run web
 ## Project Structure
 
 ```
-CyberCheck/
-├── App.js                 # Main app component with navigation setup
+CyberPup/
+├── App.js                           # Main app component with navigation setup
 ├── screens/
-│   ├── WelcomeScreen.js   # Welcome screen component
-│   └── HealthCheckScreen.js # Health check screen component
-├── assets/               # Images, fonts, and other static assets
-├── package.json          # Dependencies and scripts
-└── app.json             # Expo configuration
+│   ├── WelcomeScreen.js            # Main dashboard with progress tracking
+│   ├── CategoryScreen.js           # Level-based check organization
+│   ├── ModuleListScreen.js         # Area-based check lists
+│   ├── ProfileScreen.js            # User profile and achievements
+│   └── lessons/
+│       ├── level-1/                # Level 1 check screens
+│       │   ├── Check1_1_StrongPasswordsScreen.js
+│       │   ├── Check1_2_HighValueAccountsScreen.js
+│       │   └── ...
+│       └── README.md               # Lesson development guide
+├── components/                     # Reusable UI components
+├── data/                          # Course content and structure
+├── utils/                         # Storage utilities
+├── theme.js                       # Design system and colors
+└── package.json                   # Dependencies and scripts
 ```
+
+## Progress Saving
+
+The app uses AsyncStorage for persistent progress tracking with the following pattern:
+
+- **Storage Keys**: `check_X-Y-Z_progress` (JSON data) and `check_X-Y-Z_completed` (completion status)
+- **Race Condition Prevention**: Custom parameters in save functions to avoid state update timing issues
+- **Focus Effects**: Automatic progress refresh when returning to screens
+- **Testing**: Comprehensive testing checklist for progress persistence
+
+See `screens/lessons/README.md` for detailed implementation patterns.
 
 ## Design System
 

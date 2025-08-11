@@ -12,6 +12,7 @@ import {
   Alert,
   Animated,
   Modal,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -25,13 +26,13 @@ const Check1_2_HighValueAccountsScreen = ({ navigation, route }) => {
       id: 1,
       text: 'My bank accounts have MFA enabled',
       completed: false,
-      action: 'openBanking',
+      helpText: 'Check your banking app or website for Two-Factor Authentication settings',
     },
     {
       id: 2,
       text: 'My primary email has MFA & a strong passphrase',
       completed: false,
-      action: 'openEmail',
+      helpText: 'Enable 2FA in your email provider\'s security settings',
     },
   ]);
   const [showLearnMore, setShowLearnMore] = useState(false);
@@ -63,17 +64,22 @@ const Check1_2_HighValueAccountsScreen = ({ navigation, route }) => {
     }
   };
 
-  const saveProgress = async () => {
+  const saveProgress = async (customChecklistItems = null, customIsCompleted = null) => {
     try {
+      const itemsToSave = customChecklistItems || checklistItems;
+      const completionStatus = customIsCompleted !== null ? customIsCompleted : isCompleted;
+      
       const progressData = {
-        checklistItems,
-        isCompleted,
+        checklistItems: itemsToSave,
+        isCompleted: completionStatus,
         completedAt: new Date().toISOString(),
       };
       await AsyncStorage.setItem('check_1-1-2_progress', JSON.stringify(progressData));
       
-      if (isCompleted) {
+      if (completionStatus) {
         await AsyncStorage.setItem('check_1-1-2_completed', 'completed');
+      } else {
+        await AsyncStorage.removeItem('check_1-1-2_completed');
       }
     } catch (error) {
       console.log('Error saving progress:', error);
@@ -103,14 +109,21 @@ const Check1_2_HighValueAccountsScreen = ({ navigation, route }) => {
     // Check if all items are completed
     const allCompleted = updatedItems.every(item => item.completed);
     if (allCompleted && !isCompleted) {
-      setIsCompleted(true);
+      const newIsCompleted = true;
+      setIsCompleted(newIsCompleted);
+      
+      // Save progress with the updated completion status immediately
+      await saveProgress(updatedItems, newIsCompleted);
       celebrateCompletion();
+    } else {
+      // Save progress for partial completion
+      await saveProgress(updatedItems, isCompleted);
     }
-
-    await saveProgress();
   };
 
   const celebrateCompletion = () => {
+    // Progress is already saved in toggleChecklistItem, so we don't need to save again
+    
     Alert.alert(
       '🎉 Check Complete!',
       'Excellent! You\'ve secured your most important accounts. Banking and email are the keys to everything else.',
@@ -126,7 +139,7 @@ const Check1_2_HighValueAccountsScreen = ({ navigation, route }) => {
           text: 'Go Back',
           style: 'cancel',
           onPress: () => {
-            // Force refresh of WelcomeScreen progress
+            // Progress is already saved, just navigate back
             navigation.navigate('Welcome');
           },
         },
@@ -134,49 +147,37 @@ const Check1_2_HighValueAccountsScreen = ({ navigation, route }) => {
     );
   };
 
-  const handleAction = (action) => {
-    switch (action) {
-      case 'openBanking':
-        openBankingSettings();
-        break;
-      case 'openEmail':
-        openEmailSettings();
-        break;
-      default:
-        break;
+  const showHelp = (item) => {
+    console.log('Help button pressed for item:', item.id);
+    
+    // For web platform, we might need to handle alerts differently
+    if (Platform.OS === 'web') {
+      // Use window.alert for web or create a custom modal
+      window.alert(
+        'How to Check MFA Status\n\n' +
+        item.helpText + '\n\n' + 
+        'To verify MFA is enabled:\n' +
+        '1. Open your account settings\n' +
+        '2. Look for "Two-Factor Authentication" or "2FA"\n' +
+        '3. Check if it\'s turned ON\n' +
+        '4. If not enabled, follow the setup instructions\n\n' +
+        'Once you\'ve verified MFA is enabled, tap the checkbox to mark this complete.'
+      );
+    } else {
+      Alert.alert(
+        'How to Check MFA Status',
+        item.helpText + '\n\n' + 
+        'To verify MFA is enabled:\n' +
+        '1. Open your account settings\n' +
+        '2. Look for "Two-Factor Authentication" or "2FA"\n' +
+        '3. Check if it\'s turned ON\n' +
+        '4. If not enabled, follow the setup instructions\n\n' +
+        'Once you\'ve verified MFA is enabled, tap the checkbox to mark this complete.',
+        [
+          { text: 'Got it', style: 'default' },
+        ]
+      );
     }
-  };
-
-  const openBankingSettings = () => {
-    Alert.alert(
-      'Secure Your Banking',
-      'To enable MFA on your bank accounts:\n\n1. Open your banking app\n2. Go to Security Settings\n3. Enable Two-Factor Authentication\n4. Follow the setup instructions',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'I\'ve Done This',
-          onPress: () => {
-            toggleChecklistItem(1);
-          },
-        },
-      ]
-    );
-  };
-
-  const openEmailSettings = () => {
-    Alert.alert(
-      'Secure Your Email',
-      'To enable MFA on your email:\n\n1. Open your email provider\'s security settings\n2. Enable Two-Factor Authentication\n3. Set up a strong passphrase\n4. Save backup codes securely',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'I\'ve Done This',
-          onPress: () => {
-            toggleChecklistItem(2);
-          },
-        },
-      ]
-    );
   };
 
   const handleExit = () => {
@@ -202,11 +203,17 @@ const Check1_2_HighValueAccountsScreen = ({ navigation, route }) => {
       ]}
     >
       <View style={styles.checklistRow}>
-        <View style={[styles.checkbox, item.completed && styles.checkboxCompleted]}>
-          {item.completed && (
-            <Ionicons name="checkmark" size={16} color={Colors.textPrimary} />
-          )}
-        </View>
+        <TouchableOpacity
+          style={styles.checkboxContainer}
+          onPress={() => toggleChecklistItem(item.id)}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.checkbox, item.completed && styles.checkboxCompleted]}>
+            {item.completed && (
+              <Ionicons name="checkmark" size={16} color={Colors.textPrimary} />
+            )}
+          </View>
+        </TouchableOpacity>
         <Text style={[styles.checklistText, item.completed && styles.checklistTextCompleted]}>
           {item.text}
         </Text>
@@ -214,18 +221,15 @@ const Check1_2_HighValueAccountsScreen = ({ navigation, route }) => {
       
       {!item.completed && (
         <TouchableOpacity
-          style={styles.actionButton}
-                  onPress={() => {
-          if (item.action === 'openBanking') {
-              openBankingSettings();
-            } else if (item.action === 'openEmail') {
-              openEmailSettings();
-            }
+          style={styles.helpButton}
+          onPress={() => {
+            console.log('Help button pressed for item:', item.id);
+            showHelp(item);
           }}
-          activeOpacity={0.8}
+          activeOpacity={0.6}
         >
-          <Text style={styles.actionButtonText}>I did it</Text>
-          <Ionicons name="arrow-forward" size={16} color={Colors.accent} />
+          <Ionicons name="help-circle-outline" size={16} color={Colors.accent} />
+          <Text style={styles.helpButtonText}>Learn how to check</Text>
         </TouchableOpacity>
       )}
     </Animated.View>
@@ -377,6 +381,7 @@ const Check1_2_HighValueAccountsScreen = ({ navigation, route }) => {
               <TouchableOpacity
                 style={styles.continueButton}
                 onPress={() => {
+                  // Progress is already saved, just navigate
                   navigation.navigate('Check1_3_PasswordManagersScreen');
                 }}
                 activeOpacity={0.8}
@@ -502,13 +507,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  checkboxContainer: {
+    marginRight: 12,
+    padding: 4, // Increase touch target
+  },
   checkbox: {
     width: 24,
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
     borderColor: Colors.accent,
-    marginRight: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -525,22 +533,24 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
     color: Colors.textSecondary,
   },
-  actionButton: {
+  helpButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.accent,
+    backgroundColor: Colors.surface,
     borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     marginTop: 12,
+    borderWidth: 1,
+    borderColor: Colors.accent,
     minHeight: 44, // Ensure minimum touch target size
   },
-  actionButtonText: {
+  helpButtonText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-    marginRight: 8,
+    fontWeight: '500',
+    color: Colors.accent,
+    marginLeft: 6,
   },
   tipsSection: {
     backgroundColor: Colors.surface,

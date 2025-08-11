@@ -3,6 +3,7 @@ export const Colors = {
   background: '#2C2C2E',
   surface: '#3A3A3C',
   surfaceAlt: '#2C2C2E',
+  dropdownBackground: '#4A4A4C',
   border: '#48484A',
   textPrimary: '#F2F2F7',
   textSecondary: '#D1D1D6',
@@ -74,6 +75,31 @@ export const CommonStyles = {
     color: Colors.textPrimary,
     fontSize: Typography.sizes.md,
     fontWeight: Typography.weights.medium,
+  },
+  dropdown: {
+    backgroundColor: Colors.dropdownBackground,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  dropdownOption: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  dropdownOptionSelected: {
+    backgroundColor: Colors.accentSoft,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.accent,
   },
 };
 

@@ -632,9 +632,10 @@ const WelcomeScreen = ({ navigation }) => {
       <BottomNavigation 
         activeTab="home"
         onTabPress={(screen) => {
-          if (screen === 'Category') {
+          console.log('WelcomeScreen - Tab pressed:', screen);
+          if (screen === 'CategoryScreen') {
             navigation.navigate('CategoryScreen');
-          } else if (screen === 'Profile') {
+          } else if (screen === 'ProfileScreen') {
             navigation.navigate('ProfileScreen');
           }
         }}
