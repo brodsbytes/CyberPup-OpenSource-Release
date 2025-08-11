@@ -2,10 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../theme';
+import { Colors, Typography, Spacing } from '../theme';
+import { APP_CONSTANTS } from '../constants';
 
 const CircularProgress = ({
-  progress = 0,
+  progress = APP_CONSTANTS.PROGRESS.MIN_PROGRESS,
   size = 120,
   strokeWidth = 8,
   color = Colors.accent,
@@ -15,7 +16,10 @@ const CircularProgress = ({
   showBackground = true,
   glow = false,
 }) => {
-  const normalized = Math.max(0, Math.min(100, Number(progress) || 0));
+  const normalized = Math.max(
+    APP_CONSTANTS.PROGRESS.MIN_PROGRESS, 
+    Math.min(APP_CONSTANTS.PROGRESS.MAX_PROGRESS, Number(progress) || 0)
+  );
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
 
@@ -73,7 +77,7 @@ const CircularProgress = ({
         )}
         {showPercentage && (
           <Text style={styles.percentageText}>
-            {Math.round(normalized)}/100
+            {Math.round(normalized)}/{APP_CONSTANTS.PROGRESS.MAX_PROGRESS}
           </Text>
         )}
       </View>
@@ -96,8 +100,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   percentageText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: Typography.sizes.xs,
+    fontWeight: Typography.weights.semibold,
     color: Colors.textSecondary,
     textAlign: 'center',
   },

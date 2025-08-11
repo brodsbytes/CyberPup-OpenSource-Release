@@ -1,37 +1,3 @@
-# Prompt Template for Converting a Module to the New Scalable Lesson Format
-
-To convert a module to the new scalable lesson format, use the following prompt:
-
----
-Convert the [MODULE NAME] module (ID: [MODULE ID]) to the new scalable lesson format. Use the same structure as the 'Creating Strong Passwords', 'Password Managers', or 'Multi-Factor Authentication' modules. Keep the course content the same, but split it into multiple screens (Intro, content, practice, etc.), use BaseLessonScreen, AsyncStorage for progress, and celebration modal on completion. Update navigation and progress tracking as needed.
----
-
-## Example Prompt
-Convert the "Password Recovery" module (ID: 1-4) to the new scalable lesson format. Follow the same structure as the Password Managers module.
-
-## Steps I Will Take:
-1. Create a new directory and screens for the module under `screens/lessons/[category]/`.
-2. Split the lesson content into multiple screens (Intro, content, practice, etc.) using `BaseLessonScreen` and `lessonStyles`.
-3. Implement AsyncStorage progress tracking for the module.
-4. Add a celebration modal for lesson completion.
-5. Update the module's navigation flow in `LessonScreen.js` and `App.js`.
-6. Update progress calculation in `ModuleListScreen.js`.
-7. **IMPORTANT**: Update progress calculation in `WelcomeScreen.js` for both `calculateOverallProgress()` and `loadCategoriesInProgress()` functions.
-8. Export the new screens in the relevant `index.js` file.
-
-## Progress Tracking Keys:
-- Password Managers (1-2): `password_managers_progress`
-- Multi-Factor Authentication (1-3): `mfa_progress`
-- Creating Strong Passwords (1-1): `strong_passwords_progress`
-- [New modules]: `[module_name]_progress`
-
-## What to Provide:
-- The module name and ID (e.g., "Password Recovery", ID: 1-4)
-- Any specific content splitting or screen flow preferences (optional)
-
----
-
-
 
 Next Steps:
 Now that the WelcomeScreen is working with the new structure, we should:

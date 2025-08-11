@@ -1,29 +1,11 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Colors } from '../theme';
+import { Colors, Spacing } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
+import { TAB_NAVIGATION } from '../constants';
 
 const BottomNavigation = ({ activeTab, onTabPress }) => {
-  const tabs = [
-    {
-      id: 'home',
-      title: 'Home',
-      icon: 'home',
-      screen: 'Welcome'
-    },
-    {
-      id: 'learn',
-      title: 'Learn',
-      icon: 'book-outline',
-      screen: 'Category'
-    },
-    {
-      id: 'profile',
-      title: 'Profile',
-      icon: 'person-outline',
-      screen: 'Profile'
-    }
-  ];
+  const tabs = TAB_NAVIGATION.TABS;
 
   return (
     <View style={styles.container}>
@@ -57,18 +39,18 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
-    paddingBottom: 20,
-    paddingTop: 8,
+    paddingBottom: Spacing.lg + Spacing.sm,
+    paddingTop: Spacing.sm,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
+    paddingVertical: Spacing.sm,
   },
   tabText: {
     fontSize: 12,
-    marginTop: 4,
+    marginTop: Spacing.xs,
     color: Colors.textSecondary,
     fontWeight: '500',
   },

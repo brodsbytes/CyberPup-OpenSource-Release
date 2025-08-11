@@ -21,4 +21,60 @@ export const Colors = {
   errorSoft: 'rgba(231, 76, 60, 0.15)',
 };
 
+// Spacing constants for consistent layout
+export const Spacing = {
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 32,
+  xxl: 48,
+};
+
+// Typography constants
+export const Typography = {
+  sizes: {
+    xs: 12,
+    sm: 14,
+    md: 16,
+    lg: 18,
+    xl: 20,
+    xxl: 24,
+    xxxl: 32,
+  },
+  weights: {
+    normal: '400',
+    medium: '500',
+    semibold: '600',
+    bold: '700',
+  },
+};
+
+// Common styles for reuse
+export const CommonStyles = {
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  card: {
+    backgroundColor: Colors.surface,
+    borderRadius: 12,
+    padding: Spacing.md,
+    marginVertical: Spacing.sm,
+  },
+  button: {
+    backgroundColor: Colors.accent,
+    borderRadius: 8,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonText: {
+    color: Colors.textPrimary,
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.medium,
+  },
+};
+
 

@@ -502,24 +502,29 @@ const WelcomeScreen = ({ navigation }) => {
             {activeLevel ? (
               <>
                 <View style={[styles.activeLevelHeader, { borderColor: activeLevel.color }] }>
-                  <View style={styles.activeLevelHeaderLeft}>
-                    <View style={[styles.levelChip, { backgroundColor: activeLevel.color }]}>
-                      <Text style={styles.levelChipText}>{`Level ${getDisplayIndexForLevel(activeLevel.id)}`}</Text>
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('CategoryScreen')}
+                    style={styles.overflowButton}
+                    activeOpacity={0.8}
+                    accessibilityLabel="Open levels"
+                  >
+                    <Ionicons name="reorder-three-outline" size={24} color={Colors.textPrimary} />
+                  </TouchableOpacity>
+                  <View style={styles.activeLevelSeparator} />
+                  <View style={styles.activeLevelContent}>
+                    <View style={styles.activeLevelHeaderLeft}>
+                      <View style={styles.activeLevelLeftRow}>
+                        <View style={[styles.levelChip, { backgroundColor: activeLevel.color }]}>
+                          <Text style={styles.levelChipText}>{`Level ${getDisplayIndexForLevel(activeLevel.id)}`}</Text>
+                        </View>
+                        <Text style={styles.activeLevelTitle}>CyberPup Scout 🐾</Text>
+                      </View>
                     </View>
-                    <Text style={styles.activeLevelTitle}>CyberPup Scout 🐾</Text>
-                  </View>
-                  <View style={styles.activeLevelRight}>
-                <TouchableOpacity
-                  onPress={() => navigation.navigate('CategoryScreen')}
-                      style={styles.overflowButton}
-                  activeOpacity={0.8}
-                      accessibilityLabel="Open levels"
-                >
-                      <Ionicons name="reorder-three-outline" size={24} color={Colors.textPrimary} />
-                </TouchableOpacity>
-                    <View style={[styles.activeLevelIconWrap, { borderColor: activeLevel.color }]}>
-                      <Text style={styles.activeLevelIconText}>{activeLevel.icon}</Text>
-              </View>
+                    <View style={styles.activeLevelRight}>
+                      <View style={[styles.activeLevelIconWrap, { borderColor: activeLevel.color }]}>
+                        <Text style={styles.activeLevelIconText}>{activeLevel.icon}</Text>
+                      </View>
+                    </View>
                   </View>
                 </View>
 
@@ -715,19 +720,36 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     borderWidth: 1,
+  },
+  activeLevelSeparator: {
+    width: 1,
+    height: 40,
+    backgroundColor: Colors.accent,
+    marginHorizontal: 12,
+    opacity: 0.3,
+  },
+  activeLevelContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   activeLevelHeaderLeft: {
     flex: 1,
     paddingRight: 12,
   },
+  activeLevelLeftRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
   activeLevelTitle: {
     fontSize: 26,
     fontWeight: '800',
     color: Colors.textPrimary,
-    marginTop: 6,
-    marginBottom: 4,
+    lineHeight: 26,
+    marginTop: -2,
   },
   activeLevelSubtitle: {
     fontSize: 16,
@@ -877,7 +899,6 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 8,
     backgroundColor: 'rgba(255,255,255,0.06)'
   },
   viewAllLink: {
