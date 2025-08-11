@@ -142,8 +142,8 @@ const WelcomeScreen = ({ navigation }) => {
         const progressKey = `check_${check.id}_completed`;
         const progressData = await AsyncStorage.getItem(progressKey);
         
-          if (progressData === 'completed') {
-            completedCount++;
+        if (progressData === 'completed') {
+          completedCount++;
         }
       }
 
@@ -171,10 +171,12 @@ const WelcomeScreen = ({ navigation }) => {
         const progressKey = `check_${check.id}_completed`;
         const progressData = await AsyncStorage.getItem(progressKey);
         
+
+        
         if (progressData === 'completed') {
           isCompleted = true;
           progressPercentage = 100;
-            } else {
+        } else {
           // Check for partial progress
           const partialProgressKey = `check_${check.id}_progress`;
           const partialProgressData = await AsyncStorage.getItem(partialProgressKey);
@@ -413,6 +415,8 @@ const WelcomeScreen = ({ navigation }) => {
       const progressKey = `check_${check.id}_completed`;
       const progressData = await AsyncStorage.getItem(progressKey);
       
+      
+      
       if (progressData !== 'completed') {
         // Navigate to the first incomplete check
         const routeName = checkRoutes[check.id] || 'Welcome';
@@ -475,6 +479,7 @@ const WelcomeScreen = ({ navigation }) => {
               autoCorrect={false}
             />
           </View>
+          
         </View>
 
         {/* Search Results */}

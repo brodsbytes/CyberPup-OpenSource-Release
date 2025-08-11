@@ -77,17 +77,24 @@ const Check1_1_StrongPasswordsScreen = ({ navigation, route }) => {
     }
   };
 
-  const saveProgress = async () => {
+  const saveProgress = async (customChecklistItems = null, customIsCompleted = null) => {
     try {
+      const itemsToSave = customChecklistItems || checklistItems;
+      const completionStatus = customIsCompleted !== null ? customIsCompleted : isCompleted;
+      
       const progressData = {
-        checklistItems,
-        isCompleted,
+        checklistItems: itemsToSave,
+        isCompleted: completionStatus,
         completedAt: new Date().toISOString(),
       };
       await AsyncStorage.setItem('check_1-1-1_progress', JSON.stringify(progressData));
       
-      if (isCompleted) {
+      // Always save completion status when isCompleted is true
+      if (completionStatus) {
         await AsyncStorage.setItem('check_1-1-1_completed', 'completed');
+      } else {
+        // Remove completion status if not completed
+        await AsyncStorage.removeItem('check_1-1-1_completed');
       }
     } catch (error) {
       console.log('Error saving progress:', error);
@@ -117,30 +124,38 @@ const Check1_1_StrongPasswordsScreen = ({ navigation, route }) => {
     // Check if all items are completed
     const allCompleted = updatedItems.every(item => item.completed);
     if (allCompleted && !isCompleted) {
-      setIsCompleted(true);
+      // Update state and save progress with the new completion status
+      const newIsCompleted = true;
+      setIsCompleted(newIsCompleted);
+      
+      // Save progress with the updated completion status
+      await saveProgress(updatedItems, newIsCompleted);
       celebrateCompletion();
+    } else {
+      // Save progress for partial completion
+      await saveProgress(updatedItems, isCompleted);
     }
-
-    await saveProgress();
   };
 
-  const celebrateCompletion = () => {
+  const celebrateCompletion = async () => {
+    // Progress is already saved in toggleChecklistItem, so we don't need to save again
+    
     Alert.alert(
       '🎉 Check Complete!',
       'Great job! You\'ve mastered strong password creation. This is a crucial step in protecting your accounts.',
       [
         {
           text: 'Continue to Next Check',
-          onPress: () => {
-            // Navigate to the next check (Check 1.2)
+          onPress: async () => {
+            // Progress is already saved, just navigate
             navigation.navigate('Check1_2_HighValueAccountsScreen');
           },
         },
         {
           text: 'Go Back',
           style: 'cancel',
-          onPress: () => {
-            // Force refresh of WelcomeScreen progress
+          onPress: async () => {
+            // Progress is already saved, just navigate back
             navigation.navigate('Welcome');
           },
         },
@@ -178,6 +193,8 @@ const Check1_1_StrongPasswordsScreen = ({ navigation, route }) => {
     setShowExitModal(false);
     navigation.navigate('Welcome');
   };
+
+
 
   const renderChecklistItem = (item) => (
     <Animated.View
@@ -321,6 +338,8 @@ const Check1_1_StrongPasswordsScreen = ({ navigation, route }) => {
           <Ionicons name="arrow-forward" size={16} color={Colors.accent} />
         </TouchableOpacity>
 
+
+
         {/* Completion Status */}
         {isCompleted && (
           <View style={styles.completionCard}>
@@ -333,7 +352,7 @@ const Check1_1_StrongPasswordsScreen = ({ navigation, route }) => {
             <TouchableOpacity
               style={styles.continueButton}
               onPress={() => {
-                // Navigate to next check and ensure WelcomeScreen refreshes
+                // Progress is already saved, just navigate
                 navigation.navigate('Check1_2_HighValueAccountsScreen');
               }}
               activeOpacity={0.8}
