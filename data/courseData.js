@@ -16,42 +16,57 @@ export const levels = [
     icon: '🐾',
     color: Colors.accent,
     areas: [
-    {
-      id: '1-1',
-        title: 'Password Security & Authentication',
+      {
+        id: '1-0',
+        title: 'Welcome to CyberPup',
+        description: 'Get started with your cybersecurity journey and understand how CyberPup works.',
+        checks: [
+          {
+            id: '1-0-1',
+            title: 'CyberPup Introduction',
+            description: 'Learn about CyberPup and how it will help protect your digital life.',
+            duration: '5 min',
+            tasks: 1,
+          }
+        ],
+        badge: 'CyberPup Scout'
+      },
+      {
+        id: '1-1',
+        title: 'Protect Your Accounts',
         description: 'Master password security and protect your accounts with multi-factor authentication.',
         checks: [
           {
             id: '1-1-1',
-            title: 'Creating Strong Passwords & Passphrases',
+            title: 'Create Strong Passwords',
             description: 'Learn to create secure, memorable passwords that protect your accounts.',
       duration: '8 min',
             tasks: 4,
           },
           {
             id: '1-1-2',
-            title: 'Prioritising High-Value Accounts',
+            title: 'Secure Your Most Important Accounts',
             description: 'Secure your most important accounts first - banking and email.',
             duration: '6 min',
             tasks: 2,
           },
           {
             id: '1-1-3',
-            title: 'Using a Password Manager',
+            title: 'Set Up a Password Manager',
             description: 'Simplify your security with a password manager.',
       duration: '10 min',
             tasks: 3,
           },
           {
             id: '1-1-4',
-            title: 'Setting Up MFA (2FA)',
+            title: 'Add Extra Protection to Your Accounts',
             description: 'Add an extra layer of protection to your accounts.',
       duration: '8 min',
             tasks: 3,
           },
           {
             id: '1-1-5',
-            title: 'Checking if My Data Was Breached',
+            title: 'Check if Your Data Was Compromised',
             description: 'Find out if your information has been compromised.',
             duration: '5 min',
             tasks: 2,
@@ -61,40 +76,40 @@ export const levels = [
       },
       {
         id: '1-2',
-        title: 'Device & Network Security',
+        title: 'Secure Your Devices',
         description: 'Protect your devices and secure your digital environment.',
         checks: [
     {
       id: '1-2-1',
-            title: 'Screen Lock & Auto-Lock',
+            title: 'Lock Your Device Automatically',
             description: 'Secure your device with proper lock settings.',
             duration: '5 min',
             tasks: 2,
     },
     {
       id: '1-2-2',
-            title: 'Enable Remote Lock & Wipe',
+            title: 'Protect Your Device if Lost',
             description: 'Protect your data if your device is lost or stolen.',
             duration: '6 min',
             tasks: 2,
     },
     {
       id: '1-2-3',
-            title: 'Updating Devices & Apps',
+            title: 'Keep Your Device Updated',
             description: 'Keep your devices secure with regular updates.',
             duration: '5 min',
             tasks: 2,
     },
     {
       id: '1-2-4',
-            title: 'Bluetooth & Auto-Wi-Fi',
+            title: 'Manage Your Wireless Connections',
             description: 'Manage wireless connections safely.',
             duration: '4 min',
             tasks: 2,
     },
     {
       id: '1-2-5',
-            title: 'Avoid Public Charging Stations',
+            title: 'Stay Safe When Charging',
             description: 'Protect your device from juice jacking attacks.',
             duration: '3 min',
             tasks: 1,
@@ -104,19 +119,19 @@ export const levels = [
       },
       {
         id: '1-3',
-        title: 'Data Protection & Backups',
+        title: 'Keep Your Data Safe',
         description: 'Keep your data safe with proper backup strategies.',
         checks: [
     {
       id: '1-3-1',
-            title: 'Setting Up Cloud Backup',
+            title: 'Back Up Your Data to the Cloud',
             description: 'Automatically backup your important data to the cloud.',
             duration: '8 min',
             tasks: 2,
     },
     {
       id: '1-3-2',
-            title: 'Local Backup Option',
+            title: 'Create Local Backups',
             description: 'Create local backups for additional protection.',
             duration: '6 min',
             tasks: 2,
@@ -126,19 +141,19 @@ export const levels = [
       },
       {
         id: '1-4',
-        title: 'Phishing & Scam Awareness',
+        title: 'Avoid Scams & Fraud',
         description: 'Learn to identify and avoid common scams and phishing attempts.',
         checks: [
     {
       id: '1-4-1',
-            title: 'Recognising Scam Tactics',
+            title: 'Spot Scams Before They Happen',
             description: 'Learn the red flags that indicate a scam.',
             duration: '8 min',
             tasks: 2,
     },
     {
       id: '1-4-2',
-            title: 'Reporting Scams',
+            title: 'Report Scams to Help Others',
             description: 'Know how to report scams to help protect others.',
             duration: '5 min',
             tasks: 2,
@@ -148,19 +163,19 @@ export const levels = [
       },
       {
         id: '1-5',
-        title: 'Online Privacy & Social Media',
+        title: 'Protect Your Privacy',
         description: 'Protect your privacy and manage your digital footprint.',
         checks: [
           {
             id: '1-5-1',
-            title: 'Think Before You Share',
+            title: 'Be Smart About What You Share',
             description: 'Be mindful of what you share online.',
             duration: '6 min',
             tasks: 2,
           },
           {
             id: '1-5-2',
-            title: 'Privacy Settings Review',
+            title: 'Control Who Sees Your Information',
             description: 'Configure your social media privacy settings.',
             duration: '8 min',
             tasks: 2,

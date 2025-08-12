@@ -12,12 +12,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import BottomNavigation from '../components/BottomNavigation';
 import Badge from '../components/Badge';
-import { Colors } from '../theme';
+import { Colors, Typography, Responsive, CommonStyles } from '../theme';
 import { 
   loadUserBadges, 
   getEarnedBadgesCount, 
   BADGE_TYPES 
 } from '../utils/badgeStorage';
+import { SCREEN_NAMES } from '../constants';
 
 const ProfileScreen = ({ navigation }) => {
   const [userBadges, setUserBadges] = useState([]);
@@ -214,21 +215,21 @@ const ProfileScreen = ({ navigation }) => {
             <Text style={styles.settingsTitle}>Settings</Text>
             
             <TouchableOpacity style={styles.settingItem}>
-              <Ionicons name="notifications" size={20} color={Colors.textSecondary} />
+              <Ionicons name="notifications" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
               <Text style={styles.settingText}>Notification Preferences</Text>
-              <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+              <Ionicons name="chevron-forward" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.settingItem}>
-              <Ionicons name="help-circle" size={20} color={Colors.textSecondary} />
+              <Ionicons name="help-circle" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
               <Text style={styles.settingText}>Help & Support</Text>
-              <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+              <Ionicons name="chevron-forward" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.settingItem}>
-              <Ionicons name="information-circle" size={20} color={Colors.textSecondary} />
+              <Ionicons name="information-circle" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
               <Text style={styles.settingText}>About CyberPup</Text>
-              <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+              <Ionicons name="chevron-forward" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
             </TouchableOpacity>
           </View>
             </>
@@ -250,7 +251,7 @@ const ProfileScreen = ({ navigation }) => {
               navigation.navigate('Welcome');
             } else if (screen === 'CategoryScreen') {
               console.log('Navigating to CategoryScreen...');
-              navigation.navigate('CategoryScreen');
+              navigation.navigate(SCREEN_NAMES.CATEGORY);
             } else {
               console.log('Unknown screen:', screen);
             }
@@ -272,93 +273,93 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 20,
+    padding: Responsive.padding.screen,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: Responsive.spacing.lg,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontSize: Typography.sizes.xxxl,
+    fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
-    marginBottom: 4,
+    marginBottom: Responsive.spacing.xs,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 24,
+    marginBottom: Responsive.spacing.lg,
   },
   statCard: {
     flex: 1,
     backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
     alignItems: 'center',
-    marginHorizontal: 4,
+    marginHorizontal: Responsive.spacing.xs,
   },
   statIcon: {
-    marginBottom: 8,
+    marginBottom: Responsive.spacing.sm,
   },
   statNumber: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: Typography.sizes.xxl,
+    fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
-    marginBottom: 4,
+    marginBottom: Responsive.spacing.xs,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: Typography.sizes.xs,
     color: Colors.textSecondary,
     textAlign: 'center',
   },
   progressSection: {
     backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
   },
   progressTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
-    marginBottom: 12,
+    marginBottom: Responsive.spacing.sm,
   },
   progressBar: {
-    height: 8,
+    height: Responsive.spacing.sm,
     backgroundColor: Colors.border,
-    borderRadius: 4,
-    marginBottom: 8,
+    borderRadius: Responsive.borderRadius.small,
+    marginBottom: Responsive.spacing.sm,
   },
   progressFill: {
     height: '100%',
     backgroundColor: Colors.accent,
-    borderRadius: 4,
+    borderRadius: Responsive.borderRadius.small,
   },
   progressText: {
-    fontSize: 14,
+    fontSize: Typography.sizes.sm,
     color: Colors.textSecondary,
     textAlign: 'center',
   },
   section: {
-    marginBottom: 24,
+    marginBottom: Responsive.spacing.lg,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: Responsive.spacing.md,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: Typography.sizes.xl,
+    fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
   },
   sectionSubtitle: {
-    fontSize: 14,
+    fontSize: Typography.sizes.sm,
     color: Colors.textSecondary,
   },
   badgesGrid: {
@@ -367,42 +368,42 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   badgeItem: {
-    marginBottom: 16,
+    marginBottom: Responsive.spacing.md,
     width: '30%',
   },
   settingsSection: {
     backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
   },
   settingsTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
-    marginBottom: 16,
+    marginBottom: Responsive.spacing.md,
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: Responsive.spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
   settingText: {
     flex: 1,
-    fontSize: 16,
+    fontSize: Typography.sizes.md,
     color: Colors.textPrimary,
-    marginLeft: 12,
+    marginLeft: Responsive.spacing.sm,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 40,
+    paddingVertical: Responsive.iconSizes.xlarge,
   },
   loadingText: {
-    fontSize: 16,
+    fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
   },
 });

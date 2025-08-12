@@ -337,7 +337,7 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
         <View style={styles.content}>
           {/* Title and Description */}
           <View style={styles.titleSection}>
-            <Text style={styles.title}>Using a Password Manager</Text>
+            <Text style={styles.title}>Set Up a Password Manager</Text>
             <Text style={styles.description}>
               Password managers are the best way to create, store, and use strong, unique passwords for all your accounts.
             </Text>

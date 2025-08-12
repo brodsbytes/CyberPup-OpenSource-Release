@@ -11,11 +11,11 @@ This directory contains all the course content for CyberPup in a structured, mai
 
 ### Categories
 Each category represents a major security topic:
-- Password Security & Authentication
-- Phishing & Scam Awareness  
-- Device & Network Security
-- Online Privacy & Social Media
-- Secure Finances & Identity Protection
+- Protect Your Accounts
+- Avoid Scams & Fraud  
+- Secure Your Devices
+- Protect Your Privacy
+- Keep Your Data Safe
 
 ### Modules
 Each category contains 4 modules. Each module has:

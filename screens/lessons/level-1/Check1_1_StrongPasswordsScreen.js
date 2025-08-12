@@ -252,14 +252,14 @@ const Check1_1_StrongPasswordsScreen = ({ navigation, route }) => {
           <View style={[styles.introIcon, { backgroundColor: Colors.accent }]}>
             <Ionicons name="shield-checkmark" size={Responsive.iconSizes.xxlarge} color={Colors.textPrimary} />
           </View>
-          <Text style={styles.introTitle}>Level 1: Password Security & Authentication</Text>
+          <Text style={styles.introTitle}>Area 1: Protect Your Accounts</Text>
           <Text style={styles.introSubtitle}>Cyber Pup Scout 🐾</Text>
         </View>
 
         <View style={styles.introSection}>
           <Text style={styles.introSectionTitle}>Why This Matters</Text>
           <Text style={styles.introSectionText}>
-            Weak or reused passwords are the leading cause of account breaches. By mastering strong password creation, you'll establish a solid foundation for your digital security.
+            Your accounts are the gateway to your digital life. Weak passwords, missing security features, and compromised accounts put everything at risk. This area covers the essential protections every account needs.
           </Text>
         </View>
 
@@ -267,16 +267,17 @@ const Check1_1_StrongPasswordsScreen = ({ navigation, route }) => {
           <Text style={styles.introSectionTitle}>What You'll Learn</Text>
           <Text style={styles.introSectionText}>
             • Create strong, unique passwords for all accounts{'\n'}
-            • Use passphrases for maximum security{'\n'}
-            • Avoid common password mistakes{'\n'}
-            • Set up proper password practices
+            • Secure your most important accounts first{'\n'}
+            • Set up a password manager for convenience{'\n'}
+            • Add multi-factor authentication for extra protection{'\n'}
+            • Check if your accounts have been compromised
           </Text>
         </View>
 
         <View style={styles.introSection}>
           <Text style={styles.introSectionTitle}>Time Commitment</Text>
           <Text style={styles.introSectionText}>
-            Complete all checks in approximately 15-20 minutes
+            Complete all 5 checks in approximately 30-40 minutes
           </Text>
         </View>
 
@@ -296,7 +297,7 @@ const Check1_1_StrongPasswordsScreen = ({ navigation, route }) => {
       <View style={styles.content}>
         {/* Title and Description */}
         <View style={styles.titleSection}>
-          <Text style={styles.title}>Creating Strong Passwords & Passphrases</Text>
+          <Text style={styles.title}>Create Strong Passwords</Text>
           <Text style={styles.description}>
             Weak or reused passwords cause most hacks. Let's make sure your passwords are strong and secure.
           </Text>

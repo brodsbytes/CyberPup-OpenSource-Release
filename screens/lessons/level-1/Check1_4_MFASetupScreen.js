@@ -315,7 +315,7 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
         <View style={styles.content}>
           {/* Title and Description */}
           <View style={styles.titleSection}>
-            <Text style={styles.title}>Setting Up MFA (2FA)</Text>
+            <Text style={styles.title}>Add Extra Protection to Your Accounts</Text>
             <Text style={styles.description}>
               Add an extra layer of protection to your accounts with multi-factor authentication.
             </Text>

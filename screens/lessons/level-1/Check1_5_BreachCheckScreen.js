@@ -140,7 +140,7 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
         {
           text: 'Continue to Next Area',
           onPress: () => {
-            // Navigate to the next area (Device & Network Security)
+            // Navigate to the next area (Secure Your Devices)
             navigation.navigate('Check1_2_1_ScreenLockScreen');
           },
         },
@@ -593,7 +593,7 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
         <View style={styles.content}>
           {/* Title and Description */}
           <View style={styles.titleSection}>
-            <Text style={styles.title}>Checking if My Data Was Breached</Text>
+            <Text style={styles.title}>Check if Your Data Was Compromised</Text>
             <Text style={styles.description}>
               Find out if your information has been compromised in data breaches and take action to protect your accounts.
             </Text>

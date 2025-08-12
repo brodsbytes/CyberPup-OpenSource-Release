@@ -18,6 +18,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { levels, getAllChecks, getChecksByArea, getAreasByLevel } from '../data/courseData';
 import CircularProgress from '../components/CircularProgress';
 import BottomNavigation from '../components/BottomNavigation';
+import { SCREEN_NAMES } from '../constants';
 
 const { width } = Dimensions.get('window');
 
@@ -328,16 +329,17 @@ const WelcomeScreen = ({ navigation }) => {
             const levelInfo = getLevelInfo(item.levelId);
             // Map check id to its screen
             const checkRoutes = {
-              '1-1-1': 'Check1_1_StrongPasswordsScreen',
-              '1-1-2': 'Check1_2_HighValueAccountsScreen',
-              '1-1-3': 'Check1_3_PasswordManagersScreen',
-              '1-1-4': 'Check1_4_MFASetupScreen',
-              '1-1-5': 'Check1_5_BreachCheckScreen',
-              '1-2-1': 'Check1_2_1_ScreenLockScreen',
+              '1-0-1': SCREEN_NAMES.INITIAL_WELCOME,
+              '1-1-1': SCREEN_NAMES.CHECK_1_1_STRONG_PASSWORDS,
+              '1-1-2': SCREEN_NAMES.CHECK_1_2_HIGH_VALUE_ACCOUNTS,
+              '1-1-3': SCREEN_NAMES.CHECK_1_3_PASSWORD_MANAGERS,
+              '1-1-4': SCREEN_NAMES.CHECK_1_4_MFA_SETUP,
+              '1-1-5': SCREEN_NAMES.CHECK_1_5_BREACH_CHECK,
+              '1-2-1': SCREEN_NAMES.CHECK_1_2_1_SCREEN_LOCK,
               // TODO: Add more check screens as they are created
             };
             
-            const routeName = checkRoutes[item.id] || 'Welcome';
+            const routeName = checkRoutes[item.id] || SCREEN_NAMES.WELCOME;
             navigation.navigate(routeName, { 
               level: {
                 id: item.levelId,
@@ -401,12 +403,13 @@ const WelcomeScreen = ({ navigation }) => {
   const navigateToArea = async (area) => {
     // Map check id to its screen
     const checkRoutes = {
-      '1-1-1': 'Check1_1_StrongPasswordsScreen',
-      '1-1-2': 'Check1_2_HighValueAccountsScreen',
-      '1-1-3': 'Check1_3_PasswordManagersScreen',
-      '1-1-4': 'Check1_4_MFASetupScreen',
-      '1-1-5': 'Check1_5_BreachCheckScreen',
-      '1-2-1': 'Check1_2_1_ScreenLockScreen',
+      '1-0-1': SCREEN_NAMES.INITIAL_WELCOME,
+      '1-1-1': SCREEN_NAMES.CHECK_1_1_STRONG_PASSWORDS,
+      '1-1-2': SCREEN_NAMES.CHECK_1_2_HIGH_VALUE_ACCOUNTS,
+      '1-1-3': SCREEN_NAMES.CHECK_1_3_PASSWORD_MANAGERS,
+      '1-1-4': SCREEN_NAMES.CHECK_1_4_MFA_SETUP,
+      '1-1-5': SCREEN_NAMES.CHECK_1_5_BREACH_CHECK,
+      '1-2-1': SCREEN_NAMES.CHECK_1_2_1_SCREEN_LOCK,
       // TODO: Add more check screens as they are created
     };
 
@@ -419,7 +422,7 @@ const WelcomeScreen = ({ navigation }) => {
       
       if (progressData !== 'completed') {
         // Navigate to the first incomplete check
-        const routeName = checkRoutes[check.id] || 'Welcome';
+        const routeName = checkRoutes[check.id] || SCREEN_NAMES.WELCOME;
         navigation.navigate(routeName, { level: activeLevel });
         return;
       }
@@ -427,7 +430,7 @@ const WelcomeScreen = ({ navigation }) => {
 
     // If all checks are complete, navigate to the first check
     if (area.checks.length > 0) {
-      const routeName = checkRoutes[area.checks[0].id] || 'Welcome';
+      const routeName = checkRoutes[area.checks[0].id] || SCREEN_NAMES.WELCOME;
       navigation.navigate(routeName, { level: activeLevel });
     }
   };
@@ -508,7 +511,7 @@ const WelcomeScreen = ({ navigation }) => {
               <>
                 <View style={[styles.activeLevelHeader, { borderColor: activeLevel.color }] }>
                   <TouchableOpacity
-                    onPress={() => navigation.navigate('CategoryScreen')}
+                    onPress={() => navigation.navigate(SCREEN_NAMES.CATEGORY)}
                     style={styles.overflowButton}
                     activeOpacity={0.8}
                     accessibilityLabel="Open levels"
@@ -602,7 +605,7 @@ const WelcomeScreen = ({ navigation }) => {
 
                     <TouchableOpacity
                       style={[styles.skipAheadButton, { borderColor: Colors.accent }]}
-                      onPress={() => navigation.navigate('CategoryScreen')}
+                      onPress={() => navigation.navigate(SCREEN_NAMES.CATEGORY)}
                       activeOpacity={0.85}
                     >
                       <Text style={styles.skipAheadText}>Skip Ahead</Text>
@@ -614,7 +617,7 @@ const WelcomeScreen = ({ navigation }) => {
               <View style={styles.allDoneCard}>
                 <Text style={styles.allDoneTitle}>All levels complete 🎉</Text>
                 <Text style={styles.allDoneSubtitle}>Review checks or explore topics from the Toolkit tab.</Text>
-                <TouchableOpacity style={styles.startLearningButton} onPress={() => navigation.navigate('CategoryScreen')}>
+                <TouchableOpacity style={styles.startLearningButton} onPress={() => navigation.navigate(SCREEN_NAMES.CATEGORY)}>
                   <Text style={styles.startLearningButtonText}>View All Categories</Text>
                 </TouchableOpacity>
               </View>
@@ -634,9 +637,9 @@ const WelcomeScreen = ({ navigation }) => {
         onTabPress={(screen) => {
           console.log('WelcomeScreen - Tab pressed:', screen);
           if (screen === 'CategoryScreen') {
-            navigation.navigate('CategoryScreen');
+            navigation.navigate(SCREEN_NAMES.CATEGORY);
           } else if (screen === 'ProfileScreen') {
-            navigation.navigate('ProfileScreen');
+            navigation.navigate(SCREEN_NAMES.PROFILE);
           }
         }}
       />

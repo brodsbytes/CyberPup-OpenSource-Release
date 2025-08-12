@@ -13,7 +13,8 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { getAreasByLevel, getChecksByArea } from '../data/courseData';
-import { Colors } from '../theme';
+import { Colors, Typography, Responsive, CommonStyles } from '../theme';
+import { SCREEN_NAMES } from '../constants';
 
 const { width } = Dimensions.get('window');
 
@@ -91,7 +92,7 @@ const ModuleListScreen = ({ navigation, route }) => {
               
               {check.isCompleted && (
                 <View style={styles.completedBadge}>
-                  <Ionicons name="checkmark-circle" size={20} color={Colors.accent} />
+                  <Ionicons name="checkmark-circle" size={Responsive.iconSizes.medium} color={Colors.accent} />
                   <Text style={styles.completedText}>Completed</Text>
                 </View>
               )}
@@ -104,14 +105,15 @@ const ModuleListScreen = ({ navigation, route }) => {
 
   const getCheckNavigationTarget = (checkId) => {
     switch (checkId) {
-      case '1-1-1': return 'Check1_1_StrongPasswordsScreen';
-      case '1-1-2': return 'Check1_2_HighValueAccountsScreen';
-      case '1-1-3': return 'Check1_3_PasswordManagersScreen';
-      case '1-1-4': return 'Check1_4_MFASetupScreen';
-      case '1-1-5': return 'Check1_5_BreachCheckScreen';
-      case '1-2-1': return 'Check1_2_1_ScreenLockScreen';
+      case '1-0-1': return SCREEN_NAMES.INITIAL_WELCOME;
+      case '1-1-1': return SCREEN_NAMES.CHECK_1_1_STRONG_PASSWORDS;
+      case '1-1-2': return SCREEN_NAMES.CHECK_1_2_HIGH_VALUE_ACCOUNTS;
+      case '1-1-3': return SCREEN_NAMES.CHECK_1_3_PASSWORD_MANAGERS;
+      case '1-1-4': return SCREEN_NAMES.CHECK_1_4_MFA_SETUP;
+      case '1-1-5': return SCREEN_NAMES.CHECK_1_5_BREACH_CHECK;
+      case '1-2-1': return SCREEN_NAMES.CHECK_1_2_1_SCREEN_LOCK;
       // TODO: Add more check screens as they are created
-      default: return 'Welcome'; // Fallback to WelcomeScreen
+      default: return SCREEN_NAMES.WELCOME; // Fallback to WelcomeScreen
     }
   };
 
@@ -140,7 +142,7 @@ const ModuleListScreen = ({ navigation, route }) => {
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => navigation.navigate('Welcome')}
+          onPress={() => navigation.navigate(SCREEN_NAMES.WELCOME)}
           activeOpacity={0.8}
         >
           <Text style={styles.backButtonText}>‹</Text>
@@ -170,99 +172,99 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 16,
+    paddingHorizontal: Responsive.padding.screen,
+    paddingTop: Responsive.spacing.lg,
+    paddingBottom: Responsive.spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: Responsive.iconSizes.xlarge,
+    height: Responsive.iconSizes.xlarge,
+    borderRadius: Responsive.iconSizes.xlarge / 2,
     backgroundColor: Colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
   backButtonText: {
-    fontSize: 24,
+    fontSize: Typography.sizes.xxl,
     color: Colors.textPrimary,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: Typography.sizes.xl,
+    fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
     flex: 1,
     textAlign: 'center',
   },
   headerSpacer: {
-    width: 40,
+    width: Responsive.iconSizes.xlarge,
   },
   listContainer: {
-    paddingHorizontal: 24,
-    paddingBottom: 40,
+    paddingHorizontal: Responsive.padding.screen,
+    paddingBottom: Responsive.iconSizes.xlarge,
   },
   headerSection: {
-    paddingTop: 24,
-    paddingBottom: 32,
+    paddingTop: Responsive.spacing.lg,
+    paddingBottom: Responsive.spacing.xl,
   },
   categoryInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: Responsive.spacing.md,
   },
   categoryIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: Responsive.iconSizes.xxlarge,
+    height: Responsive.iconSizes.xxlarge,
+    borderRadius: Responsive.iconSizes.xxlarge / 2,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: Responsive.spacing.md,
   },
   categoryIconText: {
-    fontSize: 24,
+    fontSize: Typography.sizes.xxl,
   },
   categoryDetails: {
     flex: 1,
   },
   categoryTitle: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: Typography.sizes.xxl,
+    fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
-    marginBottom: 4,
+    marginBottom: Responsive.spacing.xs,
   },
   moduleCount: {
-    fontSize: 16,
+    fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
   },
   headerDescription: {
-    fontSize: 16,
+    fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: Typography.sizes.md * 1.4,
   },
   areaSection: {
-    marginBottom: 32,
+    marginBottom: Responsive.spacing.xl,
   },
   areaHeader: {
-    marginBottom: 16,
+    marginBottom: Responsive.spacing.md,
   },
   areaTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: Typography.sizes.xl,
+    fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
-    marginBottom: 4,
+    marginBottom: Responsive.spacing.xs,
   },
   areaDescription: {
-    fontSize: 14,
+    fontSize: Typography.sizes.sm,
     color: Colors.textSecondary,
-    lineHeight: 20,
+    lineHeight: Typography.sizes.sm * 1.4,
   },
   checkCard: {
     backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.sm,
     borderWidth: 1,
     borderColor: Colors.border,
   },
@@ -277,33 +279,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 8,
+    marginBottom: Responsive.spacing.sm,
   },
   checkTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
     flex: 1,
-    marginRight: 12,
+    marginRight: Responsive.spacing.sm,
   },
   checkMeta: {
     alignItems: 'flex-end',
   },
   checkDuration: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.semibold,
     color: Colors.accent,
-    marginBottom: 2,
+    marginBottom: Responsive.spacing.xs,
   },
   checkTasks: {
-    fontSize: 12,
+    fontSize: Typography.sizes.xs,
     color: Colors.textSecondary,
   },
   checkDescription: {
-    fontSize: 14,
+    fontSize: Typography.sizes.sm,
     color: Colors.textSecondary,
-    lineHeight: 20,
-    marginBottom: 8,
+    lineHeight: Typography.sizes.sm * 1.4,
+    marginBottom: Responsive.spacing.sm,
   },
   completedBadge: {
     flexDirection: 'row',
@@ -311,10 +313,10 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   completedText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: Typography.sizes.xs,
+    fontWeight: Typography.weights.semibold,
     color: Colors.accent,
-    marginLeft: 4,
+    marginLeft: Responsive.spacing.xs,
   },
 });
 

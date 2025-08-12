@@ -295,7 +295,7 @@ const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
         <View style={styles.content}>
           {/* Title and Description */}
           <View style={styles.titleSection}>
-            <Text style={styles.title}>Screen Lock & Auto-Lock</Text>
+            <Text style={styles.title}>Lock Your Device Automatically</Text>
             <Text style={styles.description}>
               Secure your device with proper lock settings to protect your data if your device is lost or stolen.
             </Text>

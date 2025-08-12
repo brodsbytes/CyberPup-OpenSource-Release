@@ -7,7 +7,7 @@ export const APP_CONSTANTS = {
   },
   NAVIGATION: {
     INITIAL_ROUTES: {
-      AUDIT: 'InitialAudit',
+      AUDIT: 'InitialWelcomeScreen',
       WELCOME: 'Welcome',
     },
   },
@@ -24,7 +24,7 @@ export const APP_CONSTANTS = {
 
 // Screen names for navigation
 export const SCREEN_NAMES = {
-  INITIAL_AUDIT: 'InitialAudit',
+  INITIAL_WELCOME: 'InitialWelcomeScreen',
   WELCOME: 'Welcome',
   CATEGORY: 'CategoryScreen',
   MODULE_LIST: 'ModuleListScreen',

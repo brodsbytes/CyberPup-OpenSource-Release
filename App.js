@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import WelcomeScreen from './screens/WelcomeScreen';
 import CategoryScreen from './screens/CategoryScreen';
 import ModuleListScreen from './screens/ModuleListScreen';
@@ -20,7 +21,7 @@ import {
   PhishingPracticeScreen,
 } from './screens/lessons';
 
-import InitialAuditScreen from './screens/InitialAuditScreen';
+import InitialWelcomeScreen from './screens/InitialWelcomeScreen';
 import ProfileScreen from './screens/ProfileScreen';
 
 const Stack = createNativeStackNavigator();
@@ -37,12 +38,17 @@ export default function App() {
 
   const checkAuditStatus = async () => {
     try {
-      const auditCompleted = await AppStorage.getAuditCompleted();
-      if (auditCompleted) {
+      const welcomeCompleted = await AsyncStorage.getItem('welcome_completed');
+      
+      if (welcomeCompleted === 'true') {
         setInitialRoute(APP_CONSTANTS.NAVIGATION.INITIAL_ROUTES.WELCOME);
+      } else {
+        setInitialRoute(SCREEN_NAMES.INITIAL_WELCOME);
       }
     } catch (error) {
       console.log(ERROR_MESSAGES.AUDIT_STATUS_ERROR, error);
+      // Fallback to initial welcome screen if there's an error
+      setInitialRoute(SCREEN_NAMES.INITIAL_WELCOME);
     } finally {
       setIsLoading(false);
     }
@@ -60,7 +66,7 @@ export default function App() {
           headerShown: false,
         }}
       >
-        <Stack.Screen name={SCREEN_NAMES.INITIAL_AUDIT} component={InitialAuditScreen} />
+        <Stack.Screen name={SCREEN_NAMES.INITIAL_WELCOME} component={InitialWelcomeScreen} />
         <Stack.Screen name={SCREEN_NAMES.WELCOME} component={WelcomeScreen} />
         <Stack.Screen name={SCREEN_NAMES.CATEGORY} component={CategoryScreen} />
         <Stack.Screen name={SCREEN_NAMES.MODULE_LIST} component={ModuleListScreen} />

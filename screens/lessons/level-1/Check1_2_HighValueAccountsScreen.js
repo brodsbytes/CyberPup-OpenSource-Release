@@ -308,7 +308,7 @@ const Check1_2_HighValueAccountsScreen = ({ navigation, route }) => {
         <View style={styles.content}>
           {/* Title and Description */}
           <View style={styles.titleSection}>
-            <Text style={styles.title}>Prioritising High-Value Accounts</Text>
+            <Text style={styles.title}>Secure Your Most Important Accounts</Text>
             <Text style={styles.description}>
               Banking & email are the keys to everything else. Let's secure your most important accounts first.
             </Text>
