@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Colors } from '../../../theme';
+import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
 
 const { width } = Dimensions.get('window');
 
@@ -47,7 +47,7 @@ const PhishingPracticeScreen = ({ navigation, route }) => {
           onPress={handleExit}
           activeOpacity={0.8}
         >
-          <Ionicons name="menu" size={24} color={Colors.textPrimary} />
+          <Ionicons name="menu" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Phishing Practice</Text>
         <View style={styles.headerSpacer} />
@@ -88,7 +88,7 @@ const PhishingPracticeScreen = ({ navigation, route }) => {
               style={styles.modalCloseButton}
               onPress={() => setShowExitModal(false)}
             >
-              <Ionicons name="close" size={24} color={Colors.textPrimary} />
+              <Ionicons name="close" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
             </TouchableOpacity>
 
             {/* Sad Character */}
@@ -138,44 +138,44 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: Responsive.padding.screen,
+    paddingVertical: Responsive.padding.button,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
   menuButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: Responsive.iconSizes.xlarge,
+    height: Responsive.iconSizes.xlarge,
+    borderRadius: Responsive.iconSizes.xlarge / 2,
     backgroundColor: Colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
   },
   headerSpacer: {
-    width: 40,
+    width: Responsive.iconSizes.xlarge,
   },
   content: {
     flex: 1,
-    padding: 20,
+    padding: Responsive.padding.screen,
   },
   progressSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: Responsive.spacing.lg,
   },
   progressText: {
-    fontSize: 16,
+    fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
   },
   scoreText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
     color: Colors.accent,
   },
   // Modal Styles
@@ -187,72 +187,74 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: Colors.surface,
-    borderRadius: 20,
-    padding: 24,
-    marginHorizontal: 20,
+    borderRadius: Responsive.borderRadius.xxlarge,
+    padding: Responsive.padding.modal,
+    marginHorizontal: Responsive.padding.screen,
     alignItems: 'center',
     position: 'relative',
-    minWidth: 300,
+    minWidth: Responsive.spacing.xxl * 7,
   },
   modalCloseButton: {
     position: 'absolute',
-    top: 16,
-    right: 16,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    top: Responsive.padding.button,
+    right: Responsive.padding.button,
+    width: Responsive.iconSizes.xlarge,
+    height: Responsive.iconSizes.xlarge,
+    borderRadius: Responsive.iconSizes.xlarge / 2,
     backgroundColor: Colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalCharacter: {
-    marginBottom: 16,
+    marginBottom: Responsive.spacing.md,
   },
   characterText: {
-    fontSize: 48,
+    fontSize: Responsive.iconSizes.xxlarge,
   },
   modalTitle: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: Typography.sizes.xxl,
+    fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: Responsive.spacing.sm,
   },
   modalMessage: {
-    fontSize: 16,
+    fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 24,
+    lineHeight: Typography.sizes.md * 1.4,
+    marginBottom: Responsive.spacing.lg,
   },
   modalButtons: {
     width: '100%',
-    gap: 12,
+    gap: Responsive.spacing.sm,
   },
   keepLearningButton: {
     backgroundColor: Colors.accent,
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
+    borderRadius: Responsive.borderRadius.large,
+    paddingVertical: Responsive.padding.button,
+    paddingHorizontal: Responsive.spacing.lg,
     alignItems: 'center',
+    minHeight: Responsive.buttonHeight.medium,
   },
   keepLearningButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
   },
   exitLessonButton: {
     backgroundColor: Colors.surface,
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
+    borderRadius: Responsive.borderRadius.large,
+    paddingVertical: Responsive.padding.button,
+    paddingHorizontal: Responsive.spacing.lg,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: Colors.accent,
+    minHeight: Responsive.buttonHeight.medium,
   },
   exitLessonButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
     color: Colors.accent,
   },
   instructionsSection: {

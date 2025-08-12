@@ -14,6 +14,7 @@ CyberPup helps users complete a comprehensive cybersecurity health check with an
 - **Platform-Specific Guidance**: Tailored instructions for iOS/Android
 - **Action-First Design**: Direct integration with device settings where possible
 - **Modern UI**: Clean, professional design with smooth animations
+- **Responsive Design**: Optimized for all screen sizes including iPhone SE
 
 ## Screens
 
@@ -100,9 +101,100 @@ CyberPup/
 ├── components/                     # Reusable UI components
 ├── data/                          # Course content and structure
 ├── utils/                         # Storage utilities
+│   └── responsive.js              # Responsive design system
 ├── theme.js                       # Design system and colors
 └── package.json                   # Dependencies and scripts
 ```
+
+## Responsive Design System
+
+CyberPup implements a comprehensive responsive design system to ensure optimal user experience across all device sizes, particularly optimized for iPhone SE (375x667) and larger screens.
+
+### Key Features
+
+- **Screen Size Detection**: Automatic detection of small, medium, and large screens
+- **Responsive Scaling**: Proportional scaling based on device dimensions
+- **Conservative Typography**: Text sizes that remain readable on small screens
+- **Touch Target Optimization**: Minimum 44px touch targets for accessibility
+- **Modal Sizing**: Properly sized modals with adequate margins
+
+### Implementation
+
+#### 1. Import Responsive Utilities
+```javascript
+import { Colors, Typography, Responsive, CommonStyles } from '../theme';
+```
+
+#### 2. Use Responsive Constants
+```javascript
+const styles = StyleSheet.create({
+  container: {
+    padding: Responsive.padding.screen,
+    marginBottom: Responsive.spacing.lg,
+  },
+  title: {
+    fontSize: Typography.sizes.xxl,
+    fontWeight: Typography.weights.bold,
+  },
+  button: {
+    minHeight: Responsive.buttonHeight.medium,
+    borderRadius: Responsive.borderRadius.medium,
+  },
+  icon: {
+    size: Responsive.iconSizes.large,
+  },
+});
+```
+
+#### 3. Responsive Constants Available
+
+**Typography:**
+- `Typography.sizes.xs` (12px) - `Typography.sizes.xxxl` (32px)
+- `Typography.weights.normal` - `Typography.weights.bold`
+
+**Spacing:**
+- `Responsive.spacing.xs` (4px) - `Responsive.spacing.xxl` (48px)
+
+**Padding:**
+- `Responsive.padding.screen` (16-20px)
+- `Responsive.padding.card` (12-16px)
+- `Responsive.padding.button` (10-12px)
+- `Responsive.padding.modal` (16-24px)
+
+**Border Radius:**
+- `Responsive.borderRadius.small` (6px) - `Responsive.borderRadius.xxlarge` (20px)
+
+**Icon Sizes:**
+- `Responsive.iconSizes.small` (16px) - `Responsive.iconSizes.xxlarge` (48px)
+
+**Button Heights:**
+- `Responsive.buttonHeight.small` (36px) - `Responsive.buttonHeight.large` (52px)
+
+**Screen Detection:**
+- `Responsive.isSmallScreen` (≤375px width)
+- `Responsive.isMediumScreen` (376-414px width)
+- `Responsive.isLargeScreen` (>414px width)
+
+### Best Practices
+
+1. **Always use responsive constants** instead of hardcoded pixel values
+2. **Test on iPhone SE simulator** to verify small screen compatibility
+3. **Use conservative scaling** for typography to maintain readability
+4. **Ensure proper touch targets** (minimum 44px height)
+5. **Size modals appropriately** with adequate margins
+6. **Use line height multipliers** for better text readability
+
+### Files Using Responsive Design
+
+All screens have been updated with responsive design:
+- ✅ WelcomeScreen.js
+- ✅ Check1_1_StrongPasswordsScreen.js
+- ✅ Check1_2_HighValueAccountsScreen.js
+- ✅ Check1_3_PasswordManagersScreen.js
+- ✅ Check1_4_MFASetupScreen.js
+- ✅ Check1_2_1_ScreenLockScreen.js
+- ✅ Check1_5_BreachCheckScreen.js
+- ✅ PhishingPracticeScreen.js
 
 ## Progress Saving
 
@@ -149,7 +241,7 @@ See `screens/lessons/README.md` for detailed implementation patterns.
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test thoroughly
+4. Test thoroughly on multiple screen sizes
 5. Submit a pull request
 
 ## License

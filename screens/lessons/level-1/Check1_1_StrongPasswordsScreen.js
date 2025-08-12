@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Colors } from '../../../theme';
+import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
 import { checkForBadgeUnlocks } from '../../../utils/badgeStorage';
 import BadgeEarnedModal from '../../../components/BadgeEarnedModal';
 
@@ -118,12 +118,12 @@ const Check1_1_StrongPasswordsScreen = ({ navigation, route }) => {
       Animated.timing(scaleAnim, {
         toValue: 1.2,
         duration: 100,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
       Animated.timing(scaleAnim, {
         toValue: 1,
         duration: 100,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
     ]).start();
 
@@ -224,7 +224,7 @@ const Check1_1_StrongPasswordsScreen = ({ navigation, route }) => {
       >
         <View style={[styles.checkbox, item.completed && styles.checkboxCompleted]}>
           {item.completed && (
-            <Ionicons name="checkmark" size={16} color={Colors.textPrimary} />
+            <Ionicons name="checkmark" size={Responsive.iconSizes.small} color={Colors.textPrimary} />
           )}
         </View>
         <Text style={[styles.checklistText, item.completed && styles.checklistTextCompleted]}>
@@ -239,7 +239,7 @@ const Check1_1_StrongPasswordsScreen = ({ navigation, route }) => {
           activeOpacity={0.8}
         >
           <Text style={styles.actionButtonText}>I did it</Text>
-          <Ionicons name="arrow-forward" size={16} color={Colors.accent} />
+          <Ionicons name="arrow-forward" size={Responsive.iconSizes.small} color={Colors.accent} />
         </TouchableOpacity>
       )}
     </Animated.View>
@@ -250,7 +250,7 @@ const Check1_1_StrongPasswordsScreen = ({ navigation, route }) => {
       <View style={styles.introContainer}>
         <View style={styles.introHeader}>
           <View style={[styles.introIcon, { backgroundColor: Colors.accent }]}>
-            <Ionicons name="shield-checkmark" size={48} color={Colors.textPrimary} />
+            <Ionicons name="shield-checkmark" size={Responsive.iconSizes.xxlarge} color={Colors.textPrimary} />
           </View>
           <Text style={styles.introTitle}>Level 1: Password Security & Authentication</Text>
           <Text style={styles.introSubtitle}>Cyber Pup Scout 🐾</Text>
@@ -311,7 +311,7 @@ const Check1_1_StrongPasswordsScreen = ({ navigation, route }) => {
           <Text style={styles.learnMoreText}>Learn more about password security</Text>
           <Ionicons
             name={showLearnMore ? 'chevron-up' : 'chevron-down'}
-            size={20}
+            size={Responsive.iconSizes.medium}
             color={Colors.accent}
           />
         </TouchableOpacity>
@@ -344,9 +344,9 @@ const Check1_1_StrongPasswordsScreen = ({ navigation, route }) => {
           onPress={openSettings}
           activeOpacity={0.8}
         >
-          <Ionicons name="settings-outline" size={20} color={Colors.accent} />
+                      <Ionicons name="settings-outline" size={Responsive.iconSizes.medium} color={Colors.accent} />
           <Text style={styles.settingsButtonText}>Open Device Settings</Text>
-          <Ionicons name="arrow-forward" size={16} color={Colors.accent} />
+                      <Ionicons name="arrow-forward" size={Responsive.iconSizes.small} color={Colors.accent} />
         </TouchableOpacity>
 
 
@@ -354,7 +354,7 @@ const Check1_1_StrongPasswordsScreen = ({ navigation, route }) => {
         {/* Completion Status */}
         {isCompleted && (
           <View style={styles.completionCard}>
-            <Ionicons name="checkmark-circle" size={48} color={Colors.accent} />
+            <Ionicons name="checkmark-circle" size={Responsive.iconSizes.xxlarge} color={Colors.accent} />
             <Text style={styles.completionTitle}>Check Complete!</Text>
             <Text style={styles.completionText}>
               You've successfully verified your password security practices.
@@ -369,7 +369,7 @@ const Check1_1_StrongPasswordsScreen = ({ navigation, route }) => {
               activeOpacity={0.8}
             >
               <Text style={styles.continueButtonText}>Continue to Next Check</Text>
-              <Ionicons name="arrow-forward" size={20} color={Colors.textPrimary} />
+                              <Ionicons name="arrow-forward" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
             </TouchableOpacity>
           </View>
         )}
@@ -388,7 +388,7 @@ const Check1_1_StrongPasswordsScreen = ({ navigation, route }) => {
           onPress={handleExit}
           activeOpacity={0.8}
         >
-          <Ionicons name="menu" size={24} color={Colors.textPrimary} />
+          <Ionicons name="menu" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
           {showIntro ? 'Level 1 Intro' : 'Check 1.1'}
@@ -410,7 +410,7 @@ const Check1_1_StrongPasswordsScreen = ({ navigation, route }) => {
               style={styles.modalCloseButton}
               onPress={() => setShowExitModal(false)}
             >
-              <Ionicons name="close" size={24} color={Colors.textPrimary} />
+              <Ionicons name="close" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
             </TouchableOpacity>
 
             {/* Sad Character */}
@@ -499,157 +499,158 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: Responsive.padding.screen,
+    paddingVertical: Responsive.padding.button,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
   menuButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: Responsive.iconSizes.xlarge,
+    height: Responsive.iconSizes.xlarge,
+    borderRadius: Responsive.iconSizes.xlarge / 2,
     backgroundColor: Colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
   },
   headerSpacer: {
-    width: 40,
+    width: Responsive.iconSizes.xlarge,
   },
   introScrollView: {
     flex: 1,
   },
   introContainer: {
-    padding: 20,
-    paddingBottom: 40,
+    padding: Responsive.padding.screen,
+    paddingBottom: Responsive.spacing.xl,
   },
   introHeader: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: Responsive.spacing.xl,
   },
   introIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: Responsive.iconSizes.xxlarge * 1.7,
+    height: Responsive.iconSizes.xxlarge * 1.7,
+    borderRadius: Responsive.iconSizes.xxlarge * 0.85,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: Responsive.spacing.md,
   },
   introTitle: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: Typography.sizes.xxl,
+    fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
     textAlign: 'center',
-    marginBottom: 8,
-    lineHeight: 32,
+    marginBottom: Responsive.spacing.sm,
+    lineHeight: Typography.sizes.xxl * 1.3,
   },
   introSubtitle: {
-    fontSize: 18,
+    fontSize: Typography.sizes.lg,
     color: Colors.accent,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
   },
   introSection: {
     backgroundColor: Colors.surface,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
+    borderRadius: Responsive.borderRadius.xlarge,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
   },
   introSectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: Typography.sizes.xl,
+    fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
-    marginBottom: 12,
+    marginBottom: Responsive.spacing.sm,
   },
   introSectionText: {
-    fontSize: 16,
+    fontSize: Typography.sizes.md,
     color: Colors.textPrimary,
-    lineHeight: 24,
+    lineHeight: Typography.sizes.md * 1.5,
   },
   getStartedButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingHorizontal: Responsive.spacing.lg,
+    paddingVertical: Responsive.padding.button,
+    borderRadius: Responsive.borderRadius.large,
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: Responsive.spacing.lg,
+    minHeight: Responsive.buttonHeight.medium,
   },
   getStartedButtonText: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
   },
   scrollView: {
     flex: 1,
   },
   content: {
-    padding: 20,
+    padding: Responsive.padding.screen,
   },
   titleSection: {
-    marginBottom: 24,
+    marginBottom: Responsive.spacing.lg,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: Typography.sizes.xxl,
+    fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
-    marginBottom: 8,
-    lineHeight: 32,
+    marginBottom: Responsive.spacing.sm,
+    lineHeight: Typography.sizes.xxl * 1.3,
   },
   description: {
-    fontSize: 16,
+    fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
-    lineHeight: 24,
+    lineHeight: Typography.sizes.md * 1.5,
   },
   learnMoreButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
-    marginBottom: 16,
+    paddingVertical: Responsive.padding.button,
+    marginBottom: Responsive.spacing.md,
   },
   learnMoreText: {
-    fontSize: 16,
+    fontSize: Typography.sizes.md,
     color: Colors.accent,
-    fontWeight: '600',
+    fontWeight: Typography.weights.semibold,
   },
   learnMoreContent: {
     backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
   },
   learnMoreTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
-    marginBottom: 8,
+    marginBottom: Responsive.spacing.sm,
   },
   learnMoreBody: {
-    fontSize: 14,
+    fontSize: Typography.sizes.sm,
     color: Colors.textSecondary,
-    lineHeight: 20,
+    lineHeight: Typography.sizes.sm * 1.4,
   },
   checklistSection: {
-    marginBottom: 24,
+    marginBottom: Responsive.spacing.lg,
   },
   checklistTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: Typography.sizes.xl,
+    fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
-    marginBottom: 8,
+    marginBottom: Responsive.spacing.sm,
   },
   checklistSubtitle: {
-    fontSize: 14,
+    fontSize: Typography.sizes.sm,
     color: Colors.textSecondary,
-    marginBottom: 16,
+    marginBottom: Responsive.spacing.md,
   },
   checklistItem: {
     backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.sm,
     borderWidth: 1,
     borderColor: Colors.border,
   },
@@ -662,12 +663,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: Responsive.iconSizes.large,
+    height: Responsive.iconSizes.large,
+    borderRadius: Responsive.iconSizes.large / 2,
     borderWidth: 2,
     borderColor: Colors.accent,
-    marginRight: 12,
+    marginRight: Responsive.spacing.sm,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -675,10 +676,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accent,
   },
   checklistText: {
-    fontSize: 16,
+    fontSize: Typography.sizes.md,
     color: Colors.textPrimary,
     flex: 1,
-    lineHeight: 22,
+    lineHeight: Typography.sizes.md * 1.4,
   },
   checklistTextCompleted: {
     textDecorationLine: 'line-through',
@@ -689,70 +690,72 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.accent,
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    marginTop: 12,
+    borderRadius: Responsive.borderRadius.medium,
+    paddingVertical: Responsive.spacing.sm,
+    paddingHorizontal: Responsive.spacing.md,
+    marginTop: Responsive.spacing.sm,
+    minHeight: Responsive.buttonHeight.small,
   },
   actionButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
-    marginRight: 8,
+    marginRight: Responsive.spacing.sm,
   },
   settingsButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
     borderWidth: 1,
     borderColor: Colors.border,
   },
   settingsButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
     color: Colors.accent,
     flex: 1,
-    marginLeft: 12,
+    marginLeft: Responsive.spacing.sm,
   },
   completionCard: {
     backgroundColor: Colors.accentSoft,
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: Responsive.borderRadius.xlarge,
+    padding: Responsive.padding.modal,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: Colors.accent,
   },
   completionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: Typography.sizes.xl,
+    fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
-    marginTop: 12,
-    marginBottom: 8,
+    marginTop: Responsive.spacing.sm,
+    marginBottom: Responsive.spacing.sm,
   },
   completionText: {
-    fontSize: 16,
+    fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 24,
+    lineHeight: Typography.sizes.md * 1.4,
+    marginBottom: Responsive.spacing.lg,
   },
   continueButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.accent,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    gap: 8,
+    paddingVertical: Responsive.padding.button,
+    paddingHorizontal: Responsive.spacing.lg,
+    borderRadius: Responsive.borderRadius.medium,
+    gap: Responsive.spacing.sm,
+    minHeight: Responsive.buttonHeight.medium,
   },
   continueButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
   },
   // Modal Styles
@@ -764,72 +767,74 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: Colors.surface,
-    borderRadius: 20,
-    padding: 24,
-    marginHorizontal: 20,
+    borderRadius: Responsive.borderRadius.xxlarge,
+    padding: Responsive.padding.modal,
+    marginHorizontal: Responsive.padding.screen,
     alignItems: 'center',
     position: 'relative',
-    minWidth: 300,
+    minWidth: Responsive.spacing.xxl * 7,
   },
   modalCloseButton: {
     position: 'absolute',
-    top: 16,
-    right: 16,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    top: Responsive.padding.button,
+    right: Responsive.padding.button,
+    width: Responsive.iconSizes.xlarge,
+    height: Responsive.iconSizes.xlarge,
+    borderRadius: Responsive.iconSizes.xlarge / 2,
     backgroundColor: Colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalCharacter: {
-    marginBottom: 16,
+    marginBottom: Responsive.spacing.md,
   },
   characterText: {
-    fontSize: 48,
+    fontSize: Responsive.iconSizes.xxlarge,
   },
   modalTitle: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: Typography.sizes.xxl,
+    fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: Responsive.spacing.sm,
   },
   modalMessage: {
-    fontSize: 16,
+    fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 24,
+    lineHeight: Typography.sizes.md * 1.4,
+    marginBottom: Responsive.spacing.lg,
   },
   modalButtons: {
     width: '100%',
-    gap: 12,
+    gap: Responsive.spacing.sm,
   },
   keepLearningButton: {
     backgroundColor: Colors.accent,
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
+    borderRadius: Responsive.borderRadius.large,
+    paddingVertical: Responsive.padding.button,
+    paddingHorizontal: Responsive.spacing.lg,
     alignItems: 'center',
+    minHeight: Responsive.buttonHeight.medium,
   },
   keepLearningButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
   },
   exitLessonButton: {
     backgroundColor: Colors.surface,
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
+    borderRadius: Responsive.borderRadius.large,
+    paddingVertical: Responsive.padding.button,
+    paddingHorizontal: Responsive.spacing.lg,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: Colors.accent,
+    minHeight: Responsive.buttonHeight.medium,
   },
   exitLessonButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
     color: Colors.accent,
   },
 });

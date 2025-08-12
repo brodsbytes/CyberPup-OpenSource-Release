@@ -1,3 +1,16 @@
+import { 
+  responsiveSpacing, 
+  responsiveTypography, 
+  responsivePadding, 
+  responsiveBorderRadius,
+  responsiveIconSizes,
+  responsiveButtonHeight,
+  responsiveInputHeight,
+  isSmallScreen,
+  modalDimensions,
+  cardDimensions
+} from './utils/responsive';
+
 // Centralized color palette
 export const Colors = {
   background: '#2C2C2E',
@@ -22,33 +35,24 @@ export const Colors = {
   errorSoft: 'rgba(231, 76, 60, 0.15)',
 };
 
-// Spacing constants for consistent layout
-export const Spacing = {
-  xs: 4,
-  sm: 8,
-  md: 16,
-  lg: 24,
-  xl: 32,
-  xxl: 48,
-};
+// Responsive spacing constants for consistent layout
+export const Spacing = responsiveSpacing;
 
-// Typography constants
-export const Typography = {
-  sizes: {
-    xs: 12,
-    sm: 14,
-    md: 16,
-    lg: 18,
-    xl: 20,
-    xxl: 24,
-    xxxl: 32,
-  },
-  weights: {
-    normal: '400',
-    medium: '500',
-    semibold: '600',
-    bold: '700',
-  },
+// Responsive typography constants
+export const Typography = responsiveTypography;
+
+// Responsive design constants
+export const Responsive = {
+  spacing: responsiveSpacing,
+  typography: responsiveTypography,
+  padding: responsivePadding,
+  borderRadius: responsiveBorderRadius,
+  iconSizes: responsiveIconSizes,
+  buttonHeight: responsiveButtonHeight,
+  inputHeight: responsiveInputHeight,
+  isSmallScreen,
+  modal: modalDimensions,
+  card: cardDimensions,
 };
 
 // Common styles for reuse
@@ -59,26 +63,27 @@ export const CommonStyles = {
   },
   card: {
     backgroundColor: Colors.surface,
-    borderRadius: 12,
-    padding: Spacing.md,
-    marginVertical: Spacing.sm,
+    borderRadius: responsiveBorderRadius.large,
+    padding: responsivePadding.card,
+    marginVertical: responsiveSpacing.sm,
   },
   button: {
     backgroundColor: Colors.accent,
-    borderRadius: 8,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
+    borderRadius: responsiveBorderRadius.medium,
+    paddingVertical: responsivePadding.button,
+    paddingHorizontal: responsiveSpacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: responsiveButtonHeight.medium,
   },
   buttonText: {
     color: Colors.textPrimary,
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.medium,
+    fontSize: responsiveTypography.sizes.md,
+    fontWeight: responsiveTypography.weights.medium,
   },
   dropdown: {
     backgroundColor: Colors.dropdownBackground,
-    borderRadius: 8,
+    borderRadius: responsiveBorderRadius.medium,
     borderWidth: 1,
     borderColor: Colors.border,
     shadowColor: '#000',
@@ -91,8 +96,8 @@ export const CommonStyles = {
     elevation: 5,
   },
   dropdownOption: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    paddingHorizontal: responsiveSpacing.md,
+    paddingVertical: responsiveSpacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
@@ -100,6 +105,35 @@ export const CommonStyles = {
     backgroundColor: Colors.accentSoft,
     borderLeftWidth: 3,
     borderLeftColor: Colors.accent,
+  },
+  // Responsive modal styles
+  modal: {
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    content: {
+      backgroundColor: Colors.surface,
+      borderRadius: responsiveBorderRadius.xlarge,
+      padding: responsivePadding.modal,
+      marginHorizontal: responsivePadding.screen,
+      width: modalDimensions.width,
+      maxHeight: modalDimensions.maxHeight,
+    },
+  },
+  // Responsive input styles
+  input: {
+    backgroundColor: Colors.background,
+    borderRadius: responsiveBorderRadius.medium,
+    paddingHorizontal: responsiveSpacing.md,
+    paddingVertical: responsivePadding.button,
+    color: Colors.textPrimary,
+    fontSize: responsiveTypography.sizes.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    minHeight: responsiveInputHeight.medium,
   },
 };
 
