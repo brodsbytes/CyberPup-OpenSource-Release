@@ -150,7 +150,7 @@ const ProfileScreen = ({ navigation }) => {
           <View style={styles.statsContainer}>
             <View style={styles.statCard}>
               <View style={styles.statIcon}>
-                <Ionicons name="trophy" size={24} color={Colors.accent} />
+                <Ionicons name="trophy" size={Responsive.iconSizes.large} color={Colors.accent} />
               </View>
               <Text style={styles.statNumber}>{earnedCount}</Text>
               <Text style={styles.statLabel}>Badges Earned</Text>
@@ -158,7 +158,7 @@ const ProfileScreen = ({ navigation }) => {
             
             <View style={styles.statCard}>
               <View style={styles.statIcon}>
-                <Ionicons name="shield-checkmark" size={24} color={Colors.accent} />
+                <Ionicons name="shield-checkmark" size={Responsive.iconSizes.large} color={Colors.accent} />
               </View>
               <Text style={styles.statNumber}>{stats.areaBadges}</Text>
               <Text style={styles.statLabel}>Areas Mastered</Text>
@@ -166,7 +166,7 @@ const ProfileScreen = ({ navigation }) => {
             
             <View style={styles.statCard}>
               <View style={styles.statIcon}>
-                <Ionicons name="star" size={24} color={Colors.accent} />
+                <Ionicons name="star" size={Responsive.iconSizes.large} color={Colors.accent} />
               </View>
               <Text style={styles.statNumber}>{stats.specialBadges}</Text>
               <Text style={styles.statLabel}>Special Achievements</Text>

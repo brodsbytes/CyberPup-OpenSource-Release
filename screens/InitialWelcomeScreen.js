@@ -80,7 +80,7 @@ const InitialWelcomeScreen = ({ navigation }) => {
         </View>
       </View>
       
-      <Text style={styles.mainTitle}>Welcome to CyberPup — Your Personal Cybersecurity Health Check</Text>
+      <Text style={styles.mainTitle}>Welcome to CyberPup - Your Personal Cybersecurity Health Check</Text>
       
       <Text style={styles.mainDescription}>
         CyberPup is your step-by-step guide to protecting your accounts, devices, and privacy - without the jargon. We'll help you go from 'at risk' to 'resilient' in just a few minutes a day.
@@ -89,7 +89,7 @@ const InitialWelcomeScreen = ({ navigation }) => {
       <View style={styles.keyPointsContainer}>
         <View style={styles.keyPoint}>
           <Ionicons name="shield-checkmark" size={Responsive.iconSizes.medium} color={Colors.accent} />
-          <Text style={styles.keyPointText}>Unbiased, expert advice — no upselling, no gimmicks</Text>
+          <Text style={styles.keyPointText}>Unbiased, expert advice - no upselling, no gimmicks</Text>
         </View>
         <View style={styles.keyPoint}>
           <Ionicons name="flash" size={Responsive.iconSizes.medium} color={Colors.accent} />
@@ -151,7 +151,7 @@ const InitialWelcomeScreen = ({ navigation }) => {
             <Text style={styles.tipNumberText}>1</Text>
           </View>
           <Text style={styles.tipText}>
-            Complete Level 1 checks as soon as possible — they give the biggest boost to your security.
+            Complete Level 1 checks as soon as possible - they give the biggest boost to your security.
           </Text>
         </View>
 
@@ -160,7 +160,7 @@ const InitialWelcomeScreen = ({ navigation }) => {
             <Text style={styles.tipNumberText}>2</Text>
           </View>
           <Text style={styles.tipText}>
-            Use the interactive checklists — we've made them quick, simple, and tailored to your device.
+            Use the interactive checklists - we've made them quick, simple, and tailored to your device.
           </Text>
         </View>
 
@@ -169,7 +169,7 @@ const InitialWelcomeScreen = ({ navigation }) => {
             <Text style={styles.tipNumberText}>3</Text>
           </View>
           <Text style={styles.tipText}>
-            Watch for progress celebrations — your work is paying off!
+            Watch for progress celebrations - your work is paying off!
           </Text>
         </View>
 
@@ -178,8 +178,26 @@ const InitialWelcomeScreen = ({ navigation }) => {
             <Text style={styles.tipNumberText}>4</Text>
           </View>
           <Text style={styles.tipText}>
-            Revisit the app monthly — cybersecurity is a habit, not a one-time job.
+            Revisit the app monthly - cybersecurity is a habit, not a one-time job.
           </Text>
+        </View>
+      </View>
+
+      {/* Added design element: Progress visualization */}
+      <View style={styles.progressVisualization}>
+        <View style={styles.progressStep}>
+          <View style={[styles.progressDot, { backgroundColor: Colors.accent }]} />
+          <Text style={styles.progressLabel}>Start</Text>
+        </View>
+        <View style={styles.progressLine} />
+        <View style={styles.progressStep}>
+          <View style={[styles.progressDot, { backgroundColor: Colors.accent }]} />
+          <Text style={styles.progressLabel}>Secure</Text>
+        </View>
+        <View style={styles.progressLine} />
+        <View style={styles.progressStep}>
+          <View style={[styles.progressDot, { backgroundColor: Colors.track }]} />
+          <Text style={styles.progressLabel}>Thrive</Text>
         </View>
       </View>
     </View>
@@ -191,37 +209,37 @@ const InitialWelcomeScreen = ({ navigation }) => {
       
       <View style={styles.comparisonTable}>
         <View style={styles.tableHeader}>
-          <Text style={styles.tableHeaderText}>Paid Tool</Text>
-          <Text style={styles.tableHeaderText}>What it Does</Text>
-          <Text style={styles.tableHeaderText}>What it Misses</Text>
-          <Text style={styles.tableHeaderText}>CyberPup Advantage</Text>
+          <Text style={styles.tableHeaderText}>Tool</Text>
+          <Text style={styles.tableHeaderText}>Does</Text>
+          <Text style={styles.tableHeaderText}>Misses</Text>
+          <Text style={styles.tableHeaderText}>CyberPup</Text>
         </View>
 
         <View style={styles.tableRow}>
           <Text style={styles.tableCell}>VPN</Text>
-          <Text style={styles.tableCell}>Hides your IP, encrypts browsing traffic</Text>
-          <Text style={styles.tableCell}>Doesn't secure accounts, stop scams, or fix device vulnerabilities</Text>
-          <Text style={styles.tableCell}>CyberPup covers all areas of your personal security</Text>
+          <Text style={styles.tableCell}>Hides IP, encrypts traffic</Text>
+          <Text style={styles.tableCell}>Accounts, scams, device security</Text>
+          <Text style={styles.tableCell}>Covers everything</Text>
         </View>
 
         <View style={styles.tableRow}>
           <Text style={styles.tableCell}>Antivirus</Text>
           <Text style={styles.tableCell}>Detects malware</Text>
-          <Text style={styles.tableCell}>Won't stop phishing, stolen passwords, unsafe settings, or privacy leaks</Text>
-          <Text style={styles.tableCell}>CyberPup prevents attacks before they happen</Text>
+          <Text style={styles.tableCell}>Phishing, passwords, settings</Text>
+          <Text style={styles.tableCell}>Prevents attacks</Text>
         </View>
 
         <View style={styles.tableRow}>
-          <Text style={styles.tableCell}>One-click "Cleanup" apps</Text>
-          <Text style={styles.tableCell}>Deletes temp files, clears cache</Text>
-          <Text style={styles.tableCell}>Doesn't improve security posture</Text>
-          <Text style={styles.tableCell}>CyberPup gives you real security improvements</Text>
+          <Text style={styles.tableCell}>Cleanup Apps</Text>
+          <Text style={styles.tableCell}>Deletes temp files</Text>
+          <Text style={styles.tableCell}>Real security</Text>
+          <Text style={styles.tableCell}>Real improvements</Text>
         </View>
       </View>
 
       <View style={styles.summaryCard}>
         <Text style={styles.summaryText}>
-          CyberPup works across every part of your digital life — accounts, devices, privacy, and scams — so nothing falls through the cracks.
+          CyberPup works across every part of your digital life - accounts, devices, privacy, and scams - so nothing falls through the cracks.
         </Text>
       </View>
     </View>
@@ -243,8 +261,27 @@ const InitialWelcomeScreen = ({ navigation }) => {
       </View>
 
       <Text style={styles.reassuranceText}>
-        You don't need to be a tech expert — we'll guide you.
+        You don't need to be a tech expert - we'll guide you.
       </Text>
+
+      {/* Added design element: Security level indicator */}
+      <View style={styles.securityLevelCard}>
+        <View style={styles.securityLevelHeader}>
+          <Ionicons name="shield" size={Responsive.iconSizes.large} color={Colors.accent} />
+          <Text style={styles.securityLevelTitle}>Your Security Journey</Text>
+        </View>
+        <View style={styles.securityLevelProgress}>
+          <View style={styles.securityLevelStep}>
+            <View style={[styles.securityLevelDot, { backgroundColor: Colors.accent }]} />
+            <Text style={styles.securityLevelText}>At Risk</Text>
+          </View>
+          <View style={styles.securityLevelArrow} />
+          <View style={styles.securityLevelStep}>
+            <View style={[styles.securityLevelDot, { backgroundColor: Colors.track }]} />
+            <Text style={styles.securityLevelText}>Resilient</Text>
+          </View>
+        </View>
+      </View>
 
       <TouchableOpacity
         style={styles.ctaButton}
@@ -385,47 +422,47 @@ const styles = StyleSheet.create({
     paddingBottom: Responsive.spacing.lg,
   },
   sectionContainer: {
-    minHeight: 400,
+    minHeight: Responsive.isSmallScreen ? 300 : 400,
     justifyContent: 'center',
   },
   mascotContainer: {
     alignItems: 'center',
-    marginBottom: Responsive.spacing.xl,
-    marginTop: Responsive.spacing.lg,
+    marginBottom: Responsive.spacing.lg,
+    marginTop: Responsive.spacing.md,
   },
   mascotWrapper: {
-    width: 200,
-    height: 200,
+    width: Responsive.isSmallScreen ? 150 : 200,
+    height: Responsive.isSmallScreen ? 150 : 200,
     justifyContent: 'center',
     alignItems: 'center',
   },
   mascotImage: {
-    width: 200,
-    height: 200,
+    width: Responsive.isSmallScreen ? 150 : 200,
+    height: Responsive.isSmallScreen ? 150 : 200,
   },
   mainTitle: {
-    fontSize: Typography.sizes.xxxl,
+    fontSize: Responsive.isSmallScreen ? Typography.sizes.xxl : Typography.sizes.xxxl,
     fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
-    marginBottom: Responsive.spacing.md,
+    marginBottom: Responsive.spacing.sm,
     textAlign: 'center',
-    lineHeight: Typography.sizes.xxxl * 1.2,
+    lineHeight: (Responsive.isSmallScreen ? Typography.sizes.xxl : Typography.sizes.xxxl) * 1.2,
   },
   mainDescription: {
-    fontSize: Typography.sizes.lg,
+    fontSize: Responsive.isSmallScreen ? Typography.sizes.md : Typography.sizes.lg,
     color: Colors.textSecondary,
     textAlign: 'center',
-    marginBottom: Responsive.spacing.xl,
-    lineHeight: Typography.sizes.lg * 1.4,
+    marginBottom: Responsive.spacing.lg,
+    lineHeight: (Responsive.isSmallScreen ? Typography.sizes.md : Typography.sizes.lg) * 1.4,
   },
   keyPointsContainer: {
-    gap: Responsive.spacing.md,
+    gap: Responsive.isSmallScreen ? Responsive.spacing.sm : Responsive.spacing.md,
   },
   keyPoint: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.surface,
-    padding: Responsive.padding.card,
+    padding: Responsive.isSmallScreen ? Responsive.spacing.md : Responsive.padding.card,
     borderRadius: Responsive.borderRadius.large,
     gap: Responsive.spacing.sm,
   },
@@ -510,14 +547,15 @@ const styles = StyleSheet.create({
   tableHeader: {
     flexDirection: 'row',
     backgroundColor: Colors.accent,
-    padding: Responsive.spacing.sm,
+    padding: Responsive.spacing.md,
   },
   tableHeaderText: {
     flex: 1,
-    fontSize: Typography.sizes.sm,
+    fontSize: Typography.sizes.xs,
     fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
     textAlign: 'center',
+    paddingHorizontal: Responsive.spacing.xs,
   },
   tableRow: {
     flexDirection: 'row',
@@ -526,11 +564,12 @@ const styles = StyleSheet.create({
   },
   tableCell: {
     flex: 1,
-    fontSize: Typography.sizes.sm,
+    fontSize: Typography.sizes.xs,
     color: Colors.textSecondary,
     padding: Responsive.spacing.sm,
     textAlign: 'center',
-    lineHeight: Typography.sizes.sm * 1.3,
+    lineHeight: Typography.sizes.xs * 1.4,
+    paddingHorizontal: Responsive.spacing.xs,
   },
   summaryCard: {
     backgroundColor: Colors.accentSoft,
@@ -621,6 +660,74 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
+  },
+     progressVisualization: {
+     flexDirection: 'row',
+     alignItems: 'center',
+     justifyContent: 'space-around',
+     marginTop: Responsive.spacing.lg,
+     paddingHorizontal: Responsive.spacing.md,
+   },
+  progressStep: {
+    alignItems: 'center',
+  },
+  progressDot: {
+    width: Responsive.iconSizes.large,
+    height: Responsive.iconSizes.large,
+    borderRadius: Responsive.iconSizes.large / 2,
+    marginBottom: Responsive.spacing.sm,
+  },
+  progressLabel: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+  },
+  progressLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: Colors.border,
+    marginHorizontal: Responsive.spacing.sm,
+  },
+  securityLevelCard: {
+    backgroundColor: Colors.surface,
+    padding: Responsive.padding.modal,
+    borderRadius: Responsive.borderRadius.large,
+    marginTop: Responsive.spacing.xl,
+    marginBottom: Responsive.spacing.lg,
+  },
+  securityLevelHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Responsive.spacing.md,
+  },
+  securityLevelTitle: {
+    fontSize: Typography.sizes.xl,
+    fontWeight: Typography.weights.bold,
+    color: Colors.textPrimary,
+    marginLeft: Responsive.spacing.sm,
+  },
+  securityLevelProgress: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  securityLevelStep: {
+    alignItems: 'center',
+  },
+  securityLevelDot: {
+    width: Responsive.iconSizes.large,
+    height: Responsive.iconSizes.large,
+    borderRadius: Responsive.iconSizes.large / 2,
+    marginBottom: Responsive.spacing.sm,
+  },
+     securityLevelArrow: {
+     flex: 1,
+     height: 2,
+     backgroundColor: Colors.border,
+     marginHorizontal: Responsive.spacing.md,
+   },
+  securityLevelText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
   },
 });
 

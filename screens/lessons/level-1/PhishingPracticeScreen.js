@@ -53,24 +53,18 @@ const PhishingPracticeScreen = ({ navigation, route }) => {
         <View style={styles.headerSpacer} />
       </View>
 
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-        <Text style={{ fontSize: 24, fontWeight: '700', color: Colors.textPrimary, marginBottom: 16 }}>
+      <View style={styles.testContainer}>
+        <Text style={styles.testTitle}>
           Phishing Practice
         </Text>
-        <Text style={{ fontSize: 16, color: Colors.textSecondary, textAlign: 'center', lineHeight: 24 }}>
+        <Text style={styles.testDescription}>
           This is a test screen to verify the component is loading properly.
         </Text>
         <TouchableOpacity
-          style={{
-            backgroundColor: Colors.accent,
-            paddingVertical: 12,
-            paddingHorizontal: 24,
-            borderRadius: 8,
-            marginTop: 24,
-          }}
+          style={styles.testButton}
           onPress={() => navigation.goBack()}
         >
-          <Text style={{ color: Colors.textPrimary, fontWeight: '600' }}>Go Back</Text>
+          <Text style={styles.testButtonText}>Go Back</Text>
         </TouchableOpacity>
       </View>
 
@@ -380,6 +374,36 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: Colors.textPrimary,
+  },
+  testContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Responsive.padding.screen,
+  },
+  testTitle: {
+    fontSize: Typography.sizes.xxl,
+    fontWeight: Typography.weights.bold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.md,
+  },
+  testDescription: {
+    fontSize: Typography.sizes.md,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: Typography.sizes.md * 1.5,
+  },
+  testButton: {
+    backgroundColor: Colors.accent,
+    paddingVertical: Responsive.padding.button,
+    paddingHorizontal: Responsive.spacing.lg,
+    borderRadius: Responsive.borderRadius.medium,
+    marginTop: Responsive.spacing.lg,
+    minHeight: Responsive.buttonHeight.medium,
+  },
+  testButtonText: {
+    color: Colors.textPrimary,
+    fontWeight: Typography.weights.semibold,
   },
 });
 

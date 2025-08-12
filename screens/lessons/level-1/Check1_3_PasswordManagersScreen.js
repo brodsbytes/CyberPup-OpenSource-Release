@@ -275,7 +275,7 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
           onPress={handleExit}
           activeOpacity={0.8}
         >
-          <Ionicons name="menu" size={24} color={Colors.textPrimary} />
+          <Ionicons name="menu" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Check 1.3</Text>
         <View style={styles.headerSpacer} />
@@ -295,7 +295,7 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
               style={styles.modalCloseButton}
               onPress={() => setShowExitModal(false)}
             >
-              <Ionicons name="close" size={24} color={Colors.textPrimary} />
+              <Ionicons name="close" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
             </TouchableOpacity>
 
             {/* Sad Character */}
@@ -356,7 +356,7 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
               <View style={styles.recommendationsList}>
                 {getRecommendedManagers().map((pm, index) => (
                   <View key={index} style={styles.recommendationItem}>
-                    <Ionicons name="star" size={16} color={Colors.accent} />
+                    <Ionicons name="star" size={Responsive.iconSizes.small} color={Colors.accent} />
                     <Text style={styles.recommendationText}>{pm.label}</Text>
                   </View>
                 ))}
@@ -381,7 +381,7 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
                 </Text>
                 <Ionicons 
                   name={showDropdown ? 'chevron-up' : 'chevron-down'} 
-                  size={20} 
+                  size={Responsive.iconSizes.medium} 
                   color={Colors.textSecondary} 
                 />
               </TouchableOpacity>
@@ -389,7 +389,7 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
 
             {selectedPasswordManager && (
               <View style={styles.selectedManagerInfo}>
-                <Ionicons name="checkmark-circle" size={20} color={Colors.accent} />
+                <Ionicons name="checkmark-circle" size={Responsive.iconSizes.medium} color={Colors.accent} />
                 <Text style={styles.selectedManagerText}>
                   Great choice! {passwordManagers.find(pm => pm.value === selectedPasswordManager)?.label} is a solid password manager.
                 </Text>
@@ -406,7 +406,7 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
             <Text style={styles.learnMoreText}>Why use a password manager?</Text>
             <Ionicons
               name={showLearnMore ? 'chevron-up' : 'chevron-down'}
-              size={20}
+              size={Responsive.iconSizes.medium}
               color={Colors.accent}
             />
           </TouchableOpacity>
@@ -438,15 +438,15 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
           <View style={styles.tipsSection}>
             <Text style={styles.tipsTitle}>💡 Security Tips</Text>
             <View style={styles.tipItem}>
-              <Ionicons name="shield-checkmark" size={20} color={Colors.accent} />
+              <Ionicons name="shield-checkmark" size={Responsive.iconSizes.medium} color={Colors.accent} />
               <Text style={styles.tipText}>Choose a password manager with zero-knowledge encryption</Text>
             </View>
             <View style={styles.tipItem}>
-              <Ionicons name="key" size={20} color={Colors.accent} />
+              <Ionicons name="key" size={Responsive.iconSizes.medium} color={Colors.accent} />
               <Text style={styles.tipText}>Use a strong master password you can remember</Text>
             </View>
             <View style={styles.tipItem}>
-              <Ionicons name="cloud" size={20} color={Colors.accent} />
+              <Ionicons name="cloud" size={Responsive.iconSizes.medium} color={Colors.accent} />
               <Text style={styles.tipText}>Enable cloud sync to access passwords on all devices</Text>
             </View>
           </View>
@@ -454,7 +454,7 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
           {/* Completion Status */}
           {isCompleted && (
             <View style={styles.completionCard}>
-              <Ionicons name="checkmark-circle" size={48} color={Colors.accent} />
+              <Ionicons name="checkmark-circle" size={Responsive.iconSizes.xxlarge} color={Colors.accent} />
               <Text style={styles.completionTitle}>Check Complete!</Text>
               <Text style={styles.completionText}>
                 You've successfully set up your password manager. This will make managing passwords much easier!
@@ -469,7 +469,7 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
                 activeOpacity={0.8}
               >
                 <Text style={styles.continueButtonText}>Continue to Next Check</Text>
-                <Ionicons name="arrow-forward" size={20} color={Colors.textPrimary} />
+                <Ionicons name="arrow-forward" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
               </TouchableOpacity>
             </View>
           )}

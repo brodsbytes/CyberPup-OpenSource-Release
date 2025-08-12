@@ -139,7 +139,7 @@ const Badge = ({
           )}
           {isEarned && (
             <View style={styles.earnedIndicator}>
-              <Ionicons name="checkmark-circle" size={16} color={Colors.textPrimary} />
+                              <Ionicons name="checkmark-circle" size={Responsive.iconSizes.small} color={Colors.textPrimary} />
             </View>
           )}
         </Animated.View>
@@ -158,7 +158,7 @@ const Badge = ({
               style={styles.modalCloseButton}
               onPress={() => setShowModal(false)}
             >
-              <Ionicons name="close" size={24} color={Colors.textPrimary} />
+              <Ionicons name="close" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
             </TouchableOpacity>
 
             <View style={styles.badgeDetails}>
@@ -174,7 +174,7 @@ const Badge = ({
               
               {isEarned ? (
                 <View style={styles.earnedInfo}>
-                  <Ionicons name="checkmark-circle" size={20} color={Colors.accent} />
+                  <Ionicons name="checkmark-circle" size={Responsive.iconSizes.medium} color={Colors.accent} />
                   <Text style={styles.earnedText}>Earned</Text>
                   {badge.unlockedAt && (
                     <Text style={styles.earnedDate}>
@@ -184,7 +184,7 @@ const Badge = ({
                 </View>
               ) : (
                 <View style={styles.lockedInfo}>
-                  <Ionicons name="lock-closed" size={20} color={Colors.textSecondary} />
+                  <Ionicons name="lock-closed" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
                   <Text style={styles.lockedText}>Not yet earned</Text>
                 </View>
               )}

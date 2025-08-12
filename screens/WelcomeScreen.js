@@ -285,7 +285,7 @@ const WelcomeScreen = ({ navigation }) => {
     } else if (overallProgress < 50) {
       return `You're midway through your security audit. Keep reducing risk with ${nextLabel}.`;
     } else if (overallProgress < 75) {
-      return `Strong progress. Close the remaining gaps — next: ${nextLabel}.`;
+      return `Strong progress. Close the remaining gaps - next: ${nextLabel}.`;
     } else if (overallProgress < 100) {
       return 'Almost done. Finish the last checks to lock in your secure baseline.';
     } else {

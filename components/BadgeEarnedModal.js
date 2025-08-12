@@ -145,7 +145,7 @@ const BadgeEarnedModal = ({
               activeOpacity={0.8}
             >
               <Text style={styles.continueButtonText}>Continue Learning</Text>
-              <Ionicons name="arrow-forward" size={20} color={Colors.textPrimary} />
+                              <Ionicons name="arrow-forward" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
             </TouchableOpacity>
 
             <TouchableOpacity

@@ -481,15 +481,15 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   checklistTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: Typography.sizes.xl,
+    fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
-    marginBottom: 8,
+    marginBottom: Responsive.spacing.sm,
   },
   checklistSubtitle: {
-    fontSize: 14,
+    fontSize: Typography.sizes.sm,
     color: Colors.textSecondary,
-    marginBottom: 16,
+    marginBottom: Responsive.spacing.md,
   },
   checklistItem: {
     backgroundColor: Colors.surface,
