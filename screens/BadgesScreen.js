@@ -3,10 +3,10 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
-  StatusBar,
-  ScrollView,
   TouchableOpacity,
+  ScrollView,
+  Modal,
+  Dimensions,
   Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,17 +14,36 @@ import { Colors, Typography, Responsive } from '../theme';
 import { isSmallScreen } from '../utils/responsive';
 import { loadUserBadges, getEarnedBadgesCount } from '../utils/badgeStorage';
 import Badge from '../components/Badge';
+import * as Haptics from 'expo-haptics';
 
-const BadgesScreen = ({ navigation }) => {
+const { height, width } = Dimensions.get('window');
+
+const BadgesModal = ({ visible, onClose }) => {
   const [badges, setBadges] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [earnedCount, setEarnedCount] = useState(0);
   const [shineAnim] = useState(new Animated.Value(0));
+  const [slideAnim] = useState(new Animated.Value(0));
 
   useEffect(() => {
+    if (visible) {
     loadBadges();
     startShineAnimation();
-  }, []);
+      // Haptic feedback on open
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      Animated.timing(slideAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [visible]);
 
   const loadBadges = async () => {
     try {
@@ -56,11 +75,30 @@ const BadgesScreen = ({ navigation }) => {
     ).start();
   };
 
+  const handleClose = () => {
+    // Haptic feedback on close
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onClose();
+  };
+
   const getBadgesByType = (type) => {
     return badges.filter(badge => badge.type === type);
   };
 
-  const BadgeSection = ({ title, badges, type }) => (
+  // Determine grid columns based on screen size
+  const getGridColumns = () => {
+    if (width <= 375) return 3; // iPhone SE
+    if (width <= 414) return 3; // iPhone 12/13/14
+    return 4; // Larger devices
+  };
+
+  const gridColumns = getGridColumns();
+  const badgeWidth = `${100 / gridColumns - 2}%`; // Account for gap
+
+  const BadgeSection = ({ title, badges, type }) => {
+    if (badges.length === 0) return null;
+    
+    return (
     <View style={styles.badgeSection}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>{title}</Text>
@@ -70,7 +108,7 @@ const BadgesScreen = ({ navigation }) => {
       </View>
       <View style={styles.badgesGrid}>
         {badges.map((badge) => (
-          <View key={badge.id} style={styles.badgeContainer}>
+            <View key={badge.id} style={[styles.badgeContainer, { width: badgeWidth }]}>
             <Badge
               badge={badge}
               size="small"
@@ -93,55 +131,91 @@ const BadgesScreen = ({ navigation }) => {
       </View>
     </View>
   );
-
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading badges...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  const areaBadges = getBadgesByType('area');
-  const levelBadges = getBadgesByType('level');
-  const specialBadges = getBadgesByType('special');
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
-      
-      {/* Header */}
-      <View style={styles.header}>
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={handleClose}
+    >
+      <View style={styles.overlay}>
         <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-          accessibilityLabel="Go back"
+          style={styles.backdrop}
+          activeOpacity={1}
+          onPress={handleClose}
+        />
+        
+        <Animated.View
+          style={[
+            styles.modalContent,
+            {
+              transform: [
+                {
+                  translateY: slideAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [height, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
         >
-          <Ionicons name="arrow-back" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
+          {/* Compact Header */}
+          <View style={styles.header}>
+            <View style={styles.headerContent}>
+              <Text style={styles.headerTitle}>Badges</Text>
+              <Text style={styles.headerSubtitle}>
+                Your achievements and progress milestones
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={handleClose}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="close" size={24} color={Colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Badges</Text>
-        <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Stats Section */}
-        <View style={styles.statsSection}>
-          <View style={styles.statsCard}>
-            <View style={styles.statsIconContainer}>
-              <Text style={styles.statsIcon}>🏆</Text>
+          {/* Compact Stats Summary */}
+          <View style={styles.statsSummary}>
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Total Earned</Text>
+                <Text style={styles.statValue}>{earnedCount} / {badges.length}</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Area Badges</Text>
+                <Text style={styles.statValue}>
+                  {getBadgesByType('area').filter(b => b.isEarned).length} / {getBadgesByType('area').length}
+                </Text>
+              </View>
             </View>
-            <Text style={styles.statsTitle}>Badges Earned</Text>
-            <Text style={styles.statsValue}>{earnedCount} / {badges.length}</Text>
-            <Text style={styles.statsSubtitle}>
-              {earnedCount > 0 ? 'Great progress!' : 'Start completing checks to earn badges'}
-            </Text>
           </View>
-        </View>
 
+          {/* Content */}
+          <ScrollView 
+            style={styles.content}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.contentContainer}
+          >
+            {isLoading ? (
+              <View style={styles.loadingContainer}>
+                <Text style={styles.loadingText}>Loading badges...</Text>
+        </View>
+            ) : (
+              <>
         {/* Badge Sections */}
+                {(() => {
+                  const areaBadges = getBadgesByType('area');
+                  const levelBadges = getBadgesByType('level');
+                  const specialBadges = getBadgesByType('special');
+
+                  return (
+                    <>
         {areaBadges.length > 0 && (
           <BadgeSection 
             title="Area Badges" 
@@ -166,127 +240,157 @@ const BadgesScreen = ({ navigation }) => {
           />
         )}
 
-        {/* Bottom spacing */}
-        <View style={styles.bottomSpacing} />
+                      {/* Minimal bottom spacing */}
+                      <View style={{ height: Responsive.spacing.md }} />
+                    </>
+                  );
+                })()}
+              </>
+            )}
       </ScrollView>
-    </SafeAreaView>
+        </Animated.View>
+      </View>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  overlay: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  backdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
-  loadingText: {
-    color: Colors.textSecondary,
-    fontSize: Typography.sizes.md,
+  modalContent: {
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: Responsive.borderRadius.xlarge,
+    borderTopRightRadius: Responsive.borderRadius.xlarge,
+    maxHeight: height * 0.85,
+    minHeight: height * 0.5,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Responsive.padding.screen,
-    paddingVertical: Responsive.spacing.md,
+    paddingVertical: Responsive.spacing.md, // Reduced from lg
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
-  backButton: {
-    width: Responsive.iconSizes.large,
-    height: Responsive.iconSizes.large,
-    borderRadius: Responsive.iconSizes.large / 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
-  },
-  headerTitle: {
-    fontSize: Typography.sizes.lg,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-  },
-  headerSpacer: {
-    width: Responsive.iconSizes.large,
-  },
-  scrollView: {
+  headerContent: {
     flex: 1,
   },
-  statsSection: {
-    paddingHorizontal: Responsive.padding.screen,
-    paddingVertical: Responsive.spacing.lg,
-  },
-  statsCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.xlarge,
-    padding: Responsive.padding.modal,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.accent,
-  },
-  statsIconContainer: {
-    marginBottom: Responsive.spacing.sm,
-  },
-  statsIcon: {
-    fontSize: Typography.sizes.xxl * 2,
-  },
-  statsTitle: {
-    fontSize: Typography.sizes.md,
-    color: Colors.textSecondary,
-    marginBottom: Responsive.spacing.xs,
-  },
-  statsValue: {
-    fontSize: Typography.sizes.xxl,
+  headerTitle: {
+    fontSize: Typography.sizes.xl,
     fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.xs, // Reduced from xs
+  },
+  headerSubtitle: {
+    fontSize: Typography.sizes.sm, // Reduced from md
+    color: Colors.textSecondary,
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statsSummary: {
+    paddingHorizontal: Responsive.padding.screen,
+    paddingVertical: Responsive.spacing.sm, // Compact padding
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+  },
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statLabel: {
+    fontSize: Typography.sizes.xs,
+    color: Colors.textSecondary,
     marginBottom: Responsive.spacing.xs,
   },
-  statsSubtitle: {
-    fontSize: Typography.sizes.sm,
+  statValue: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.bold,
+    color: Colors.textPrimary,
+  },
+  statDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: Colors.border,
+  },
+  content: {
+    flex: 1,
+  },
+  contentContainer: {
+    paddingHorizontal: Responsive.padding.screen,
+    paddingVertical: Responsive.spacing.sm, // Reduced from lg
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: Responsive.spacing.xl,
+  },
+  loadingText: {
     color: Colors.textSecondary,
-    textAlign: 'center',
+    fontSize: Typography.sizes.md,
   },
   badgeSection: {
-    paddingHorizontal: Responsive.padding.screen,
-    marginBottom: Responsive.spacing.lg,
+    marginBottom: Responsive.spacing.lg, // Reduced from xl
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Responsive.spacing.md,
+    marginBottom: Responsive.spacing.sm, // Reduced from lg
+    paddingHorizontal: Responsive.spacing.xs,
   },
   sectionTitle: {
-    fontSize: Typography.sizes.lg,
+    fontSize: Typography.sizes.md, // Reduced from lg
     fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
   },
   sectionCount: {
-    fontSize: Typography.sizes.sm,
+    fontSize: Typography.sizes.xs, // Reduced from sm
     color: Colors.textSecondary,
+    fontWeight: Typography.weights.medium,
   },
   badgesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: isSmallScreen ? Responsive.spacing.xs : Responsive.spacing.sm,
+    gap: Responsive.spacing.sm, // Reduced from md
+    paddingHorizontal: Responsive.spacing.xs,
   },
   badgeContainer: {
-    width: isSmallScreen ? '48%' : '31%', // 2 columns on small screens, 3 on larger
     alignItems: 'center',
     position: 'relative',
-    marginBottom: Responsive.spacing.md,
+    marginBottom: Responsive.spacing.md, // Reduced from lg
+    paddingHorizontal: Responsive.spacing.xs,
   },
   badgeName: {
-    fontSize: isSmallScreen ? Typography.sizes.xs * 0.9 : Typography.sizes.xs,
+    fontSize: Typography.sizes.xs, // Reduced size
     color: Colors.textSecondary,
     textAlign: 'center',
-    marginTop: Responsive.spacing.xs,
+    marginTop: Responsive.spacing.xs, // Reduced from sm
     fontWeight: Typography.weights.medium,
-    lineHeight: isSmallScreen ? Typography.sizes.xs * 1.1 : Typography.sizes.xs * 1.2,
+    lineHeight: Typography.sizes.xs * 1.2,
     maxWidth: '100%',
   },
   badgeNameEarned: {
@@ -301,9 +405,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: Responsive.borderRadius.large,
   },
-  bottomSpacing: {
-    height: Responsive.spacing.lg,
-  },
 });
 
-export default BadgesScreen;
+export default BadgesModal;

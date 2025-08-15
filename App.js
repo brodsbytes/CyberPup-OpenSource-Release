@@ -7,8 +7,7 @@ import CategoryScreen from './screens/CategoryScreen';
 import ModuleListScreen from './screens/ModuleListScreen';
 import InsightsScreen from './screens/InsightsScreen';
 import LoadingScreen from './components/LoadingScreen';
-import StreakDetailsScreen from './screens/StreakDetailsScreen';
-import BadgesScreen from './screens/BadgesScreen';
+
 import { APP_CONSTANTS, SCREEN_NAMES, ERROR_MESSAGES } from './constants';
 import { AppStorage } from './utils/storage';
 import { ThemeProvider } from './utils/themeContext';
@@ -77,9 +76,7 @@ export default function App() {
           <Stack.Screen name={SCREEN_NAMES.MODULE_LIST} component={ModuleListScreen} />
           <Stack.Screen name={SCREEN_NAMES.INSIGHTS} component={InsightsScreen} />
           
-          {/* Gamification screens */}
-          <Stack.Screen name={SCREEN_NAMES.STREAK_DETAILS} component={StreakDetailsScreen} />
-          <Stack.Screen name={SCREEN_NAMES.BADGES} component={BadgesScreen} />
+
           
           {/* Level 1 Check screens */}
           <Stack.Screen name={SCREEN_NAMES.CHECK_1_1_STRONG_PASSWORDS} component={Check1_1_StrongPasswordsScreen} />

@@ -70,9 +70,9 @@ const Badge = ({
     switch (size) {
       case 'small':
         return {
-          container: { width: 60, height: 60 },
-          icon: { fontSize: 24 },
-          text: { fontSize: 10 }
+          container: { width: 60, height: 60 }, // Reduced for compact layout
+          icon: { fontSize: 24 }, // Reduced for compact layout
+          text: { fontSize: 9 } // Reduced for compact layout
         };
       case 'large':
         return {
@@ -82,9 +82,9 @@ const Badge = ({
         };
       default: // medium
         return {
-          container: { width: 80, height: 80 },
-          icon: { fontSize: 32 },
-          text: { fontSize: 12 }
+          container: { width: 70, height: 70 }, // Reduced for compact layout
+          icon: { fontSize: 28 }, // Reduced for compact layout
+          text: { fontSize: 10 } // Reduced for compact layout
         };
     }
   };
@@ -202,11 +202,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   badgeContainer: {
-    borderRadius: 12,
+    borderRadius: 14, // Reduced for compact layout
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 8,
+    padding: 8, // Reduced for compact layout
     position: 'relative',
   },
   badgeIcon: {

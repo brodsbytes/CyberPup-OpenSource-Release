@@ -3,25 +3,44 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
-  StatusBar,
-  ScrollView,
   TouchableOpacity,
+  ScrollView,
+  Modal,
+  Dimensions,
   Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Responsive } from '../theme';
 import { getStreakStats, STREAK_MILESTONES } from '../utils/streakStorage';
+import * as Haptics from 'expo-haptics';
 
-const StreakDetailsScreen = ({ navigation }) => {
+const { height } = Dimensions.get('window');
+
+const StreakDetailsModal = ({ visible, onClose }) => {
   const [streakStats, setStreakStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [flickerAnim] = useState(new Animated.Value(1));
+  const [slideAnim] = useState(new Animated.Value(0));
 
   useEffect(() => {
-    loadStreakStats();
-    startFlickerAnimation();
-  }, []);
+    if (visible) {
+      loadStreakStats();
+      startFlickerAnimation();
+      // Haptic feedback on open
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      Animated.timing(slideAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [visible]);
 
   const loadStreakStats = async () => {
     try {
@@ -51,272 +70,350 @@ const StreakDetailsScreen = ({ navigation }) => {
     ).start();
   };
 
-  const MilestoneCard = ({ milestone, isAchieved, isNext }) => (
-    <View style={[
-      styles.milestoneCard,
-      isAchieved && styles.milestoneCardAchieved,
-      isNext && styles.milestoneCardNext
-    ]}>
-      <View style={styles.milestoneHeader}>
-        <Text style={styles.milestoneDays}>{milestone.days} days</Text>
-        {isAchieved && (
-          <Animated.View style={{ opacity: flickerAnim }}>
-            <Text style={styles.milestoneIcon}>🔥</Text>
-          </Animated.View>
-        )}
+  const handleClose = () => {
+    // Haptic feedback on close
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onClose();
+  };
+
+  const StatCard = ({ icon, label, value, isHighlighted = false }) => (
+    <View style={[styles.statCard, isHighlighted && styles.statCardHighlighted]}>
+      <View style={styles.statIconContainer}>
+        <Text style={styles.statIcon}>{icon}</Text>
       </View>
-      <Text style={[
-        styles.milestoneTitle,
-        isAchieved && styles.milestoneTitleAchieved
-      ]}>
-        {milestone.title}
+      <Text style={styles.statLabel}>{label}</Text>
+      <Text style={[styles.statValue, isHighlighted && styles.statValueHighlighted]}>
+        {value}
       </Text>
-      <Text style={[
-        styles.milestoneDescription,
-        isAchieved && styles.milestoneDescriptionAchieved
-      ]}>
-        {milestone.description}
-      </Text>
-      {isNext && streakStats && (
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View 
-              style={[
-                styles.progressFill, 
-                { width: `${streakStats.streakPercentage}%` }
-              ]} 
-            />
-          </View>
-          <Text style={styles.progressText}>
-            {streakStats.currentStreak} / {milestone.days}
-          </Text>
-        </View>
-      )}
     </View>
   );
 
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading streak data...</Text>
+  const MilestoneCard = ({ milestone, isAchieved, isNext, index, totalMilestones }) => (
+    <View style={styles.milestoneWrapper}>
+      <View style={[
+        styles.milestoneCard,
+        isAchieved && styles.milestoneCardAchieved,
+        isNext && styles.milestoneCardNext
+      ]}>
+        <View style={styles.milestoneHeader}>
+          <View style={styles.milestoneIconContainer}>
+            <Text style={styles.milestoneIcon}>🔥</Text>
+          </View>
+          <View style={styles.milestoneContent}>
+            <Text style={[
+              styles.milestoneTitle,
+              isAchieved && styles.milestoneTitleAchieved
+            ]}>
+              {milestone.title}
+            </Text>
+            <Text style={[
+              styles.milestoneDescription,
+              isAchieved && styles.milestoneDescriptionAchieved
+            ]}>
+              {milestone.days} day streak
+            </Text>
+          </View>
+          {isAchieved && (
+            <Animated.View style={{ opacity: flickerAnim }}>
+              <Ionicons 
+                name="checkmark-circle" 
+                size={20} 
+                color={Colors.accent} 
+                style={styles.achievedIcon}
+              />
+            </Animated.View>
+          )}
         </View>
-      </SafeAreaView>
-    );
-  }
+        
+        {isNext && streakStats && (
+          <View style={styles.progressContainer}>
+            <View style={styles.progressBar}>
+              <View 
+                style={[
+                  styles.progressFill, 
+                  { width: `${streakStats.streakPercentage}%` }
+                ]} 
+              />
+            </View>
+            <Text style={styles.progressText}>
+              {streakStats.currentStreak} / {milestone.days}
+            </Text>
+          </View>
+        )}
+      </View>
+    </View>
+  );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
-      
-      {/* Header */}
-      <View style={styles.header}>
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={handleClose}
+    >
+      <View style={styles.overlay}>
         <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-          accessibilityLabel="Go back"
+          style={styles.backdrop}
+          activeOpacity={1}
+          onPress={handleClose}
+        />
+        
+        <Animated.View
+          style={[
+            styles.modalContent,
+            {
+              transform: [
+                {
+                  translateY: slideAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [height, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
         >
-          <Ionicons name="arrow-back" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Streak Details</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+          {/* Compact Header */}
+          <View style={styles.header}>
+            <View style={styles.headerContent}>
+              <Text style={styles.headerTitle}>Streak Details</Text>
+              <Text style={styles.headerSubtitle}>
+                Track your learning progress and milestones
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={handleClose}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="close" size={24} color={Colors.textPrimary} />
+            </TouchableOpacity>
+          </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Current Streak Section */}
-        <View style={styles.currentStreakSection}>
-          <View style={styles.streakCard}>
-            <Animated.View style={[styles.streakIconContainer, { opacity: flickerAnim }]}>
-              <Text style={styles.streakIcon}>🔥</Text>
-            </Animated.View>
-            <Text style={styles.currentStreakTitle}>Current Streak</Text>
-            <Text style={styles.currentStreakCount}>
-              {streakStats?.currentStreak || 0} days
-            </Text>
-            {streakStats?.isOnFire && (
-              <Text style={styles.onFireText}>You're on fire! 🔥</Text>
+          {/* Content */}
+          <ScrollView 
+            style={styles.content}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.contentContainer}
+          >
+            {isLoading ? (
+              <View style={styles.loadingContainer}>
+                <Text style={styles.loadingText}>Loading streak data...</Text>
+              </View>
+            ) : (
+              <>
+                {/* Current Stats Row */}
+                <View style={styles.statsSection}>
+                  <StatCard
+                    icon="🔥"
+                    label="Current Streak"
+                    value={`${streakStats?.currentStreak || 0} days`}
+                    isHighlighted={streakStats?.isOnFire}
+                  />
+                  <StatCard
+                    icon="📈"
+                    label="Longest Streak"
+                    value={`${streakStats?.longestStreak || 0} days`}
+                  />
+                  <StatCard
+                    icon="📅"
+                    label="Total Days"
+                    value={`${streakStats?.totalDays || 0} days`}
+                  />
+                </View>
+
+                {/* Milestones Section */}
+                <View style={styles.milestonesSection}>
+                  <Text style={styles.sectionTitle}>Milestones</Text>
+                  <View style={styles.milestonesContainer}>
+                    {Object.entries(STREAK_MILESTONES).map(([days, milestone], index) => {
+                      const isAchieved = streakStats?.currentStreak >= parseInt(days);
+                      const isNext = !isAchieved && streakStats?.nextMilestone?.days === parseInt(days);
+                      
+                      return (
+                        <MilestoneCard
+                          key={days}
+                          milestone={{ days: parseInt(days), ...milestone }}
+                          isAchieved={isAchieved}
+                          isNext={isNext}
+                          index={index}
+                          totalMilestones={Object.keys(STREAK_MILESTONES).length}
+                        />
+                      );
+                    })}
+                  </View>
+                </View>
+                
+                {/* Minimal bottom spacing */}
+                <View style={{ height: Responsive.spacing.md }} />
+              </>
             )}
-          </View>
-        </View>
-
-        {/* Stats Section */}
-        <View style={styles.statsSection}>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{streakStats?.longestStreak || 0}</Text>
-            <Text style={styles.statLabel}>Longest Streak</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>{streakStats?.totalDays || 0}</Text>
-            <Text style={styles.statLabel}>Total Days</Text>
-          </View>
-        </View>
-
-        {/* Milestones Section */}
-        <View style={styles.milestonesSection}>
-          <Text style={styles.sectionTitle}>Milestones</Text>
-          {Object.entries(STREAK_MILESTONES).map(([days, milestone]) => {
-            const isAchieved = streakStats?.currentStreak >= parseInt(days);
-            const isNext = !isAchieved && streakStats?.nextMilestone?.days === parseInt(days);
-            
-            return (
-              <MilestoneCard
-                key={days}
-                milestone={{ days: parseInt(days), ...milestone }}
-                isAchieved={isAchieved}
-                isNext={isNext}
-              />
-            );
-          })}
-        </View>
-
-        {/* Bottom spacing */}
-        <View style={styles.bottomSpacing} />
-      </ScrollView>
-    </SafeAreaView>
+          </ScrollView>
+        </Animated.View>
+      </View>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  overlay: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  backdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
-  loadingText: {
-    color: Colors.textSecondary,
-    fontSize: Typography.sizes.md,
+  modalContent: {
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: Responsive.borderRadius.xlarge,
+    borderTopRightRadius: Responsive.borderRadius.xlarge,
+    maxHeight: height * 0.85,
+    minHeight: height * 0.5,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Responsive.padding.screen,
-    paddingVertical: Responsive.spacing.md,
+    paddingVertical: Responsive.spacing.md, // Reduced from lg
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
-  backButton: {
-    width: Responsive.iconSizes.large,
-    height: Responsive.iconSizes.large,
-    borderRadius: Responsive.iconSizes.large / 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
+  headerContent: {
+    flex: 1,
   },
   headerTitle: {
-    fontSize: Typography.sizes.lg,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-  },
-  headerSpacer: {
-    width: Responsive.iconSizes.large,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  currentStreakSection: {
-    paddingHorizontal: Responsive.padding.screen,
-    paddingVertical: Responsive.spacing.lg,
-  },
-  streakCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.xlarge,
-    padding: Responsive.padding.modal,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.accent,
-  },
-  streakIconContainer: {
-    marginBottom: Responsive.spacing.sm,
-  },
-  streakIcon: {
-    fontSize: Typography.sizes.xxl * 2,
-  },
-  currentStreakTitle: {
-    fontSize: Typography.sizes.md,
-    color: Colors.textSecondary,
-    marginBottom: Responsive.spacing.xs,
-  },
-  currentStreakCount: {
-    fontSize: Typography.sizes.xxl,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-    marginBottom: Responsive.spacing.xs,
-  },
-  onFireText: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.accent,
-    fontWeight: Typography.weights.semibold,
-  },
-  statsSection: {
-    flexDirection: 'row',
-    paddingHorizontal: Responsive.padding.screen,
-    marginBottom: Responsive.spacing.lg,
-    gap: Responsive.spacing.md,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.large,
-    padding: Responsive.padding.card,
-    alignItems: 'center',
-  },
-  statValue: {
     fontSize: Typography.sizes.xl,
     fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
-    marginBottom: Responsive.spacing.xs,
+    marginBottom: Responsive.spacing.xs, // Reduced from xs
   },
-  statLabel: {
-    fontSize: Typography.sizes.sm,
+  headerSubtitle: {
+    fontSize: Typography.sizes.sm, // Reduced from md
     color: Colors.textSecondary,
   },
-  milestonesSection: {
-    paddingHorizontal: Responsive.padding.screen,
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  sectionTitle: {
-    fontSize: Typography.sizes.lg,
+  content: {
+    flex: 1,
+  },
+  contentContainer: {
+    paddingHorizontal: Responsive.padding.screen,
+    paddingVertical: Responsive.spacing.sm, // Reduced from lg
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: Responsive.spacing.xl,
+  },
+  loadingText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.sizes.md,
+  },
+  statsSection: {
+    flexDirection: 'row',
+    marginBottom: Responsive.spacing.lg, // Reduced from xl
+    gap: Responsive.spacing.sm, // Reduced gap
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: Colors.background,
+    borderRadius: Responsive.borderRadius.medium, // Reduced from large
+    padding: Responsive.spacing.md, // Reduced from card
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  statCardHighlighted: {
+    borderColor: Colors.accent,
+    backgroundColor: 'rgba(91, 163, 240, 0.1)',
+  },
+  statIconContainer: {
+    marginBottom: Responsive.spacing.xs, // Reduced from sm
+  },
+  statIcon: {
+    fontSize: Typography.sizes.lg, // Reduced from xl
+  },
+  statLabel: {
+    fontSize: Typography.sizes.xs, // Reduced from sm
+    color: Colors.textSecondary,
+    marginBottom: Responsive.spacing.xs,
+    textAlign: 'center',
+  },
+  statValue: {
+    fontSize: Typography.sizes.md, // Reduced from lg
     fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
+    textAlign: 'center',
+  },
+  statValueHighlighted: {
+    color: Colors.accent,
+  },
+  milestonesSection: {
+    marginBottom: Responsive.spacing.lg, // Reduced from xl
+  },
+  sectionTitle: {
+    fontSize: Typography.sizes.md, // Reduced from lg
+    fontWeight: Typography.weights.bold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.sm, // Reduced from md
+  },
+  milestonesContainer: {
+    position: 'relative',
+  },
+  milestoneWrapper: {
     marginBottom: Responsive.spacing.md,
   },
   milestoneCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.large,
-    padding: Responsive.padding.card,
-    marginBottom: Responsive.spacing.md,
+    backgroundColor: Colors.background,
+    borderRadius: Responsive.borderRadius.medium,
+    padding: Responsive.spacing.md,
     borderWidth: 1,
     borderColor: Colors.border,
+    opacity: 0.7, // Grey out unachieved milestones
+    zIndex: 1, // Above the connector line
   },
   milestoneCardAchieved: {
     borderColor: Colors.accent,
     backgroundColor: 'rgba(91, 163, 240, 0.1)',
+    opacity: 1, // Full opacity for achieved milestones
   },
   milestoneCardNext: {
     borderColor: Colors.accent,
     borderWidth: 2,
+    opacity: 1,
   },
   milestoneHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: Responsive.spacing.xs,
   },
-  milestoneDays: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
+  milestoneIconContainer: {
+    marginRight: Responsive.spacing.sm,
   },
   milestoneIcon: {
     fontSize: Typography.sizes.lg,
   },
+  milestoneContent: {
+    flex: 1,
+  },
+  achievedIcon: {
+    marginLeft: Responsive.spacing.sm,
+  },
   milestoneTitle: {
-    fontSize: Typography.sizes.md,
+    fontSize: Typography.sizes.sm, // Reduced from md
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
     marginBottom: Responsive.spacing.xs,
@@ -325,9 +422,8 @@ const styles = StyleSheet.create({
     color: Colors.accent,
   },
   milestoneDescription: {
-    fontSize: Typography.sizes.sm,
+    fontSize: Typography.sizes.xs, // Reduced from sm
     color: Colors.textSecondary,
-    marginBottom: Responsive.spacing.sm,
   },
   milestoneDescriptionAchieved: {
     color: Colors.textPrimary,
@@ -336,28 +432,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Responsive.spacing.sm,
+    marginTop: Responsive.spacing.xs,
   },
   progressBar: {
     flex: 1,
-    height: Responsive.spacing.xs,
+    height: 3, // Reduced from xs
     backgroundColor: Colors.track,
-    borderRadius: Responsive.borderRadius.small,
+    borderRadius: 2, // Reduced from small
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
     backgroundColor: Colors.accent,
-    borderRadius: Responsive.borderRadius.small,
+    borderRadius: 2, // Reduced from small
   },
   progressText: {
-    fontSize: Typography.sizes.sm,
+    fontSize: Typography.sizes.xs, // Reduced from sm
     color: Colors.textSecondary,
-    minWidth: 40,
+    minWidth: 35, // Reduced from 40
     textAlign: 'right',
-  },
-  bottomSpacing: {
-    height: Responsive.spacing.lg,
   },
 });
 
-export default StreakDetailsScreen;
+export default StreakDetailsModal;

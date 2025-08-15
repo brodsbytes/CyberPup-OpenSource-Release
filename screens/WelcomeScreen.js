@@ -17,6 +17,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { levels, getAllChecks, getChecksByArea, getAreasByLevel } from '../data/courseData';
 import CircularProgress from '../components/CircularProgress';
+import ScoreBreakdownModal from '../components/ScoreBreakdownModal';
+import StreakDetailsModal from './StreakDetailsScreen';
+import BadgesModal from './BadgesScreen';
 import BottomNavigation from '../components/BottomNavigation';
 import GamificationIcons from '../components/GamificationIcons';
 import { SCREEN_NAMES } from '../constants';
@@ -27,6 +30,9 @@ const { width } = Dimensions.get('window');
 const WelcomeScreen = ({ navigation }) => {
   const [overallProgress, setOverallProgress] = useState(0);
   const [activeLevel, setActiveLevel] = useState(null);
+  const [showScoreBreakdown, setShowScoreBreakdown] = useState(false);
+  const [showStreakDetails, setShowStreakDetails] = useState(false);
+  const [showBadges, setShowBadges] = useState(false);
 
   const [isLoadingActiveLevel, setIsLoadingActiveLevel] = useState(true);
   const [nextLevel, setNextLevel] = useState(null);
@@ -373,8 +379,8 @@ const WelcomeScreen = ({ navigation }) => {
             {/* Gamification Icons */}
             <View style={styles.gamificationIconsContainer}>
               <GamificationIcons
-                onStreakPress={() => navigation.navigate(SCREEN_NAMES.STREAK_DETAILS)}
-                onBadgesPress={() => navigation.navigate(SCREEN_NAMES.BADGES)}
+                onStreakPress={() => setShowStreakDetails(true)}
+                onBadgesPress={() => setShowBadges(true)}
               />
             </View>
           </View>
@@ -391,6 +397,8 @@ const WelcomeScreen = ({ navigation }) => {
                 showIcon={false}
                 showPercentage={true}
                 showBackground={true}
+                interactive={true}
+                onPress={() => setShowScoreBreakdown(true)}
               />
             </View>
 
@@ -547,6 +555,25 @@ const WelcomeScreen = ({ navigation }) => {
             navigation.navigate(SCREEN_NAMES.PROFILE);
           }
         }}
+      />
+
+      {/* Score Breakdown Modal */}
+      <ScoreBreakdownModal
+        visible={showScoreBreakdown}
+        onClose={() => setShowScoreBreakdown(false)}
+        overallProgress={overallProgress}
+      />
+
+      {/* Streak Details Modal */}
+      <StreakDetailsModal
+        visible={showStreakDetails}
+        onClose={() => setShowStreakDetails(false)}
+      />
+
+      {/* Badges Modal */}
+      <BadgesModal
+        visible={showBadges}
+        onClose={() => setShowBadges(false)}
       />
     </SafeAreaView>
   );
