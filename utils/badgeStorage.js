@@ -60,8 +60,8 @@ export const BADGES = {
   'level-1': {
     id: 'level-1',
     type: BADGE_TYPES.LEVEL,
-    name: 'Cyber Pup Scout',
-    description: 'Completed Level 1 - Beginner',
+    name: 'CyberPup Scout',
+    description: 'Completed Level 1 - CyberPup Scout 🐾',
     icon: '🐾',
     color: '#5BA3F0',
     unlockedAt: null
@@ -69,18 +69,18 @@ export const BADGES = {
   'level-2': {
     id: 'level-2',
     type: BADGE_TYPES.LEVEL,
-    name: 'Cyber Pup Guardian',
-    description: 'Completed Level 2 - Intermediate',
-    icon: '🛡️',
+    name: 'CyberPup Watchdog',
+    description: 'Completed Level 2 - CyberPup Watchdog 👁️',
+    icon: '👁️',
     color: '#27ae60',
     unlockedAt: null
   },
   'level-3': {
     id: 'level-3',
     type: BADGE_TYPES.LEVEL,
-    name: 'Cyber Pup Master',
-    description: 'Completed Level 3 - Advanced',
-    icon: '🎯',
+    name: 'CyberPup Guardian',
+    description: 'Completed Level 3 - CyberPup Guardian 🛡️',
+    icon: '🛡️',
     color: '#e74c3c',
     unlockedAt: null
   },

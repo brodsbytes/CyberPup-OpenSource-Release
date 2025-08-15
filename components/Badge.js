@@ -8,7 +8,7 @@ import {
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../theme';
+import { Colors, Responsive } from '../theme';
 
 const Badge = ({ 
   badge, 

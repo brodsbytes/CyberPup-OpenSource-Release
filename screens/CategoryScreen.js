@@ -75,11 +75,13 @@ const CategoryScreen = ({ navigation }) => {
       
       {/* Bottom Navigation */}
       <BottomNavigation 
-        activeTab="learn"
+        activeTab="insights"
         onTabPress={(screen) => {
           console.log('CategoryScreen - Tab pressed:', screen);
           if (screen === 'Welcome') {
             navigation.navigate('Welcome');
+          } else if (screen === 'InsightsScreen') {
+            navigation.navigate('InsightsScreen');
           } else if (screen === 'ProfileScreen') {
             navigation.navigate('ProfileScreen');
           }

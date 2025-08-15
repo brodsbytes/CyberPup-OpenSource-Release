@@ -253,7 +253,7 @@ const Check1_1_StrongPasswordsScreen = ({ navigation, route }) => {
             <Ionicons name="shield-checkmark" size={Responsive.iconSizes.xxlarge} color={Colors.textPrimary} />
           </View>
           <Text style={styles.introTitle}>Area 1: Protect Your Accounts</Text>
-          <Text style={styles.introSubtitle}>Cyber Pup Scout 🐾</Text>
+          <Text style={styles.introSubtitle}>CyberPup Scout 🐾</Text>
         </View>
 
         <View style={styles.introSection}>

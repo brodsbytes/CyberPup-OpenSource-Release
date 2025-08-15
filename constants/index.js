@@ -29,6 +29,10 @@ export const SCREEN_NAMES = {
   CATEGORY: 'CategoryScreen',
   MODULE_LIST: 'ModuleListScreen',
   PROFILE: 'ProfileScreen',
+  INSIGHTS: 'InsightsScreen',
+  // Gamification screens
+  STREAK_DETAILS: 'StreakDetailsScreen',
+  BADGES: 'BadgesScreen',
   // Level 1 Check screens
   CHECK_1_1_STRONG_PASSWORDS: 'Check1_1_StrongPasswordsScreen',
   CHECK_1_2_HIGH_VALUE_ACCOUNTS: 'Check1_2_HighValueAccountsScreen',
@@ -49,10 +53,10 @@ export const TAB_NAVIGATION = {
       screen: SCREEN_NAMES.WELCOME,
     },
     {
-      id: 'learn',
-      title: 'Learn',
-      icon: 'book-outline',
-      screen: SCREEN_NAMES.CATEGORY,
+      id: 'insights',
+      title: 'Insights',
+      icon: 'bulb-outline',
+      screen: SCREEN_NAMES.INSIGHTS,
     },
     {
       id: 'profile',

@@ -7,12 +7,12 @@ import { Colors } from '../theme';
 export const levels = [
   {
     id: 1,
-    title: 'Level 1 - Beginner',
-    subtitle: 'Cyber Pup Scout 🐾',
+    title: 'Level 1 - CyberPup Scout 🐾',
+    subtitle: 'CyberPup Scout 🐾',
     description: 'Establish a strong baseline of cyber hygiene in the least time possible.',
     headerMessage: 'Start your cyber security journey with essential protections',
     whyItMatters: 'Building strong cyber security habits starts with the fundamentals. These basic protections will defend you against the most common threats and create a solid foundation for more advanced security practices.',
-    whatYoullLearn: 'You\'ll learn password security, device protection, data backup, scam awareness, and privacy management to earn your Cyber Pup Scout badge.',
+    whatYoullLearn: 'You\'ll learn password security, device protection, data backup, scam awareness, and privacy management to earn your CyberPup Scout badge.',
     icon: '🐾',
     color: Colors.accent,
     areas: [
@@ -187,25 +187,25 @@ export const levels = [
   },
   {
     id: 2,
-    title: 'Level 2 - Intermediate',
-    subtitle: 'Cyber Pup Guardian 🛡️',
+    title: 'Level 2 - CyberPup Watchdog 👁️',
+    subtitle: 'CyberPup Watchdog 👁️',
     description: 'Advanced security practices for comprehensive protection.',
     headerMessage: 'Build advanced cyber security skills and knowledge',
     whyItMatters: 'Intermediate security practices help you protect against more sophisticated threats and secure your digital life more comprehensively.',
-    whatYoullLearn: 'You\'ll learn advanced security techniques, network protection, privacy tools, and threat detection to earn your Cyber Pup Guardian badge.',
-    icon: '🛡️',
+    whatYoullLearn: 'You\'ll learn advanced security techniques, network protection, privacy tools, and threat detection to earn your CyberPup Watchdog badge.',
+    icon: '👁️',
     color: '#27ae60',
     areas: []
   },
   {
     id: 3,
-    title: 'Level 3 - Advanced',
-    subtitle: 'Cyber Pup Master 🎯',
+    title: 'Level 3 - CyberPup Guardian 🛡️',
+    subtitle: 'CyberPup Guardian 🛡️',
     description: 'Expert-level cyber security health check and monitoring.',
     headerMessage: 'Master advanced cyber security and become a security expert',
     whyItMatters: 'Advanced security practices help you protect against sophisticated threats and secure your entire digital ecosystem.',
-    whatYoullLearn: 'You\'ll learn expert security techniques, threat hunting, advanced privacy, and security monitoring to earn your Cyber Pup Master badge.',
-    icon: '🎯',
+    whatYoullLearn: 'You\'ll learn expert security techniques, threat hunting, advanced privacy, and security monitoring to earn your CyberPup Guardian badge.',
+    icon: '🛡️',
     color: '#e74c3c',
     areas: []
   }

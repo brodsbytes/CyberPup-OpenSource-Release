@@ -1,8 +1,191 @@
+Prompt for Cursor (copy/paste):
 
-Next Steps:
-Now that the WelcomeScreen is working with the new structure, we should:
-Create Level 1 Check Screens - The individual check screens (like "Creating Strong Passwords & Passphrases")
-Update ModuleListScreen - To work with the new check structure
-Update CategoryIntroScreen - To work with levels instead of categories
-Test the Flow - Make sure navigation works end-to-end
-The WelcomeScreen should now show the levels and checks properly! You should see Level 1 with its 5 main checks displayed on the home screen. Would you like me to proceed with creating the Level 1 check screens next?
+Goal: Implement the new Insights tab with two sub-tabs (Learn and Tools) using our existing theme colors/typography and our existing SearchBar component. The rest of this screen is currently empty.
+
+Constraints
+
+Do not change the Home/progress visualization.
+
+Use our existing theme tokens (import from our theme file; no hardcoded colors).
+
+Use our existing SearchBar component; just place it correctly and wire it up to filter lists.
+
+Avoid adding new dependencies; build a lightweight segmented control with Pressable + Animated.
+
+1) Files & structure
+
+Create these (TypeScript, React Native):
+
+src/screens/Insights/InsightsScreen.tsx (parent screen)
+
+src/screens/Insights/LearnTab.tsx
+
+src/screens/Insights/ToolsTab.tsx
+
+src/components/insights/SegmentedControl.tsx
+
+src/components/insights/SectionHeader.tsx
+
+src/components/insights/AlertCard.tsx
+
+src/components/insights/TopicChip.tsx
+
+src/components/insights/GuideCard.tsx
+
+src/components/insights/ToolCard.tsx
+
+src/data/insightsMock.ts (temporary mock data)
+
+If our project uses different paths, adapt but keep a similar hierarchy.
+
+2) Parent screen (InsightsScreen)
+
+Layout:
+
+<SafeAreaView> → page title: Security Insights and caption: “Tools, guides, and alerts to keep you protected”.
+
+SegmentedControl at the top with tabs: Learn | Tools.
+
+SearchBar directly below the segmented control (full width, sticky to top when scrolling the tab content).
+
+Below SearchBar, render the active tab component (LearnTab or ToolsTab).
+
+State:
+
+const [tab, setTab] = useState<'learn'|'tools'>('learn')
+
+const [query, setQuery] = useState('')
+
+Pass query into the active tab to filter results.
+
+Sticky behavior:
+
+Make the header + segmented + search a small sticky header for both tabs using ScrollView nested header or SectionList with stickySectionHeadersEnabled.
+
+3) SegmentedControl component
+
+Props: segments: string[], value: number, onChange:(index:number)=>void.
+
+Build with two Pressables and an Animated.View pill indicator that slides under the active tab.
+
+Accessibility: accessibilityRole="tab", aria-selected equivalent.
+
+Use theme colors; respect dark mode.
+
+4) Shared subcomponents
+
+SectionHeader: title + optional trailing action (e.g., “See all” / “View all”).
+
+AlertCard (horizontal carousel item):
+
+Props: { title, summary, tag:'NEW THREAT'|string, onPress }
+
+Visual cue: subtle left border or top badge using theme danger color.
+
+TopicChip (horizontal scroll chips):
+
+Props: { label, selected, onPress }
+
+Multi-select supported; uses theme surfaces.
+
+GuideCard (vertical list item for Learn):
+
+Props: { tag:'GUIDE'|'PLAYBOOK', level:'Beginner'|'Essential'|string, title, excerpt, readMinutes:number, onPress }
+
+ToolCard (vertical list item for Tools):
+
+Props: { tag:'CHECKER'|'LOOKUP'|'WIZARD', etaLabel:'Instant'|'2 min'|string, title, description, onPress }
+
+All cards: whole card is tappable; rounded corners; subtle shadow; spacing from theme.
+
+5) LearnTab
+
+Receives query and selectedTopics (local state).
+
+Sections (in order):
+
+Security Alerts — horizontal ScrollView of AlertCards.
+
+Browse by Topic — horizontal chips (TopicChips).
+
+Latest Guides — vertical FlatList of GuideCards.
+
+Filtering:
+
+Filter guides by query (title + excerpt) and any selected topics.
+
+Each guide item includes a badge (“Beginner”, “Guide/Playbook”) and read time (e.g., “8 min read”).
+
+6) ToolsTab
+
+Receives query and selectedTopics (local state).
+
+Sections (in order):
+
+Security Alerts (reuse the same horizontal list).
+
+Browse by Topic (chips).
+
+Interactive Tools — vertical FlatList of ToolCards.
+
+Each tool card shows:
+
+Tag (CHECKER/LOOKUP/WIZARD), ETA (“Instant”, “2 min”).
+
+Brief description.
+
+CTA text “Try Tool”.
+
+For now, onPress just navigates to placeholder routes:
+
+PasswordStrengthTool, BreachLookupTool, MFAWizard, etc.
+
+7) Mock data
+
+Create src/data/insightsMock.ts exporting arrays:
+
+alerts, topics, guides, tools.
+
+Each item should include a topics: string[] array for filtering and optional relatedCheckId for future deep links.
+
+8) SearchBar integration
+
+Import our existing SearchBar component.
+
+Place it under the segmented control in InsightsScreen.
+
+Wire onChangeText to setQuery.
+
+Pass query to the active tab which filters its lists locally (simple includes matching).
+
+9) Navigation
+
+Hook InsightsScreen into the bottom tab navigator under the Insights tab (label remains “Insights”).
+
+Inside Tools/Guides cards, call navigation.navigate('ToolDetail'|'GuideDetail', { id }) to placeholder detail screens if they exist; otherwise create simple placeholders in src/screens/Insights/detail/.
+
+10) Theming & polish
+
+Use spacing, radius, shadows, and typography from our theme (no hardcoded hex values).
+
+Respect dark mode.
+
+Ensure touch targets ≥ 44x44.
+
+Add small “See all / View all” actions to section headers (no-op for now).
+
+Keep performance smooth: use FlatList with keyExtractor, getItemLayout where relevant.
+
+11) Acceptance criteria
+
+Insights tab renders with Learn and Tools segments, persistent SearchBar, and the four sections in the specified order.
+
+Search filters both tabs’ main lists.
+
+Alerts and Topics render as horizontal carousels.
+
+No visual regressions to other tabs; theme colors are used; no new deps added.
+
+Code is split into the files above and follows our component patterns.
+
+Please implement all of the above in a single PR.

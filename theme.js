@@ -11,19 +11,19 @@ import {
   cardDimensions
 } from './utils/responsive';
 
-// Centralized color palette
-export const Colors = {
-  background: '#2C2C2E',
-  surface: '#3A3A3C',
-  surfaceAlt: '#2C2C2E',
-  dropdownBackground: '#4A4A4C',
+// Dark mode color palette (following iOS/macOS design system)
+export const darkColors = {
+  background: '#1C1C1E',
+  surface: '#2C2C2E',
+  surfaceAlt: '#1C1C1E',
+  dropdownBackground: '#3A3A3C',
   border: '#48484A',
   textPrimary: '#F2F2F7',
   textSecondary: '#D1D1D6',
   muted: '#8E8E93',
-  accent: '#5BA3F0',
+  accent: '#4A7CBE',
   accentSoft: 'rgba(74, 144, 226, 0.2)',
-  track: '#1C1C1E',
+  track: '#2C2C2E',
   // Status colors
   success: '#27ae60',
   warning: '#ff6b6b',
@@ -33,6 +33,38 @@ export const Colors = {
   successSoft: 'rgba(39, 174, 96, 0.15)',
   warningSoft: 'rgba(255, 107, 107, 0.15)',
   errorSoft: 'rgba(231, 76, 60, 0.15)',
+};
+
+// Light mode color palette (following iOS/macOS design system)
+export const lightColors = {
+  background: '#F2F2F7',
+  surface: '#FFFFFF',
+  surfaceAlt: '#F8F8F8',
+  dropdownBackground: '#FFFFFF',
+  border: '#E5E5EA',
+  textPrimary: '#000000',
+  textSecondary: '#6C6C70',
+  muted: '#8E8E93',
+  accent: '#4A7CBE',
+  accentSoft: 'rgba(74, 124, 190, 0.1)',
+  track: '#E5E5EA',
+  // Status colors (same for consistency)
+  success: '#27ae60',
+  warning: '#ff6b6b',
+  error: '#e74c3c',
+  disabled: '#a0aec0',
+  // Status backgrounds
+  successSoft: 'rgba(39, 174, 96, 0.1)',
+  warningSoft: 'rgba(255, 107, 107, 0.1)',
+  errorSoft: 'rgba(231, 76, 60, 0.1)',
+};
+
+// Default to dark mode
+export const Colors = darkColors;
+
+// Theme management function
+export const getThemeColors = (isDarkMode = true) => {
+  return isDarkMode ? darkColors : lightColors;
 };
 
 // Responsive spacing constants for consistent layout

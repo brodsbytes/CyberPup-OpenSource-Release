@@ -67,17 +67,9 @@ const CircularProgress = ({
       
       {/* Center content */}
       <View style={styles.centerContent}>
-        {showIcon && (
-          <Ionicons 
-            name="lock-closed" 
-            size={size * 0.25} 
-            color={Colors.textPrimary} 
-            style={styles.icon}
-          />
-        )}
         {showPercentage && (
           <Text style={styles.percentageText}>
-            {Math.round(normalized)}/{APP_CONSTANTS.PROGRESS.MAX_PROGRESS}
+            {Math.round(normalized)}
           </Text>
         )}
       </View>
@@ -100,9 +92,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   percentageText: {
-    fontSize: Typography.sizes.xs,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textSecondary,
+    fontSize: Typography.sizes.xxl * 2,
+    fontWeight: Typography.weights.bold,
+    color: Colors.textPrimary,
     textAlign: 'center',
   },
 });

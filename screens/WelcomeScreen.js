@@ -18,20 +18,19 @@ import { useFocusEffect } from '@react-navigation/native';
 import { levels, getAllChecks, getChecksByArea, getAreasByLevel } from '../data/courseData';
 import CircularProgress from '../components/CircularProgress';
 import BottomNavigation from '../components/BottomNavigation';
+import GamificationIcons from '../components/GamificationIcons';
 import { SCREEN_NAMES } from '../constants';
+import { updateStreak } from '../utils/streakStorage';
 
 const { width } = Dimensions.get('window');
 
 const WelcomeScreen = ({ navigation }) => {
   const [overallProgress, setOverallProgress] = useState(0);
-  const [completedChecks, setCompletedChecks] = useState(0);
-  const [totalChecks, setTotalChecks] = useState(0);
   const [activeLevel, setActiveLevel] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
+
   const [isLoadingActiveLevel, setIsLoadingActiveLevel] = useState(true);
   const [nextLevel, setNextLevel] = useState(null);
+  const [nextArea, setNextArea] = useState(null);
 
   // Get check data from our course data
   const getCheckData = () => {
@@ -60,81 +59,17 @@ const WelcomeScreen = ({ navigation }) => {
     React.useCallback(() => {
       calculateOverallProgress();
       loadActiveLevelView();
+      updateStreak(); // Update streak when screen is focused
     }, [])
   );
 
-  // Filter search results when search query changes
-  useEffect(() => {
-    if (searchQuery.trim()) {
-      setIsSearching(true);
-      performSearch(searchQuery.trim());
-    } else {
-      setIsSearching(false);
-      setSearchResults([]);
-    }
-  }, [searchQuery]);
 
-  const performSearch = (query) => {
-    const allChecks = getCheckData();
-    const results = [];
 
-    // Search through checks
-    allChecks.forEach(check => {
-      const matchesTitle = check.title.toLowerCase().includes(query.toLowerCase());
-      const matchesLevel = check.levelTitle.toLowerCase().includes(query.toLowerCase());
-      
-      if (matchesTitle || matchesLevel) {
-        const levelInfo = getLevelInfo(check.levelId);
-        results.push({
-          type: 'check',
-          id: check.id,
-          title: check.title,
-          levelId: check.levelId,
-          levelTitle: check.levelTitle,
-          levelIcon: levelInfo.icon,
-          levelColor: levelInfo.color,
-        });
-      }
-    });
 
-    // Search through levels
-    const levelIds = [...new Set(allChecks.map(c => c.levelId))];
-    levelIds.forEach(levelId => {
-      const levelInfo = getLevelInfo(levelId);
-      const matchesLevel = levelInfo.title.toLowerCase().includes(query.toLowerCase());
-      
-      if (matchesLevel) {
-        const levelChecks = allChecks.filter(c => c.levelId === levelId);
-        results.push({
-          type: 'level',
-          id: `level-${levelId}`,
-          title: levelInfo.title,
-          levelId: levelId,
-          levelIcon: levelInfo.icon,
-          levelColor: levelInfo.color,
-          checkCount: levelChecks.length,
-        });
-      }
-    });
-
-    // Remove duplicates and sort (levels first, then checks)
-    const uniqueResults = results.filter((item, index, self) => 
-      index === self.findIndex(t => t.id === item.id)
-    );
-    
-    const sortedResults = uniqueResults.sort((a, b) => {
-      if (a.type === 'level' && b.type === 'check') return -1;
-      if (a.type === 'check' && b.type === 'level') return 1;
-      return a.title.localeCompare(b.title);
-    });
-
-    setSearchResults(sortedResults);
-  };
 
   const calculateOverallProgress = async () => {
     try {
       const allChecks = getCheckData();
-      setTotalChecks(allChecks.length);
       
       let completedCount = 0;
 
@@ -147,12 +82,14 @@ const WelcomeScreen = ({ navigation }) => {
           completedCount++;
         }
       }
-
-      setCompletedChecks(completedCount);
       
       // Calculate overall progress as percentage of completed checks
       const progress = allChecks.length > 0 ? Math.round((completedCount / allChecks.length) * 100) : 0;
       setOverallProgress(progress);
+      
+      // Find and set the next incomplete area
+      const nextIncompleteArea = await getNextIncompleteArea();
+      setNextArea(nextIncompleteArea);
     } catch (error) {
       console.log('Error calculating progress:', error);
     }
@@ -269,6 +206,11 @@ const WelcomeScreen = ({ navigation }) => {
       });
       
       setNextLevel(nextLevelInfo);
+      
+      // Find and set the next incomplete area
+      const nextIncompleteArea = await getNextIncompleteArea();
+      setNextArea(nextIncompleteArea);
+      
       setIsLoadingActiveLevel(false);
     } catch (error) {
       console.log('Error loading active level view:', error);
@@ -276,12 +218,64 @@ const WelcomeScreen = ({ navigation }) => {
     }
   };
 
+  // Find the next incomplete area across all levels
+  const getNextIncompleteArea = async () => {
+    try {
+      const allLevels = levels;
+      
+      for (const level of allLevels) {
+        for (const area of level.areas) {
+          // Check if any check in this area is incomplete
+          let hasIncompleteCheck = false;
+          
+          for (const check of area.checks) {
+            const progressKey = `check_${check.id}_completed`;
+            const progressData = await AsyncStorage.getItem(progressKey);
+            
+            if (progressData !== 'completed') {
+              hasIncompleteCheck = true;
+              break;
+            }
+          }
+          
+          if (hasIncompleteCheck) {
+            return {
+              levelId: level.id,
+              levelTitle: level.title,
+              areaId: area.id,
+              areaTitle: area.title,
+              displayName: area.id === '1-0' ? 'Welcome to CyberPup' : `${area.title}`
+            };
+          }
+        }
+      }
+      
+      return null; // All areas are complete
+    } catch (error) {
+      console.log('Error finding next incomplete area:', error);
+      return null;
+    }
+  };
+
+  const getAreaIcon = (areaId) => {
+    // Map area IDs to appropriate Ionicons
+    const iconMap = {
+      '1-0': 'hand-left', // Welcome to CyberPup
+      '1-1': 'lock-closed', // Protect Your Accounts
+      '1-2': 'shield-checkmark', // Secure Your Devices
+      '1-3': 'cloud-upload', // Keep Your Data Safe
+      '1-4': 'warning', // Avoid Scams & Fraud
+      '1-5': 'eye-off', // Protect Your Privacy
+    };
+    return iconMap[areaId] || 'document'; // Default icon
+  };
+
   const getWelcomeMessage = () => {
-    const nextLabel = activeLevel?.title || 'the next check';
+    const nextLabel = nextArea?.displayName || 'the next check';
     if (overallProgress === 0) {
       return "Let’s begin your security health check. Start with the first check to set a secure baseline.";
     } else if (overallProgress < 25) {
-      return `Good start. Continue your audit with ${nextLabel}.`;
+      return `Nice start! You're on your way - next stop: ${nextLabel}.`;
     } else if (overallProgress < 50) {
       return `You're midway through your security audit. Keep reducing risk with ${nextLabel}.`;
     } else if (overallProgress < 75) {
@@ -293,77 +287,7 @@ const WelcomeScreen = ({ navigation }) => {
     }
   };
 
-  const renderSearchResult = ({ item }) => {
-    if (item.type === 'level') {
-      return (
-        <TouchableOpacity
-          style={styles.searchResultCard}
-          onPress={() => {
-            navigation.navigate('ModuleListScreen', {
-              category: {
-                id: item.levelId,
-                title: item.title,
-                icon: item.levelIcon,
-                color: item.levelColor,
-              }
-            });
-            setSearchQuery('');
-          }}
-          activeOpacity={0.8}
-        >
-          <View style={[styles.searchResultIcon, { backgroundColor: item.levelColor }]}>
-            <Text style={styles.searchResultIconText}>{item.levelIcon}</Text>
-          </View>
-          <View style={styles.searchResultContent}>
-            <Text style={styles.searchResultTitle}>{item.title}</Text>
-            <Text style={styles.searchResultSubtitle}>{item.checkCount} checks</Text>
-          </View>
-          <Text style={styles.searchResultType}>Level</Text>
-        </TouchableOpacity>
-      );
-    } else {
-      return (
-        <TouchableOpacity
-          style={styles.searchResultCard}
-          onPress={() => {
-            const levelInfo = getLevelInfo(item.levelId);
-            // Map check id to its screen
-            const checkRoutes = {
-              '1-0-1': SCREEN_NAMES.INITIAL_WELCOME,
-              '1-1-1': SCREEN_NAMES.CHECK_1_1_STRONG_PASSWORDS,
-              '1-1-2': SCREEN_NAMES.CHECK_1_2_HIGH_VALUE_ACCOUNTS,
-              '1-1-3': SCREEN_NAMES.CHECK_1_3_PASSWORD_MANAGERS,
-              '1-1-4': SCREEN_NAMES.CHECK_1_4_MFA_SETUP,
-              '1-1-5': SCREEN_NAMES.CHECK_1_5_BREACH_CHECK,
-              '1-2-1': SCREEN_NAMES.CHECK_1_2_1_SCREEN_LOCK,
-              // TODO: Add more check screens as they are created
-            };
-            
-            const routeName = checkRoutes[item.id] || SCREEN_NAMES.WELCOME;
-            navigation.navigate(routeName, { 
-              level: {
-                id: item.levelId,
-                title: item.levelTitle,
-                icon: item.levelIcon,
-                color: item.levelColor,
-              }
-            });
-            setSearchQuery('');
-          }}
-          activeOpacity={0.8}
-        >
-          <View style={[styles.searchResultIcon, { backgroundColor: item.levelColor }]}>
-            <Text style={styles.searchResultIconText}>{item.levelIcon}</Text>
-          </View>
-          <View style={styles.searchResultContent}>
-            <Text style={styles.searchResultTitle}>{item.title}</Text>
-            <Text style={styles.searchResultSubtitle}>{item.levelTitle}</Text>
-          </View>
-          <Text style={styles.searchResultType}>Check</Text>
-        </TouchableOpacity>
-      );
-    }
-  };
+
 
   const ProgressCard = ({ icon, title, subtitle, progress, levelId }) => (
     <TouchableOpacity
@@ -446,6 +370,13 @@ const WelcomeScreen = ({ navigation }) => {
         <View style={styles.overallProgressSection}>
           <View style={styles.overallProgressHeader}>
             <Text style={styles.overallProgressTitle}>Your Secure Score</Text>
+            {/* Gamification Icons */}
+            <View style={styles.gamificationIconsContainer}>
+              <GamificationIcons
+                onStreakPress={() => navigation.navigate(SCREEN_NAMES.STREAK_DETAILS)}
+                onBadgesPress={() => navigation.navigate(SCREEN_NAMES.BADGES)}
+              />
+            </View>
           </View>
           
           <View style={styles.overallProgressCard}>
@@ -453,72 +384,25 @@ const WelcomeScreen = ({ navigation }) => {
               <CircularProgress 
                 key={`overall-${overallProgress}`}
                 progress={overallProgress}
-                size={140}
+                size={175}
                 strokeWidth={10}
                 color={Colors.accent}
                 backgroundColor={Colors.track}
-                showIcon={true}
+                showIcon={false}
                 showPercentage={true}
                 showBackground={true}
               />
             </View>
-            <Text style={styles.overallProgressSubtitle}>
-              {completedChecks} of {totalChecks} checks completed
-            </Text>
+
           </View>
         </View>
-
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <View style={styles.searchBar}>
-            <Ionicons name="search" size={18} color={Colors.textSecondary} style={{ marginRight: 8 }} />
-            <TextInput
-              style={styles.searchInput}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Search for security tips, areas, or levels..."
-              placeholderTextColor={Colors.textSecondary}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
-          
-        </View>
-
-        {/* Search Results */}
-        {isSearching && (
-          <View style={styles.searchResultsContainer}>
-            <Text style={styles.searchResultsTitle}>
-              {searchResults.length > 0 ? `Found ${searchResults.length} result${searchResults.length === 1 ? '' : 's'}` : 'No results found'}
-            </Text>
-            <FlatList
-              data={searchResults}
-              renderItem={renderSearchResult}
-              keyExtractor={(item) => item.id}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.searchResultsList}
-            />
-          </View>
-        )}
-
-
 
         {/* Active Level Check List (replaces Checks in Progress) */}
-        {!isSearching && (
           <View style={styles.activeLevelSection}>
             <Text style={[styles.welcomeMessage, styles.welcomeMessageSpacing]}>{getWelcomeMessage()}</Text>
             {activeLevel ? (
               <>
                 <View style={[styles.activeLevelHeader, { borderColor: activeLevel.color }] }>
-                  <TouchableOpacity
-                    onPress={() => navigation.navigate(SCREEN_NAMES.CATEGORY)}
-                    style={styles.overflowButton}
-                    activeOpacity={0.8}
-                    accessibilityLabel="Open levels"
-                  >
-                    <Ionicons name="reorder-three-outline" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
-                  </TouchableOpacity>
-                  <View style={styles.activeLevelSeparator} />
                   <View style={styles.activeLevelContent}>
                     <View style={styles.activeLevelHeaderLeft}>
                       <View style={styles.activeLevelLeftRow}>
@@ -534,6 +418,28 @@ const WelcomeScreen = ({ navigation }) => {
                       </View>
                     </View>
                   </View>
+                  
+                  {/* Security Check Button */}
+                  {(() => {
+                    const hasStartedAnyChecks = activeLevel.areas.some(area => area.completedChecks > 0);
+                    const buttonText = hasStartedAnyChecks ? "Continue My Security Check" : "Start My Security Check";
+                    return (
+                      <TouchableOpacity
+                        style={[styles.securityCheckButton, { backgroundColor: activeLevel.color }]}
+                        onPress={() => {
+                          // Navigate to the first incomplete area, or the first area if all are complete
+                          const firstIncompleteArea = activeLevel.areas.find(area => area.completedChecks < area.totalChecks);
+                          const targetArea = firstIncompleteArea || activeLevel.areas[0];
+                          if (targetArea) {
+                            navigateToArea(targetArea);
+                          }
+                        }}
+                        activeOpacity={0.85}
+                      >
+                        <Text style={styles.securityCheckButtonText}>{buttonText}</Text>
+                      </TouchableOpacity>
+                    );
+                  })()}
                 </View>
 
                 <View style={styles.checkListContainer}>
@@ -544,43 +450,41 @@ const WelcomeScreen = ({ navigation }) => {
                   const firstIncompleteIndex = activeLevel.areas.findIndex(area => area.completedChecks < area.totalChecks);
                   return activeLevel.areas.map((area, idx) => {
                     const isCompleted = area.completedChecks === area.totalChecks;
-                    const isLocked = !isCompleted && firstIncompleteIndex !== -1 && idx > firstIncompleteIndex;
                     const progressPercentage = area.totalChecks > 0 ? Math.round((area.completedChecks / area.totalChecks) * 100) : 0;
-                    const cta = isCompleted ? 'COMPLETED' : (progressPercentage === 0 ? 'START' : 'CONTINUE');
-                    const ctaBorderColor = isCompleted || isLocked ? Colors.disabled : activeLevel.color;
-                    const ctaTextStyle = isCompleted || isLocked ? styles.checkCtaTextDisabled : styles.checkCtaText;
-                    const badgeStyle = [styles.checkBadge, (isCompleted || isLocked) && styles.checkBadgeDisabled];
                     return (
-                <React.Fragment key={area.id}>
-                  <TouchableOpacity
-                    style={[
-                      styles.checkCardNew,
-                      { borderColor: activeLevel.color }
-                    ]}
-                    activeOpacity={0.85}
-                    onPress={() => navigateToArea(area)}
-                  >
-                    <View style={styles.checkHeaderNew}>
-                          <View style={badgeStyle}> 
-                            <Text style={styles.checkBadgeText}>{`Area ${idx + 1}`}</Text>
+                      <React.Fragment key={area.id}>
+                        <TouchableOpacity
+                          style={[
+                            styles.checkCardNew,
+                            { borderColor: activeLevel.color }
+                          ]}
+                          activeOpacity={0.85}
+                          onPress={() => navigateToArea(area)}
+                        >
+                          <View style={styles.checkCardContent}>
+                            <View style={styles.checkCardLeft}>
+                              <Ionicons 
+                                name={getAreaIcon(area.id)} 
+                                size={Responsive.iconSizes.large} 
+                                color={Colors.textSecondary} 
+                              />
+                            </View>
+                            <View style={styles.checkCardRight}>
+                              <Text style={styles.checkTitleNew}>{area.title}</Text>
+                              <Text style={styles.checkSubtitleNew}>{area.description}</Text>
+                              <View style={styles.checkProgressRow}>
+                                <View style={styles.checkProgressBar}> 
+                                  <View style={[styles.checkProgressFill, { width: `${progressPercentage}%`, backgroundColor: activeLevel.color }]} />
+                                </View>
+                                <Text style={styles.checkProgressPercent}>{area.completedChecks} of {area.totalChecks} checks</Text>
+                              </View>
+                            </View>
                           </View>
-                          <Text style={[styles.checkTitleNew, styles.checkTitleInline]}>{area.title}</Text>
-                          <View style={[styles.checkCtaBubble, { borderColor: ctaBorderColor }]}> 
-                            <Text style={ctaTextStyle}>{cta}</Text>
-                          </View>
-                    </View>
-                    <Text style={styles.checkSubtitleNew}>{area.description}</Text>
-                        <View style={styles.checkProgressRow}>
-                          <View style={styles.checkProgressBar}> 
-                            <View style={[styles.checkProgressFill, { width: `${progressPercentage}%`, backgroundColor: activeLevel.color }]} />
-                          </View>
-                          <Text style={styles.checkProgressPercent}>{area.completedChecks} of {area.totalChecks} checks</Text>
-                        </View>
-                  </TouchableOpacity>
-                  {idx < activeLevel.areas.length - 1 && (
-                    <View style={styles.cardSeparator} />
-                  )}
-                </React.Fragment>
+                        </TouchableOpacity>
+                        {idx < activeLevel.areas.length - 1 && (
+                          <View style={styles.cardSeparator} />
+                        )}
+                      </React.Fragment>
                     );
                   });
                 })()}
@@ -623,7 +527,6 @@ const WelcomeScreen = ({ navigation }) => {
               </View>
             )}
           </View>
-        )}
 
 
 
@@ -638,6 +541,8 @@ const WelcomeScreen = ({ navigation }) => {
           console.log('WelcomeScreen - Tab pressed:', screen);
           if (screen === 'CategoryScreen') {
             navigation.navigate(SCREEN_NAMES.CATEGORY);
+          } else if (screen === 'InsightsScreen') {
+            navigation.navigate(SCREEN_NAMES.INSIGHTS);
           } else if (screen === 'ProfileScreen') {
             navigation.navigate(SCREEN_NAMES.PROFILE);
           }
@@ -669,6 +574,7 @@ const styles = StyleSheet.create({
   overallProgressHeader: {
     marginBottom: Responsive.spacing.sm,
     alignItems: 'center',
+    position: 'relative',
   },
   overallProgressTitle: {
     fontSize: Typography.sizes.xl,
@@ -677,6 +583,11 @@ const styles = StyleSheet.create({
     marginBottom: Responsive.spacing.sm,
     paddingTop: Responsive.spacing.sm,
     textAlign: 'center',
+  },
+  gamificationIconsContainer: {
+    position: 'absolute',
+    top: Responsive.spacing.md,
+    right: 0,
   },
   overallProgressSubtitle: {
     fontSize: Typography.sizes.sm,
@@ -727,17 +638,9 @@ const styles = StyleSheet.create({
     borderRadius: Responsive.borderRadius.xlarge,
     padding: Responsive.padding.card,
     marginBottom: Responsive.spacing.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
     borderWidth: 1,
   },
-  activeLevelSeparator: {
-    width: 1,
-    height: Responsive.iconSizes.xlarge,
-    backgroundColor: Colors.accent,
-    marginHorizontal: Responsive.spacing.sm,
-    opacity: 0.3,
-  },
+
   activeLevelContent: {
     flex: 1,
     flexDirection: 'row',
@@ -776,6 +679,21 @@ const styles = StyleSheet.create({
   activeLevelIconText: {
     fontSize: Typography.sizes.xxl,
   },
+  securityCheckButton: {
+    marginTop: Responsive.spacing.md,
+    borderRadius: Responsive.borderRadius.large,
+    paddingVertical: Responsive.padding.button,
+    paddingHorizontal: Responsive.spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: Responsive.buttonHeight.medium,
+  },
+  securityCheckButtonText: {
+    color: Colors.textPrimary,
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.bold,
+    textAlign: 'center',
+  },
   levelChip: {
     alignSelf: 'flex-start',
     borderRadius: Responsive.borderRadius.medium,
@@ -790,7 +708,7 @@ const styles = StyleSheet.create({
   checkCardNew: {
     backgroundColor: Colors.surface,
     borderRadius: Responsive.borderRadius.xlarge,
-    padding: Responsive.padding.card,
+    padding: Responsive.spacing.sm,
     marginBottom: Responsive.spacing.lg,
     borderWidth: 1,
     elevation: 6,
@@ -802,57 +720,31 @@ const styles = StyleSheet.create({
   timelineDot: {
     display: 'none',
   },
-  checkHeaderNew: {
+  checkCardContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: Responsive.spacing.sm,
+  },
+  checkCardLeft: {
     alignItems: 'center',
-    marginBottom: Responsive.spacing.sm,
+    justifyContent: 'center',
+    alignSelf: 'center',
   },
-  checkTitleInline: {
+  checkCardRight: {
     flex: 1,
-    marginHorizontal: Responsive.spacing.sm,
   },
-  checkBadge: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: Responsive.borderRadius.medium,
-    paddingHorizontal: Responsive.spacing.sm,
-    paddingVertical: Responsive.spacing.xs,
-  },
-  checkBadgeDisabled: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
-  },
-  checkBadgeText: {
-    color: Colors.textSecondary,
-    fontWeight: Typography.weights.bold,
-    fontSize: Typography.sizes.sm,
-  },
-  checkCtaBubble: {
-    borderRadius: Responsive.borderRadius.large,
-    paddingHorizontal: Responsive.spacing.sm,
-    paddingVertical: Responsive.spacing.xs,
-    borderWidth: 1,
-    backgroundColor: 'rgba(0,0,0,0.1)'
-  },
-  checkCtaText: {
-    color: Colors.textPrimary,
-    fontWeight: Typography.weights.bold,
-    fontSize: Typography.sizes.sm,
-  },
-  checkCtaTextDisabled: {
-    color: Colors.textSecondary,
-    fontWeight: Typography.weights.bold,
-    fontSize: Typography.sizes.sm,
-  },
+
   checkTitleNew: {
     fontSize: Typography.sizes.xl,
     fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
     marginBottom: Responsive.spacing.xs,
+    textAlign: 'left',
   },
   checkSubtitleNew: {
     fontSize: Typography.sizes.sm,
     color: Colors.textSecondary,
-    marginBottom: Responsive.spacing.sm,
+    marginBottom: Responsive.spacing.xs,
   },
   checkProgressBar: {
     flex: 1,
@@ -877,21 +769,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     minWidth: 28,
   },
-  searchContainer: {
-    paddingHorizontal: Responsive.padding.screen,
-    marginBottom: Responsive.spacing.lg,
-  },
-  searchBar: {
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.large,
-    paddingHorizontal: Responsive.spacing.md,
-    paddingVertical: Responsive.padding.button,
-    borderWidth: 1,
-    borderColor: Colors.accent,
-    flexDirection: 'row',
-    alignItems: 'center',
-    minHeight: Responsive.buttonHeight.medium,
-  },
+
   activeLevelMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -902,14 +780,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Responsive.spacing.sm,
   },
-  overflowButton: {
-    width: Responsive.iconSizes.large,
-    height: Responsive.iconSizes.large,
-    borderRadius: Responsive.iconSizes.large / 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)'
-  },
+
   viewAllLink: {
     color: Colors.accent,
     fontWeight: Typography.weights.bold,
@@ -992,70 +863,7 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.bold,
     textAlign: 'center',
   },
-  searchInput: {
-    color: Colors.textPrimary,
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.medium,
-    flex: 1,
-    paddingVertical: 0,
-    textAlignVertical: 'center',
-  },
-  searchResultsContainer: {
-    flex: 1,
-    paddingHorizontal: Responsive.padding.screen,
-    marginBottom: Responsive.spacing.lg,
-  },
-  searchResultsTitle: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textSecondary,
-    marginBottom: Responsive.spacing.md,
-  },
-  searchResultsList: {
-    paddingBottom: Responsive.spacing.lg,
-  },
-  searchResultCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.large,
-    padding: Responsive.padding.card,
-    marginBottom: Responsive.spacing.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
-    elevation: 3,
-  },
-  searchResultIcon: {
-    width: Responsive.iconSizes.xlarge,
-    height: Responsive.iconSizes.xlarge,
-    borderRadius: Responsive.iconSizes.xlarge / 2,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Responsive.spacing.sm,
-  },
-  searchResultIconText: {
-    fontSize: Typography.sizes.md,
-  },
-  searchResultContent: {
-    flex: 1,
-  },
-  searchResultTitle: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
-    marginBottom: 2,
-  },
-  searchResultSubtitle: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.textSecondary,
-  },
-  searchResultType: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.accent,
-    fontWeight: Typography.weights.semibold,
-    backgroundColor: 'rgba(74, 144, 226, 0.1)',
-    paddingHorizontal: Responsive.spacing.sm,
-    paddingVertical: Responsive.spacing.xs,
-    borderRadius: Responsive.borderRadius.medium,
-  },
+
   progressSection: {
     paddingHorizontal: Responsive.padding.screen,
   },

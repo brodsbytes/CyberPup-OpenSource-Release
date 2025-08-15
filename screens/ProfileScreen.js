@@ -13,14 +13,18 @@ import { useFocusEffect } from '@react-navigation/native';
 import BottomNavigation from '../components/BottomNavigation';
 import Badge from '../components/Badge';
 import { Colors, Typography, Responsive, CommonStyles } from '../theme';
+
 import { 
   loadUserBadges, 
   getEarnedBadgesCount, 
   BADGE_TYPES 
 } from '../utils/badgeStorage';
 import { SCREEN_NAMES } from '../constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getAllChecks } from '../data/courseData';
 
 const ProfileScreen = ({ navigation }) => {
+
   const [userBadges, setUserBadges] = useState([]);
   const [earnedCount, setEarnedCount] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
@@ -31,6 +35,40 @@ const ProfileScreen = ({ navigation }) => {
     specialBadges: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [checksProgress, setChecksProgress] = useState({
+    completedChecks: 0,
+    totalChecks: 0,
+    progressPercentage: 0
+  });
+
+  const calculateChecksProgress = async () => {
+    try {
+      const allChecks = getAllChecks();
+      setChecksProgress(prev => ({ ...prev, totalChecks: allChecks.length }));
+      
+      let completedCount = 0;
+
+      // Check each check for completion
+      for (const check of allChecks) {
+        const progressKey = `check_${check.id}_completed`;
+        const progressData = await AsyncStorage.getItem(progressKey);
+        
+        if (progressData === 'completed') {
+          completedCount++;
+        }
+      }
+
+      const progressPercentage = allChecks.length > 0 ? Math.round((completedCount / allChecks.length) * 100) : 0;
+      
+      setChecksProgress({
+        completedChecks: completedCount,
+        totalChecks: allChecks.length,
+        progressPercentage
+      });
+    } catch (error) {
+      console.log('Error calculating checks progress:', error);
+    }
+  };
 
   const loadBadges = async () => {
     try {
@@ -56,6 +94,9 @@ const ProfileScreen = ({ navigation }) => {
       });
       
       console.log('Stats calculated:', { totalBadges: badges.length, areaBadges, levelBadges, specialBadges });
+      
+      // Calculate checks progress
+      await calculateChecksProgress();
     } catch (error) {
       console.log('Error loading badges:', error);
       // Set default values to prevent rendering issues
@@ -129,7 +170,11 @@ const ProfileScreen = ({ navigation }) => {
       <ScrollView 
         style={styles.scrollView}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            tintColor={Colors.accent}
+          />
         }
         showsVerticalScrollIndicator={false}
       >
@@ -173,19 +218,21 @@ const ProfileScreen = ({ navigation }) => {
             </View>
           </View>
 
-          {/* Progress Overview */}
+          {/* Checks Progress Overview */}
           <View style={styles.progressSection}>
-            <Text style={styles.progressTitle}>Overall Progress</Text>
+            <Text style={styles.progressTitle}>Security Checks Progress</Text>
             <View style={styles.progressBar}>
               <View 
                 style={[
                   styles.progressFill, 
-                  { width: `${stats.totalBadges > 0 ? (earnedCount / stats.totalBadges) * 100 : 0}%` }
+                  { 
+                    width: `${checksProgress.progressPercentage}%`
+                  }
                 ]} 
               />
             </View>
             <Text style={styles.progressText}>
-              {earnedCount} of {stats.totalBadges} badges earned
+              {checksProgress.completedChecks} of {checksProgress.totalChecks} checks completed
             </Text>
           </View>
 
@@ -214,6 +261,8 @@ const ProfileScreen = ({ navigation }) => {
           <View style={styles.settingsSection}>
             <Text style={styles.settingsTitle}>Settings</Text>
             
+
+            
             <TouchableOpacity style={styles.settingItem}>
               <Ionicons name="notifications" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
               <Text style={styles.settingText}>Notification Preferences</Text>
@@ -241,22 +290,14 @@ const ProfileScreen = ({ navigation }) => {
       <BottomNavigation 
         activeTab="profile"
         onTabPress={(screen) => {
-          console.log('Tab pressed:', screen);
-          console.log('Navigation object:', navigation);
-          console.log('Navigation methods:', Object.keys(navigation));
-          
-          try {
-            if (screen === 'Welcome') {
-              console.log('Navigating to Welcome...');
-              navigation.navigate('Welcome');
-            } else if (screen === 'CategoryScreen') {
-              console.log('Navigating to CategoryScreen...');
-              navigation.navigate(SCREEN_NAMES.CATEGORY);
-            } else {
-              console.log('Unknown screen:', screen);
-            }
-          } catch (error) {
-            console.log('Navigation error:', error);
+          console.log('ProfileScreen - Tab pressed:', screen);
+          if (screen === SCREEN_NAMES.WELCOME) {
+            navigation.navigate(SCREEN_NAMES.WELCOME);
+          } else if (screen === SCREEN_NAMES.INSIGHTS) {
+            navigation.navigate(SCREEN_NAMES.INSIGHTS);
+          } else if (screen === SCREEN_NAMES.PROFILE) {
+            // Already on profile screen
+            console.log('Already on profile screen');
           }
         }}
       />
