@@ -11,35 +11,132 @@ import {
   cardDimensions
 } from './utils/responsive';
 
-// Dark mode color palette (following iOS/macOS design system)
+/**
+ * CyberPup Theme System
+ * 
+ * This theme follows iOS/macOS design system principles with a dark mode focus.
+ * All colors are standardized to hex format for consistency.
+ * 
+ * Color Categories:
+ * - Base colors: Background, surface, and structural elements
+ * - Text colors: Primary, secondary, and muted text
+ * - Accent colors: Primary brand colors and their variations
+ * - Status colors: Success, warning, error states
+ * - Overlay colors: Modal backgrounds and overlays
+ * - Card colors: Progression state styling
+ * 
+ * Opacity values are encoded in hex (e.g., #FFFFFF80 = 50% opacity white)
+ */
 export const Colors = {
+  // Base colors
   background: '#2C2C2E',
   surface: '#1C1C1E',
   surfaceAlt: '#2C2C2E',
   dropdownBackground: '#3A3A3C',
   border: '#48484A',
+  track: '#1C1C1E',
+  
+  // Text colors
   textPrimary: '#F2F2F7',
   textSecondary: '#D1D1D6',
   muted: '#8E8E93',
+  
+  // Accent colors
   accent: '#4A7CBE',
-  accentSoft: 'rgba(74, 144, 226, 0.2)',
-  track: '#1C1C1E', //#1C1C1E
-  // Card-specific colors for progression states
-  cardCompleted: 'rgba(91, 163, 240, 0.1)',
+  accentSoft: '#4A90E233', // 20% opacity version of accent
+  accentLighter: '#5B9BE233', // 10% opacity version of accent
+  
+  // New accent colors for future use
+  green: '#66c98a',
+  orange: '#F57C00',
+  red: '#FF5252',
+  purple: '#7e3eee',
+  
+  // Status colors
+  success: '#27AE60',
+  warning: '#FF6B6B',
+  error: '#E74C3C',
+  disabled: '#A0AEC0',
+  
+  // Additional status colors (used in components)
+  successLight: '#4ECDC4', // Light green variant
+  warningLight: '#FFD700', // Gold/yellow variant
+  
+  // Status backgrounds (with opacity)
+  successSoft: '#27AE6026', // 15% opacity version of success
+  warningSoft: '#FF6B6B26', // 15% opacity version of warning
+  errorSoft: '#E74C3C26', // 15% opacity version of error
+  
+  // Overlay colors (commonly used throughout the app)
+  overlayDark: '#00000080', // 50% opacity black
+  overlayDarker: '#000000CC', // 80% opacity black
+  overlayLight: '#FFFFFF0A', // 4% opacity white
+  overlayLighter: '#FFFFFF14', // 8% opacity white
+  overlayMedium: '#FFFFFF33', // 20% opacity white
+  
+  // Shadow colors
+  shadowColor: '#000000',
+  shadowColorLight: '#00000040', // 25% opacity black
+  
+  // Card background colors
+  cardCompleted: '#1C1C1E',
   cardInProgress: '#1C1C1E', 
   cardNotStarted: '#1C1C1E', 
-  cardCompletedBorder: '#4A7CBE',
-  cardInProgressBorder: '#48484A',
+  
+  // Card border colors
+  cardCompletedBorder: '#48484A',
+  cardInProgressBorder: '#4A7CBE',
   cardNotStartedBorder: '#48484A',
-  // Status colors
-  success: '#27ae60',
-  warning: '#ff6b6b',
-  error: '#e74c3c',
-  disabled: '#a0aec0',
-  // Status backgrounds
-  successSoft: 'rgba(39, 174, 96, 0.15)',
-  warningSoft: 'rgba(255, 107, 107, 0.15)',
-  errorSoft: 'rgba(231, 76, 60, 0.15)',
+  
+  // Card opacity values
+  cardCompletedOpacity: 0.7,
+  cardInProgressOpacity: 1,
+  cardNotStartedOpacity: 0.7,
+  
+  // Card text colors
+  cardCompletedTitleColor: '#D1D1D6',
+  cardInProgressTitleColor: '#F2F2F7',
+  cardNotStartedTitleColor: '#D1D1D6',
+  cardCompletedSubtitleColor: '#D1D1D6',
+  cardInProgressSubtitleColor: '#D1D1D6',
+  cardNotStartedSubtitleColor: '#D1D1D6',
+  
+  // Card icon colors
+  cardCompletedIconColor: '#D1D1D6',
+  cardInProgressIconColor: '#F2F2F7',
+  cardNotStartedIconColor: '#D1D1D6',
+  
+  // Card text sizes
+  cardCompletedTitleSize: 'xl',
+  cardInProgressTitleSize: 'xxl',
+  cardNotStartedTitleSize: 'xl',
+  
+  // Hero card colors (for primary level cards)
+  heroCardBackground: '#1C1C1E',
+  heroCardBorder: '#4A7CBE',
+  heroCardBorderWidth: 2,
+  heroCardShadowColor: '#4A7CBE',
+  heroCardShadowOpacity: 0.3,
+  heroCardShadowRadius: 8,
+  heroCardElevation: 12,
+  
+  // Hero card button colors
+  heroButtonBackground: '#4A7CBE',
+  heroButtonTextColor: '#F2F2F7',
+  heroButtonShadowColor: '#4A7CBE',
+  heroButtonShadowOpacity: 0.4,
+  heroButtonShadowRadius: 6,
+  heroButtonElevation: 8,
+  
+  // Hero card icon colors
+  heroIconBackground: 'rgba(74, 124, 190, 0.15)', // 15% opacity accent
+  heroIconBorder: '#4A7CBE',
+  
+  // Hero card text colors
+  heroTitleColor: '#F2F2F7',
+  heroSubtitleColor: '#D1D1D6',
+  heroChipBackground: '#4A7CBE',
+  heroChipTextColor: '#0b1b2b',
 };
 
 // Responsive spacing constants for consistent layout
@@ -93,7 +190,7 @@ export const CommonStyles = {
     borderRadius: responsiveBorderRadius.medium,
     borderWidth: 1,
     borderColor: Colors.border,
-    shadowColor: '#000',
+    shadowColor: Colors.shadowColor,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -117,7 +214,7 @@ export const CommonStyles = {
   modal: {
     overlay: {
       flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      backgroundColor: Colors.overlayDark,
       justifyContent: 'center',
       alignItems: 'center',
     },

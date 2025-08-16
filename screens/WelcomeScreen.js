@@ -73,12 +73,12 @@ const WelcomeScreen = ({ navigation }) => {
   };
 
   // Helper functions for determining card states (reused from StreakDetailsModal)
-  const getCardState = (area) => {
+  const getCardState = (area, isNextCard = false) => {
     const isCompleted = area.completedChecks === area.totalChecks;
     const hasProgress = area.completedChecks > 0;
     
     if (isCompleted) return 'completed';
-    if (hasProgress) return 'in-progress';
+    if (hasProgress || isNextCard) return 'in-progress';
     return 'not-started';
   };
 
@@ -171,6 +171,9 @@ const WelcomeScreen = ({ navigation }) => {
         
         if (progressData === 'completed') {
           completedCount++;
+          console.log(`✅ Check ${check.id} is completed`);
+        } else {
+          console.log(`❌ Check ${check.id} is not completed (${progressData})`);
         }
       }
       
@@ -364,17 +367,17 @@ const WelcomeScreen = ({ navigation }) => {
   const getWelcomeMessage = () => {
     const nextLabel = nextArea?.displayName || 'the next check';
     if (overallProgress === 0) {
-      return "Let’s begin your security health check. Start with the first check to set a secure baseline.";
+      return "Ready to secure your digital life?\nLet's start with your first security check.";
     } else if (overallProgress < 25) {
-      return `Nice start! You're on your way - next stop: ${nextLabel}.`;
+      return `Great start!\nKeep the momentum going with ${nextLabel}.`;
     } else if (overallProgress < 50) {
-      return `You're midway through your security audit. Keep reducing risk with ${nextLabel}.`;
+      return `You're building strong defences!\nNext up: ${nextLabel}.`;
     } else if (overallProgress < 75) {
-      return `Strong progress. Close the remaining gaps - next: ${nextLabel}.`;
+      return `Excellent progress!\nYou're almost fortress-level secure.\nNext: ${nextLabel}.`;
     } else if (overallProgress < 100) {
-      return 'Almost done. Finish the last checks to lock in your secure baseline.';
+      return "You're in the final stretch!\nComplete your last checks to achieve full protection.";
     } else {
-      return 'All checks complete. Re-run key checks regularly and when things change.';
+      return 'Fully protected!\nRun regular check-ups to stay ahead of new threats.';
     }
   };
 
@@ -706,20 +709,19 @@ const WelcomeScreen = ({ navigation }) => {
             <Text style={[styles.welcomeMessage, styles.welcomeMessageSpacing]}>{getWelcomeMessage()}</Text>
             {activeLevel ? (
               <>
-                <View style={[styles.activeLevelHeader, { borderColor: activeLevel.color }] }>
-                  <View style={styles.activeLevelContent}>
-                    <View style={styles.activeLevelHeaderLeft}>
-                      <View style={styles.activeLevelLeftRow}>
-                        <View style={[styles.levelChip, { backgroundColor: activeLevel.color }]}>
-                          <Text style={styles.levelChipText}>{`Level ${getDisplayIndexForLevel(activeLevel.id)}`}</Text>
-                        </View>
-                        <Text style={styles.activeLevelTitle}>CyberPup Scout 🐾</Text>
-                      </View>
+                <View style={styles.activeLevelHeader}>
+                  {/* Level Badge - Top Row */}
+                  <View style={styles.levelChipContainer}>
+                    <View style={styles.levelChip}>
+                      <Text style={styles.levelChipText}>{`Level ${getDisplayIndexForLevel(activeLevel.id)}`}</Text>
                     </View>
-                    <View style={styles.activeLevelRight}>
-                      <View style={[styles.activeLevelIconWrap, { borderColor: activeLevel.color }]}>
-                        <Text style={styles.activeLevelIconText}>{activeLevel.icon}</Text>
-                      </View>
+                  </View>
+                  
+                  {/* Title and Icon - Middle Row */}
+                  <View style={styles.titleIconRow}>
+                    <Text style={styles.activeLevelTitle}>CyberPup Scout</Text>
+                    <View style={styles.activeLevelIconWrap}>
+                      <Text style={styles.activeLevelIconText}>{activeLevel.icon}</Text>
                     </View>
                   </View>
                   
@@ -729,7 +731,7 @@ const WelcomeScreen = ({ navigation }) => {
                     const buttonText = hasStartedAnyChecks ? "Continue My Security Check" : "Start My Security Check";
                     return (
                       <TouchableOpacity
-                        style={[styles.securityCheckButton, { backgroundColor: activeLevel.color }]}
+                        style={styles.securityCheckButton}
                         onPress={() => {
                           // Navigate to the first incomplete area, or the first area if all are complete
                           const firstIncompleteArea = activeLevel.areas.find(area => area.completedChecks < area.totalChecks);
@@ -752,7 +754,8 @@ const WelcomeScreen = ({ navigation }) => {
                   return activeLevel.areas.map((area, idx) => {
                     const isCompleted = area.completedChecks === area.totalChecks;
                     const progressPercentage = area.totalChecks > 0 ? Math.round((area.completedChecks / area.totalChecks) * 100) : 0;
-                    const cardState = getCardState(area);
+                    const isNextCard = idx === firstIncompleteIndex;
+                    const cardState = getCardState(area, isNextCard);
                     const cardAnim = getCardAnimation(area.id);
                     
                     return (
@@ -762,11 +765,15 @@ const WelcomeScreen = ({ navigation }) => {
                             style={[
                               styles.checkCardNew,
                               cardState === 'completed' && styles.checkCardCompleted,
-                              cardState === 'in-progress' && styles.checkCardInProgress,
                               cardState === 'not-started' && styles.checkCardNotStarted,
+                              // Apply next card style first, then in-progress if not next
+                              isNextCard ? styles.checkCardNext : 
+                              cardState === 'in-progress' && styles.checkCardInProgress,
                               { 
-                                borderColor: cardState === 'completed' ? Colors.cardCompletedBorder : 
+                                borderColor: isNextCard ? Colors.cardInProgressBorder :
+                                           cardState === 'completed' ? Colors.cardCompletedBorder : 
                                            cardState === 'not-started' ? Colors.cardNotStartedBorder : 
+                                           cardState === 'in-progress' ? Colors.cardInProgressBorder :
                                            undefined
                               }
                             ]}
@@ -781,14 +788,37 @@ const WelcomeScreen = ({ navigation }) => {
                                 <Ionicons 
                                   name={getAreaIcon(area.id)} 
                                   size={Responsive.iconSizes.large} 
-                                  color={Colors.textSecondary} 
+                                  color={
+                                    cardState === 'completed' ? Colors.cardCompletedIconColor :
+                                    cardState === 'in-progress' ? Colors.cardInProgressIconColor :
+                                    Colors.cardNotStartedIconColor
+                                  } 
                                 />
                               </View>
                               <View style={styles.checkCardRight}>
-                                <Text style={styles.checkTitleNew}>
+                                <Text style={[
+                                  styles.checkTitleNew,
+                                  cardState === 'completed' && { 
+                                    color: Colors.cardCompletedTitleColor,
+                                    fontSize: Typography.sizes[Colors.cardCompletedTitleSize]
+                                  },
+                                  cardState === 'in-progress' && { 
+                                    color: Colors.cardInProgressTitleColor,
+                                    fontSize: Typography.sizes[Colors.cardInProgressTitleSize]
+                                  },
+                                  cardState === 'not-started' && { 
+                                    color: Colors.cardNotStartedTitleColor,
+                                    fontSize: Typography.sizes[Colors.cardNotStartedTitleSize]
+                                  }
+                                ]}>
                                   {area.title}
                                 </Text>
-                                <Text style={styles.checkSubtitleNew}>
+                                <Text style={[
+                                  styles.checkSubtitleNew,
+                                  cardState === 'completed' && { color: Colors.cardCompletedSubtitleColor },
+                                  cardState === 'in-progress' && { color: Colors.cardInProgressSubtitleColor },
+                                  cardState === 'not-started' && { color: Colors.cardNotStartedSubtitleColor }
+                                ]}>
                                   {area.description}
                                 </Text>
                                 <View style={styles.checkProgressRow}>
@@ -851,7 +881,7 @@ const WelcomeScreen = ({ navigation }) => {
             ) : (
               <View style={styles.allDoneCard}>
                 <Text style={styles.allDoneTitle}>All levels complete 🎉</Text>
-                <Text style={styles.allDoneSubtitle}>Review checks or explore topics from the Toolkit tab.</Text>
+                <Text style={styles.allDoneSubtitle}>Review checks or explore topics from the Insights tab.</Text>
                 <TouchableOpacity style={styles.startLearningButton} onPress={() => navigation.navigate(SCREEN_NAMES.CATEGORY)}>
                   <Text style={styles.startLearningButtonText}>View All Categories</Text>
                 </TouchableOpacity>
@@ -1088,6 +1118,7 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
     lineHeight: Typography.sizes.md * 1.4,
+    textAlign: 'center',
   },
   welcomeMessageSpacing: {
     paddingHorizontal: Responsive.padding.screen,
@@ -1144,76 +1175,85 @@ const styles = StyleSheet.create({
   },
 
   activeLevelHeader: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.heroCardBackground,
     borderRadius: Responsive.borderRadius.xlarge,
-    padding: Responsive.padding.card,
-    marginBottom: Responsive.spacing.sm,
-    borderWidth: 1,
+    padding: Responsive.spacing.xl, // Increased from lg to xl for more breathing room
+    marginBottom: Responsive.spacing.md, // Increased margin for better separation
+    marginHorizontal: -Responsive.spacing.xs, // Slightly extend beyond container for hero effect
+    borderWidth: Colors.heroCardBorderWidth,
+    borderColor: Colors.heroCardBorder,
+    shadowColor: Colors.heroCardShadowColor,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: Colors.heroCardShadowOpacity,
+    shadowRadius: Colors.heroCardShadowRadius,
+    elevation: Colors.heroCardElevation,
   },
 
-  activeLevelContent: {
-    flex: 1,
+  levelChipContainer: {
+    marginBottom: Responsive.spacing.md, // Space between badge and title row
+  },
+  titleIconRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  activeLevelHeaderLeft: {
-    flex: 1,
-    paddingRight: Responsive.spacing.sm,
-  },
-  activeLevelLeftRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Responsive.spacing.sm,
+    marginBottom: Responsive.spacing.xl, // Space between title row and button
   },
   activeLevelTitle: {
-    fontSize: Typography.sizes.xxl,
+    fontSize: Typography.sizes.xxxl, // Increased from xxl to xxxl for more prominence
     fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-    lineHeight: Typography.sizes.xxl,
-    marginTop: -2,
+    color: Colors.heroTitleColor,
+    lineHeight: Typography.sizes.xxxl * 1.2, // Increased line height for better readability
+    flex: 1, // Take up available space
+    marginRight: Responsive.spacing.lg, // Space between title and icon
   },
   activeLevelSubtitle: {
     fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
   },
   activeLevelIconWrap: {
-    width: Responsive.iconSizes.xxlarge,
-    height: Responsive.iconSizes.xxlarge,
-    borderRadius: Responsive.iconSizes.xxlarge / 2,
+    width: Responsive.iconSizes.xxlarge + Responsive.spacing.sm, // Increased size
+    height: Responsive.iconSizes.xxlarge + Responsive.spacing.sm, // Increased size
+    borderRadius: (Responsive.iconSizes.xxlarge + Responsive.spacing.sm) / 2,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    backgroundColor: 'rgba(255,255,255,0.08)'
+    borderWidth: 3, // Increased border width for more prominence
+    borderColor: Colors.heroIconBorder,
+    backgroundColor: Colors.heroIconBackground,
   },
   activeLevelIconText: {
-    fontSize: Typography.sizes.xxl,
+    fontSize: Typography.sizes.xxxl, // Increased from xxl to xxxl for more prominence
   },
   securityCheckButton: {
-    marginTop: Responsive.spacing.md,
     borderRadius: Responsive.borderRadius.large,
-    paddingVertical: Responsive.padding.button,
-    paddingHorizontal: Responsive.spacing.lg,
+    paddingVertical: Responsive.padding.button + Responsive.spacing.xs, // Increased padding
+    paddingHorizontal: Responsive.spacing.xl, // Increased horizontal padding
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: Responsive.buttonHeight.medium,
+    minHeight: Responsive.buttonHeight.large, // Increased button height
+    backgroundColor: Colors.heroButtonBackground,
+    shadowColor: Colors.heroButtonShadowColor,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: Colors.heroButtonShadowOpacity,
+    shadowRadius: Colors.heroButtonShadowRadius,
+    elevation: Colors.heroButtonElevation,
   },
   securityCheckButtonText: {
-    color: Colors.textPrimary,
-    fontSize: Typography.sizes.md,
+    color: Colors.heroButtonTextColor,
+    fontSize: Typography.sizes.lg, // Increased from md to lg for more prominence
     fontWeight: Typography.weights.bold,
     textAlign: 'center',
   },
   levelChip: {
     alignSelf: 'flex-start',
     borderRadius: Responsive.borderRadius.medium,
-    paddingHorizontal: Responsive.spacing.sm,
-    paddingVertical: Responsive.spacing.xs,
+    paddingHorizontal: Responsive.spacing.md, // Increased horizontal padding
+    paddingVertical: Responsive.spacing.sm, // Increased vertical padding
+    backgroundColor: Colors.heroChipBackground,
   },
   levelChipText: {
-    color: '#0b1b2b',
+    color: Colors.heroChipTextColor,
     fontWeight: Typography.weights.bold,
-    fontSize: Typography.sizes.sm,
+    fontSize: Typography.sizes.md, // Increased from sm to md for more prominence
   },
   checkCardNew: {
     backgroundColor: Colors.background,
@@ -1226,13 +1266,13 @@ const styles = StyleSheet.create({
   checkCardCompleted: {
     borderColor: Colors.cardCompletedBorder,
     backgroundColor: Colors.cardCompleted,
-    opacity: 1,
+    opacity: Colors.cardCompletedOpacity,
   },
   checkCardInProgress: {
-    borderColor: Colors.accent,
+    borderColor: Colors.cardInProgressBorder,
     borderWidth: 2,
     backgroundColor: Colors.cardInProgress,
-    opacity: 1,
+    opacity: Colors.cardInProgressOpacity,
     // Make in-progress cards slightly larger
     transform: [{ scale: 1.02 }],
     marginHorizontal: -Responsive.spacing.xs, // Compensate for the scale to maintain alignment
@@ -1240,12 +1280,20 @@ const styles = StyleSheet.create({
   checkCardNotStarted: {
     borderColor: Colors.cardNotStartedBorder,
     backgroundColor: Colors.cardNotStarted,
-    opacity: 0.7,
+    opacity: Colors.cardNotStartedOpacity,
     shadowColor: Colors.cardNotStartedBorder,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 1,
     elevation: 2,
+  },
+  checkCardNext: {
+    borderWidth: 2,
+    backgroundColor: Colors.cardInProgress,
+    opacity: Colors.cardInProgressOpacity,
+    // Make next card larger like in-progress cards
+    transform: [{ scale: 1.02 }],
+    marginHorizontal: -Responsive.spacing.xs, // Compensate for the scale to maintain alignment
   },
   cardSeparator: {
     height: Responsive.spacing.xs, // Reduced from sm to xs for closer spacing
@@ -1272,13 +1320,11 @@ const styles = StyleSheet.create({
   checkTitleNew: {
     fontSize: Typography.sizes.xl,
     fontWeight: Typography.weights.bold,
-    color: Colors.textSecondary,
     marginBottom: Responsive.spacing.xs,
     textAlign: 'left',
   },
   checkSubtitleNew: {
     fontSize: Typography.sizes.sm,
-    color: Colors.textSecondary,
     marginBottom: Responsive.spacing.xs,
   },
   checkProgressBar: {
@@ -1314,11 +1360,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  activeLevelRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Responsive.spacing.sm,
-  },
+
 
   viewAllLink: {
     color: Colors.accent,

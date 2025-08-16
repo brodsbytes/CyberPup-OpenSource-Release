@@ -376,19 +376,19 @@ const styles = StyleSheet.create({
     padding: Responsive.spacing.md,
     borderWidth: 1,
     borderColor: Colors.cardNotStartedBorder,
-    opacity: 0.7, // Grey out unachieved milestones
+    opacity: Colors.cardNotStartedOpacity, // Grey out unachieved milestones
     zIndex: 1, // Above the connector line
   },
   milestoneCardAchieved: {
-    borderColor: Colors.accent,
+    borderColor: Colors.cardCompletedBorder,
     backgroundColor: Colors.cardCompleted,
-    opacity: 1, // Full opacity for achieved milestones
+    opacity: Colors.cardCompletedOpacity, // Full opacity for achieved milestones
   },
   milestoneCardNext: {
-    borderColor: Colors.accent,
+    borderColor: Colors.cardInProgressBorder,
     borderWidth: 2,
     backgroundColor: Colors.cardInProgress,
-    opacity: 1,
+    opacity: Colors.cardInProgressOpacity,
   },
   milestoneHeader: {
     flexDirection: 'row',

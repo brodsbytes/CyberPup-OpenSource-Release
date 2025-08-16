@@ -64,12 +64,22 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
   const loadProgress = async () => {
     try {
       const progressData = await AsyncStorage.getItem('check_1-1-5_progress');
+      const completedData = await AsyncStorage.getItem('check_1-1-5_completed');
+      console.log('📥 Loading progress for Check 1.1.5:', { progressData: !!progressData, completedData });
+      
       if (progressData) {
         const data = JSON.parse(progressData);
         setChecklistItems(data.checklistItems || checklistItems);
         setIsCompleted(data.isCompleted || false);
         setEmail(data.email || '');
         setBreachResult(data.breachResult || null);
+        console.log('📊 Loaded progress data:', { isCompleted: data.isCompleted, checklistItems: data.checklistItems?.length });
+      }
+      
+      // Also check the completion status directly
+      if (completedData === 'completed') {
+        console.log('✅ Check 1.1.5 is marked as completed in storage');
+        setIsCompleted(true);
       }
       
       // Load password manager data from Check 1.3
@@ -83,19 +93,26 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
     }
   };
 
-  const saveProgress = async () => {
+  const saveProgress = async (customChecklistItems = null, customIsCompleted = null) => {
     try {
+      const itemsToSave = customChecklistItems || checklistItems;
+      const completionStatus = customIsCompleted !== null ? customIsCompleted : isCompleted;
+      
       const progressData = {
-        checklistItems,
-        isCompleted,
+        checklistItems: itemsToSave,
+        isCompleted: completionStatus,
         email,
         breachResult,
         completedAt: new Date().toISOString(),
       };
       await AsyncStorage.setItem('check_1-1-5_progress', JSON.stringify(progressData));
       
-      if (isCompleted) {
+      if (completionStatus) {
         await AsyncStorage.setItem('check_1-1-5_completed', 'completed');
+        console.log('✅ Check 1.1.5 marked as completed');
+      } else {
+        await AsyncStorage.removeItem('check_1-1-5_completed');
+        console.log('❌ Check 1.1.5 completion removed');
       }
     } catch (error) {
       console.log('Error saving progress:', error);
@@ -124,22 +141,37 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
 
     // Check if all items are completed
     const allCompleted = updatedItems.every(item => item.completed);
+    console.log(`📋 All items completed: ${allCompleted}, current isCompleted: ${isCompleted}`);
+    
     if (allCompleted && !isCompleted) {
-      setIsCompleted(true);
+      console.log('🎯 Marking check as completed!');
+      // Update state and save progress with the new completion status
+      const newIsCompleted = true;
+      setIsCompleted(newIsCompleted);
+      
+      // Save progress with the updated completion status
+      await saveProgress(updatedItems, newIsCompleted);
       celebrateCompletion();
+    } else {
+      console.log('💾 Saving partial progress');
+      // Save progress for partial completion
+      await saveProgress(updatedItems, isCompleted);
     }
-
-    await saveProgress();
   };
 
-  const celebrateCompletion = () => {
+  const celebrateCompletion = async () => {
+    console.log('🎉 Celebrating completion of Check 1.1.5');
+    // Ensure completion is saved before showing alert
+    await saveProgress(checklistItems, true);
+    
     Alert.alert(
       '🎉 Check Complete!',
       'Great job! You\'ve checked for data breaches and secured any compromised accounts. This is a crucial step in protecting your digital identity.',
       [
         {
           text: 'Continue to Next Area',
-          onPress: () => {
+          onPress: async () => {
+            console.log('🚀 Navigating to Check 1.2.1');
             // Navigate to the next area (Secure Your Devices)
             navigation.navigate('Check1_2_1_ScreenLockScreen');
           },
@@ -147,7 +179,8 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
         {
           text: 'Go Back',
           style: 'cancel',
-          onPress: () => {
+          onPress: async () => {
+            console.log('🏠 Navigating back to Welcome');
             // Force refresh of WelcomeScreen progress
             navigation.navigate('Welcome');
           },
@@ -191,7 +224,8 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
           item.id === 1 ? { ...item, completed: true } : item
         );
         setChecklistItems(updatedItems);
-        await saveProgress();
+        console.log('🔍 Auto-completing first checklist item after breach check');
+        await saveProgress(updatedItems, isCompleted);
       }
       
     } catch (error) {
@@ -716,7 +750,10 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
               
               <TouchableOpacity
                 style={styles.continueButton}
-                onPress={() => {
+                onPress={async () => {
+                  console.log('🔘 Continue button pressed in completion card');
+                  // Ensure completion is saved before navigating
+                  await saveProgress(checklistItems, true);
                   navigation.navigate('Check1_2_1_ScreenLockScreen');
                 }}
                 activeOpacity={0.8}
