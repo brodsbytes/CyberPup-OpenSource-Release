@@ -8,12 +8,12 @@ import {
   TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Typography, Responsive } from '../theme';
-import BottomNavigation from '../components/BottomNavigation';
-import SegmentedControl from '../components/insights/SegmentedControl';
-import LearnTab from './Insights/LearnTab';
-import ToolsTab from './Insights/ToolsTab';
-import { SCREEN_NAMES } from '../constants';
+import { Colors, Typography, Responsive } from '../../theme';
+import BottomNavigation from '../../components/BottomNavigation';
+import SegmentedControl from '../../components/insights/SegmentedControl';
+import LearnTab from './LearnTab';
+import ToolsTab from './ToolsTab';
+import { SCREEN_NAMES } from '../../constants';
 
 const InsightsScreen = ({ navigation }) => {
   const [tab, setTab] = useState(0); // 0 = Learn, 1 = Tools
@@ -107,42 +107,41 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: Responsive.padding.screen,
-    paddingTop: Responsive.spacing.md,
+    paddingTop: Responsive.spacing.lg,
     paddingBottom: Responsive.spacing.md,
   },
   headerTitle: {
-    fontSize: Typography.sizes.xxxl,
+    fontSize: Typography.sizes.xxl,
     fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
-    marginBottom: Responsive.spacing.sm,
+    marginBottom: Responsive.spacing.xs,
   },
   headerSubtitle: {
-    fontSize: Typography.sizes.lg,
+    fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
-    lineHeight: Typography.sizes.lg * 1.5,
+    lineHeight: Typography.sizes.md * 1.4,
   },
   searchContainer: {
     paddingHorizontal: Responsive.padding.screen,
     paddingBottom: Responsive.spacing.md,
-    marginTop: Responsive.spacing.xs,
   },
   searchBar: {
     backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.xlarge,
-    paddingHorizontal: Responsive.spacing.lg,
-    paddingVertical: Responsive.padding.button * 1.5,
+    borderRadius: Responsive.borderRadius.large,
+    paddingHorizontal: Responsive.spacing.md,
+    paddingVertical: Responsive.padding.button,
     borderWidth: 1,
     borderColor: Colors.accent,
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: Responsive.buttonHeight.large,
+    minHeight: Responsive.buttonHeight.medium,
   },
   searchIcon: {
-    marginRight: Responsive.spacing.md,
+    marginRight: Responsive.spacing.sm,
   },
   searchInput: {
     color: Colors.textPrimary,
-    fontSize: Typography.sizes.lg,
+    fontSize: Typography.sizes.md,
     fontWeight: Typography.weights.medium,
     flex: 1,
     paddingVertical: 0,

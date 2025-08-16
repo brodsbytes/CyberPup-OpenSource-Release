@@ -7,6 +7,7 @@ import CategoryScreen from './screens/CategoryScreen';
 import ModuleListScreen from './screens/ModuleListScreen';
 import InsightsScreen from './screens/InsightsScreen';
 import LoadingScreen from './components/LoadingScreen';
+import { GuideDetailScreen, ToolDetailScreen } from './screens/Insights';
 
 import { APP_CONSTANTS, SCREEN_NAMES, ERROR_MESSAGES } from './constants';
 import { AppStorage } from './utils/storage';
@@ -74,7 +75,9 @@ export default function App() {
         <Stack.Screen name={SCREEN_NAMES.MODULE_LIST} component={ModuleListScreen} />
         <Stack.Screen name={SCREEN_NAMES.INSIGHTS} component={InsightsScreen} />
         
-
+        {/* Insights detail screens */}
+        <Stack.Screen name={SCREEN_NAMES.GUIDE_DETAIL} component={GuideDetailScreen} />
+        <Stack.Screen name={SCREEN_NAMES.TOOL_DETAIL} component={ToolDetailScreen} />
         
         {/* Level 1 Check screens */}
         <Stack.Screen name={SCREEN_NAMES.CHECK_1_1_STRONG_PASSWORDS} component={Check1_1_StrongPasswordsScreen} />

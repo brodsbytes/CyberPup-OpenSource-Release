@@ -41,6 +41,9 @@ export const SCREEN_NAMES = {
   CHECK_1_5_BREACH_CHECK: 'Check1_5_BreachCheckScreen',
   CHECK_1_2_1_SCREEN_LOCK: 'Check1_2_1_ScreenLockScreen',
   PHISHING_PRACTICE: 'PhishingPracticeScreen',
+  // Insights detail screens
+  GUIDE_DETAIL: 'GuideDetailScreen',
+  TOOL_DETAIL: 'ToolDetailScreen',
 };
 
 // Tab navigation constants

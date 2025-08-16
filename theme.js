@@ -239,6 +239,21 @@ export const CommonStyles = {
     borderColor: Colors.border,
     minHeight: responsiveInputHeight.medium,
   },
+  // Premium card styles for insights
+  premiumCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: responsiveBorderRadius.xlarge,
+    padding: responsivePadding.card * 1.5,
+    marginVertical: responsiveSpacing.lg,
+    shadowColor: Colors.shadowColor,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
+  },
 };
 
 
