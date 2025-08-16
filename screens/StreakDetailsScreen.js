@@ -100,16 +100,10 @@ const StreakDetailsModal = ({ visible, onClose }) => {
             <Text style={styles.milestoneIcon}>🔥</Text>
           </View>
           <View style={styles.milestoneContent}>
-            <Text style={[
-              styles.milestoneTitle,
-              isAchieved && styles.milestoneTitleAchieved
-            ]}>
+            <Text style={styles.milestoneTitle}>
               {milestone.title}
             </Text>
-            <Text style={[
-              styles.milestoneDescription,
-              isAchieved && styles.milestoneDescriptionAchieved
-            ]}>
+            <Text style={styles.milestoneDescription}>
               {milestone.days} day streak
             </Text>
           </View>
@@ -269,7 +263,7 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   modalContent: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.background,
     borderTopLeftRadius: Responsive.borderRadius.xlarge,
     borderTopRightRadius: Responsive.borderRadius.xlarge,
     maxHeight: height * 0.85,
@@ -377,22 +371,23 @@ const styles = StyleSheet.create({
     marginBottom: Responsive.spacing.md,
   },
   milestoneCard: {
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.cardNotStarted,
     borderRadius: Responsive.borderRadius.medium,
     padding: Responsive.spacing.md,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: Colors.cardNotStartedBorder,
     opacity: 0.7, // Grey out unachieved milestones
     zIndex: 1, // Above the connector line
   },
   milestoneCardAchieved: {
     borderColor: Colors.accent,
-    backgroundColor: 'rgba(91, 163, 240, 0.1)',
+    backgroundColor: Colors.cardCompleted,
     opacity: 1, // Full opacity for achieved milestones
   },
   milestoneCardNext: {
     borderColor: Colors.accent,
     borderWidth: 2,
+    backgroundColor: Colors.cardInProgress,
     opacity: 1,
   },
   milestoneHeader: {
@@ -415,18 +410,12 @@ const styles = StyleSheet.create({
   milestoneTitle: {
     fontSize: Typography.sizes.sm, // Reduced from md
     fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
+    color: Colors.textSecondary,
     marginBottom: Responsive.spacing.xs,
-  },
-  milestoneTitleAchieved: {
-    color: Colors.accent,
   },
   milestoneDescription: {
     fontSize: Typography.sizes.xs, // Reduced from sm
     color: Colors.textSecondary,
-  },
-  milestoneDescriptionAchieved: {
-    color: Colors.textPrimary,
   },
   progressContainer: {
     flexDirection: 'row',

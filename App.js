@@ -10,7 +10,6 @@ import LoadingScreen from './components/LoadingScreen';
 
 import { APP_CONSTANTS, SCREEN_NAMES, ERROR_MESSAGES } from './constants';
 import { AppStorage } from './utils/storage';
-import { ThemeProvider } from './utils/themeContext';
 
 import {
   // Level 1 Check screens
@@ -62,35 +61,33 @@ export default function App() {
   }
 
   return (
-    <ThemeProvider>
-      <NavigationContainer>
-        <Stack.Navigator
-          initialRouteName={initialRoute}
-          screenOptions={{
-            headerShown: false,
-          }}
-        >
-          <Stack.Screen name={SCREEN_NAMES.INITIAL_WELCOME} component={InitialWelcomeScreen} />
-          <Stack.Screen name={SCREEN_NAMES.WELCOME} component={WelcomeScreen} />
-          <Stack.Screen name={SCREEN_NAMES.CATEGORY} component={CategoryScreen} />
-          <Stack.Screen name={SCREEN_NAMES.MODULE_LIST} component={ModuleListScreen} />
-          <Stack.Screen name={SCREEN_NAMES.INSIGHTS} component={InsightsScreen} />
-          
+    <NavigationContainer>
+      <Stack.Navigator
+        initialRouteName={initialRoute}
+        screenOptions={{
+          headerShown: false,
+        }}
+      >
+        <Stack.Screen name={SCREEN_NAMES.INITIAL_WELCOME} component={InitialWelcomeScreen} />
+        <Stack.Screen name={SCREEN_NAMES.WELCOME} component={WelcomeScreen} />
+        <Stack.Screen name={SCREEN_NAMES.CATEGORY} component={CategoryScreen} />
+        <Stack.Screen name={SCREEN_NAMES.MODULE_LIST} component={ModuleListScreen} />
+        <Stack.Screen name={SCREEN_NAMES.INSIGHTS} component={InsightsScreen} />
+        
 
-          
-          {/* Level 1 Check screens */}
-          <Stack.Screen name={SCREEN_NAMES.CHECK_1_1_STRONG_PASSWORDS} component={Check1_1_StrongPasswordsScreen} />
-          <Stack.Screen name={SCREEN_NAMES.CHECK_1_2_HIGH_VALUE_ACCOUNTS} component={Check1_2_HighValueAccountsScreen} />
-          <Stack.Screen name={SCREEN_NAMES.CHECK_1_3_PASSWORD_MANAGERS} component={Check1_3_PasswordManagersScreen} />
-          <Stack.Screen name={SCREEN_NAMES.CHECK_1_4_MFA_SETUP} component={Check1_4_MFASetupScreen} />
-          <Stack.Screen name={SCREEN_NAMES.CHECK_1_5_BREACH_CHECK} component={Check1_5_BreachCheckScreen} />
-          <Stack.Screen name={SCREEN_NAMES.CHECK_1_2_1_SCREEN_LOCK} component={Check1_2_1_ScreenLockScreen} />
-          <Stack.Screen name={SCREEN_NAMES.PHISHING_PRACTICE} component={PhishingPracticeScreen} />
-          
-          <Stack.Screen name={SCREEN_NAMES.PROFILE} component={ProfileScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </ThemeProvider>
+        
+        {/* Level 1 Check screens */}
+        <Stack.Screen name={SCREEN_NAMES.CHECK_1_1_STRONG_PASSWORDS} component={Check1_1_StrongPasswordsScreen} />
+        <Stack.Screen name={SCREEN_NAMES.CHECK_1_2_HIGH_VALUE_ACCOUNTS} component={Check1_2_HighValueAccountsScreen} />
+        <Stack.Screen name={SCREEN_NAMES.CHECK_1_3_PASSWORD_MANAGERS} component={Check1_3_PasswordManagersScreen} />
+        <Stack.Screen name={SCREEN_NAMES.CHECK_1_4_MFA_SETUP} component={Check1_4_MFASetupScreen} />
+        <Stack.Screen name={SCREEN_NAMES.CHECK_1_5_BREACH_CHECK} component={Check1_5_BreachCheckScreen} />
+        <Stack.Screen name={SCREEN_NAMES.CHECK_1_2_1_SCREEN_LOCK} component={Check1_2_1_ScreenLockScreen} />
+        <Stack.Screen name={SCREEN_NAMES.PHISHING_PRACTICE} component={PhishingPracticeScreen} />
+        
+        <Stack.Screen name={SCREEN_NAMES.PROFILE} component={ProfileScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 

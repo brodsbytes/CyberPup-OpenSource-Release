@@ -15,13 +15,17 @@ CyberPup helps users complete a comprehensive cybersecurity health check with an
 - **Action-First Design**: Direct integration with device settings where possible
 - **Modern UI**: Clean, professional design with smooth animations
 - **Responsive Design**: Optimized for all screen sizes including iPhone SE
+- **Gamification System**: Streak tracking, badge collection, and achievement milestones
+- **Security Check Catalogue**: Comprehensive overview of all checks with direct navigation
+- **Sticky Gamification Bar**: Quick access to progress, streaks, and badges
 
 ## Screens
 
 ### Welcome Screen
 - Overall progress dashboard with circular progress indicator
+- Sticky gamification bar with quick access to catalogue, streaks, and badges
 - Active level display with area-based check lists
-- Search functionality for finding specific checks
+- Security Check Catalogue modal for comprehensive check overview
 - Real-time progress updates and completion tracking
 
 ### Check Screens
@@ -34,6 +38,11 @@ CyberPup helps users complete a comprehensive cybersecurity health check with an
 - Level-based organization of security checks
 - Visual progress indicators for each level
 - Badge system for completed areas
+
+### Gamification Screens
+- **Streak Details**: Comprehensive streak tracking with milestone achievements
+- **Badge Collection**: Visual display of earned badges and achievements
+- **Security Check Catalogue**: Hierarchical overview of all checks with direct navigation
 
 ## Tech Stack
 
@@ -88,10 +97,12 @@ npm run web
 CyberPup/
 ├── App.js                           # Main app component with navigation setup
 ├── screens/
-│   ├── WelcomeScreen.js            # Main dashboard with progress tracking
+│   ├── WelcomeScreen.js            # Main dashboard with progress tracking and gamification bar
 │   ├── CategoryScreen.js           # Level-based check organization
 │   ├── ModuleListScreen.js         # Area-based check lists
 │   ├── ProfileScreen.js            # User profile and achievements
+│   ├── StreakDetailsScreen.js      # Streak tracking and milestone achievements
+│   ├── BadgesScreen.js             # Badge collection and achievements
 │   └── lessons/
 │       ├── level-1/                # Level 1 check screens
 │       │   ├── Check1_1_StrongPasswordsScreen.js
@@ -101,7 +112,10 @@ CyberPup/
 ├── components/                     # Reusable UI components
 ├── data/                          # Course content and structure
 ├── utils/                         # Storage utilities
-│   └── responsive.js              # Responsive design system
+│   ├── streakStorage.js            # Streak tracking and milestone logic
+│   ├── badgeStorage.js             # Badge system and achievement tracking
+│   ├── storage.js                  # General storage utilities
+│   └── responsive.js               # Responsive design system
 ├── theme.js                       # Design system and colors
 └── package.json                   # Dependencies and scripts
 ```

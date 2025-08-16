@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   modalContent: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.background,
     borderTopLeftRadius: Responsive.borderRadius.xlarge,
     borderTopRightRadius: Responsive.borderRadius.xlarge,
     maxHeight: height * 0.85,
