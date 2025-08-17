@@ -772,7 +772,7 @@ const WelcomeScreen = ({ navigation }) => {
                               navigateToArea(area);
                             }}
                           >
-                            <View style={styles.checkCardContent}>
+                            <View style={isNextCard ? styles.checkCardContentWithButton : styles.checkCardContent}>
                               <View style={styles.checkCardLeft}>
                                 <Ionicons 
                                   name={getAreaIcon(area.id)} 
@@ -828,6 +828,25 @@ const WelcomeScreen = ({ navigation }) => {
                                   </Text>
                                 </View>
                               </View>
+                              
+                              {/* Play Button for In-Progress/Next Card */}
+                              {isNextCard && (
+                                <TouchableOpacity
+                                  style={styles.playButton}
+                                  onPress={() => {
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                                    animateCardPress(area.id);
+                                    navigateToArea(area);
+                                  }}
+                                  activeOpacity={0.8}
+                                >
+                                  <Ionicons 
+                                    name="play" 
+                                    size={20} 
+                                    color={Colors.heroButtonTextColor} 
+                                  />
+                                </TouchableOpacity>
+                              )}
                             </View>
                           </TouchableOpacity>
                         </Animated.View>
@@ -1291,6 +1310,9 @@ const styles = StyleSheet.create({
     // Make next card larger like in-progress cards
     transform: [{ scale: 1.02 }],
     marginHorizontal: -Responsive.spacing.xs, // Compensate for the scale to maintain alignment
+    // Extra padding for better play button integration
+    paddingVertical: Responsive.spacing.md,
+    paddingHorizontal: Responsive.spacing.md,
   },
   cardSeparator: {
     height: Responsive.spacing.xs, // Reduced from sm to xs for closer spacing
@@ -1303,6 +1325,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: Responsive.spacing.sm,
+  },
+  checkCardContentWithButton: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Responsive.spacing.sm,
+    paddingRight: Responsive.spacing.xl + 8, // Extra space for play button (40px + 16px margin)
   },
   checkCardLeft: {
     alignItems: 'center',
@@ -1350,7 +1378,30 @@ const styles = StyleSheet.create({
   checkProgressPercentCompleted: {
     color: Colors.accent,
   },
-
+  
+  // Play button for in-progress cards
+  playButton: {
+    position: 'absolute',
+    right: Responsive.spacing.sm,
+    top: '50%',
+    marginTop: -20, // Half of button height for perfect centering
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.accent, // Solid accent color
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: Colors.accent,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    elevation: 8,
+    // Ensure it's above other elements
+    zIndex: 10,
+    // Add subtle animation hint
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
 
   activeLevelMetaRow: {
     flexDirection: 'row',

@@ -21,7 +21,7 @@ const InitialWelcomeScreen = ({ navigation }) => {
   const [currentStep, setCurrentStep] = useState(0);
 
   const handleNext = () => {
-    if (currentStep < 4) {
+    if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     } else {
       handleComplete();
@@ -80,16 +80,16 @@ const InitialWelcomeScreen = ({ navigation }) => {
         </View>
       </View>
       
-      <Text style={styles.mainTitle}>Welcome to CyberPup - Your Personal Cybersecurity Health Check</Text>
+      <Text style={styles.mainTitle}>Welcome to CyberPup - Your Personal Cybersecurity Guide</Text>
       
       <Text style={styles.mainDescription}>
-        CyberPup is your step-by-step guide to protecting your accounts, devices, and privacy - without the jargon. We'll help you go from 'at risk' to 'resilient' in just a few minutes a day.
+        CyberPup is your step-by-step guide to securing your entire cybersecurity footprint without the jargon. <br /> We'll help you go from 'at risk' to 'resilient' in just a few minutes a day.
       </Text>
 
       <View style={styles.keyPointsContainer}>
         <View style={styles.keyPoint}>
           <Ionicons name="shield-checkmark" size={Responsive.iconSizes.medium} color={Colors.accent} />
-          <Text style={styles.keyPointText}>Unbiased, expert advice - no upselling, no gimmicks</Text>
+          <Text style={styles.keyPointText}>Unbiased expert advice that remains passionately vendor-agnostic. No upsells.</Text>
         </View>
         <View style={styles.keyPoint}>
           <Ionicons name="flash" size={Responsive.iconSizes.medium} color={Colors.accent} />
@@ -114,7 +114,7 @@ const InitialWelcomeScreen = ({ navigation }) => {
           </View>
           <Text style={styles.helpCardTitle}>Find Your Gaps</Text>
           <Text style={styles.helpCardDescription}>
-            CyberPup scans your cyber habits against expert-recommended best practices.
+            CyberPup compares your cyber habits against expert-recommended best practices.
           </Text>
         </View>
 
@@ -124,180 +124,149 @@ const InitialWelcomeScreen = ({ navigation }) => {
           </View>
           <Text style={styles.helpCardTitle}>Fix Them Fast</Text>
           <Text style={styles.helpCardDescription}>
-            Interactive checklists guide you through actions, step-by-step.
+            Interactive checks guide you through actions, step-by-step.
           </Text>
         </View>
 
         <View style={styles.helpCard}>
           <View style={[styles.helpCardIcon, { backgroundColor: Colors.warning }]}>
-            <Ionicons name="shield" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
+            <Ionicons name="analytics" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
           </View>
-          <Text style={styles.helpCardTitle}>Stay Secure</Text>
+          <Text style={styles.helpCardTitle}>Stay Informed</Text>
           <Text style={styles.helpCardDescription}>
-            Monthly refreshers help keep you protected as threats evolve.
+            Get real-time security alerts, expert tools, detailed playbooks, and educational articles to keep you ahead of evolving threats.
           </Text>
         </View>
       </View>
     </View>
   );
 
-  const renderSection3 = () => (
-    <View style={styles.sectionContainer}>
-      <Text style={styles.sectionTitle}>How to Get the Most Out of CyberPup</Text>
-      
-      <View style={styles.tipsContainer}>
-        <View style={styles.tipItem}>
-          <View style={styles.tipNumber}>
-            <Text style={styles.tipNumberText}>1</Text>
-          </View>
-          <Text style={styles.tipText}>
-            Complete Level 1 checks as soon as possible - they give the biggest boost to your security.
-          </Text>
-        </View>
 
-        <View style={styles.tipItem}>
-          <View style={styles.tipNumber}>
-            <Text style={styles.tipNumberText}>2</Text>
-          </View>
-          <Text style={styles.tipText}>
-            Use the interactive checklists - we've made them quick, simple, and tailored to your device.
-          </Text>
-        </View>
-
-        <View style={styles.tipItem}>
-          <View style={styles.tipNumber}>
-            <Text style={styles.tipNumberText}>3</Text>
-          </View>
-          <Text style={styles.tipText}>
-            Watch for progress celebrations - your work is paying off!
-          </Text>
-        </View>
-
-        <View style={styles.tipItem}>
-          <View style={styles.tipNumber}>
-            <Text style={styles.tipNumberText}>4</Text>
-          </View>
-          <Text style={styles.tipText}>
-            Revisit the app monthly - cybersecurity is a habit, not a one-time job.
-          </Text>
-        </View>
-      </View>
-
-      {/* Added design element: Progress visualization */}
-      <View style={styles.progressVisualization}>
-        <View style={styles.progressStep}>
-          <View style={[styles.progressDot, { backgroundColor: Colors.accent }]} />
-          <Text style={styles.progressLabel}>Start</Text>
-        </View>
-        <View style={styles.progressLine} />
-        <View style={styles.progressStep}>
-          <View style={[styles.progressDot, { backgroundColor: Colors.accent }]} />
-          <Text style={styles.progressLabel}>Secure</Text>
-        </View>
-        <View style={styles.progressLine} />
-        <View style={styles.progressStep}>
-          <View style={[styles.progressDot, { backgroundColor: Colors.track }]} />
-          <Text style={styles.progressLabel}>Thrive</Text>
-        </View>
-      </View>
-    </View>
-  );
 
   const renderSection4 = () => (
     <View style={styles.sectionContainer}>
-      <Text style={styles.sectionTitle}>Why CyberPup is Better Than Buying Individual Tools</Text>
+      <Text style={styles.sectionTitle}>Why CyberPup Does More Than Individual Tools</Text>
       
-      <View style={styles.comparisonTable}>
-        <View style={styles.tableHeader}>
-          <Text style={styles.tableHeaderText}>Tool</Text>
-          <Text style={styles.tableHeaderText}>Does</Text>
-          <Text style={styles.tableHeaderText}>Misses</Text>
-          <Text style={styles.tableHeaderText}>CyberPup</Text>
+      {/* Problem Section */}
+      <View style={styles.problemSection}>
+        <View style={styles.sectionHeader}>
+          <Ionicons name="close-circle" size={Responsive.iconSizes.medium} color={Colors.error} />
+          <Text style={styles.sectionHeaderText}>Why Paid Tools Alone Aren't Enough</Text>
         </View>
 
-        <View style={styles.tableRow}>
-          <Text style={styles.tableCell}>VPN</Text>
-          <Text style={styles.tableCell}>Hides IP, encrypts traffic</Text>
-          <Text style={styles.tableCell}>Accounts, scams, device security</Text>
-          <Text style={styles.tableCell}>Covers everything</Text>
-        </View>
+        <Text style={styles.sectionDescription}>
+          Many apps claim to "keep you safe" but only cover a small slice of the problem.
+        </Text>
 
-        <View style={styles.tableRow}>
-          <Text style={styles.tableCell}>Antivirus</Text>
-          <Text style={styles.tableCell}>Detects malware</Text>
-          <Text style={styles.tableCell}>Phishing, passwords, settings</Text>
-          <Text style={styles.tableCell}>Prevents attacks</Text>
-        </View>
+        <View style={styles.toolsList}>
+          <View style={styles.toolItem}>
+            <Text style={styles.toolTitle}>VPN</Text>
+            <View style={styles.toolPoint}>
+              <Ionicons name="checkmark-circle" size={Responsive.iconSizes.small} color={Colors.success} />
+              <Text style={styles.toolPointText}>Encrypts browsing traffic</Text>
+            </View>
+            <View style={styles.toolPoint}>
+              <Ionicons name="close-circle" size={Responsive.iconSizes.small} color={Colors.error} />
+              <Text style={styles.toolPointText}>Doesn't protect accounts, stop scams, or secure devices</Text>
+            </View>
+          </View>
 
-        <View style={styles.tableRow}>
-          <Text style={styles.tableCell}>Cleanup Apps</Text>
-          <Text style={styles.tableCell}>Deletes temp files</Text>
-          <Text style={styles.tableCell}>Real security</Text>
-          <Text style={styles.tableCell}>Real improvements</Text>
+          <View style={styles.toolItem}>
+            <Text style={styles.toolTitle}>Paid Antivirus Packages</Text>
+            <View style={styles.toolPoint}>
+              <Ionicons name="checkmark-circle" size={Responsive.iconSizes.small} color={Colors.success} />
+              <Text style={styles.toolPointText}>Blocks known malware</Text>
+            </View>
+            <View style={styles.toolPoint}>
+              <Ionicons name="close-circle" size={Responsive.iconSizes.small} color={Colors.error} />
+              <Text style={styles.toolPointText}>Won't stop phishing, weak passwords, or unsafe settings</Text>
+        </View>
+          </View>
+
+          <View style={styles.toolItem}>
+            <Text style={styles.toolTitle}>One-click "Cleanup" apps</Text>
+            <View style={styles.toolPoint}>
+              <Ionicons name="checkmark-circle" size={Responsive.iconSizes.small} color={Colors.success} />
+              <Text style={styles.toolPointText}>Clear junk files</Text>
+            </View>
+            <View style={styles.toolPoint}>
+              <Ionicons name="close-circle" size={Responsive.iconSizes.small} color={Colors.error} />
+              <Text style={styles.toolPointText}>No real impact on security</Text>
+        </View>
+          </View>
         </View>
       </View>
 
-      <View style={styles.summaryCard}>
-        <Text style={styles.summaryText}>
-          CyberPup works across every part of your digital life - accounts, devices, privacy, and scams - so nothing falls through the cracks.
+      {/* Solution Section */}
+      <View style={styles.solutionSection}>
+        <View style={styles.sectionHeader}>
+          <Ionicons name="checkmark-circle" size={Responsive.iconSizes.medium} color={Colors.success} />
+          <Text style={styles.sectionHeaderText}>Why CyberPup Is Different</Text>
+        </View>
+        
+        <Text style={styles.sectionDescription}>
+          CyberPup helps you protect all areas of your digital life:
+        </Text>
+
+        <View style={styles.toolsList}>
+          <View style={styles.toolItem}>
+            <Text style={styles.toolTitle}>Accounts</Text>
+            <View style={styles.toolPoint}>
+              <Ionicons name="checkmark-circle" size={Responsive.iconSizes.small} color={Colors.success} />
+              <Text style={styles.toolPointText}>Passwords, MFA, breaches</Text>
+        </View>
+      </View>
+
+          <View style={styles.toolItem}>
+            <Text style={styles.toolTitle}>Devices & Wi-Fi</Text>
+            <View style={styles.toolPoint}>
+              <Ionicons name="checkmark-circle" size={Responsive.iconSizes.small} color={Colors.success} />
+              <Text style={styles.toolPointText}>Updates, backups, router security</Text>
+    </View>
+        </View>
+
+          <View style={styles.toolItem}>
+            <Text style={styles.toolTitle}>Privacy & Scams</Text>
+            <View style={styles.toolPoint}>
+              <Ionicons name="checkmark-circle" size={Responsive.iconSizes.small} color={Colors.success} />
+              <Text style={styles.toolPointText}>Phishing, social media, fraud</Text>
+            </View>
+        </View>
+        </View>
+
+        <Text style={styles.bottomLine}>
+          No misleading marketing or sales tactics. Just expert-backed steps that actually make you safer.
         </Text>
       </View>
+
+
     </View>
   );
 
   const renderSection5 = () => (
     <View style={styles.sectionContainer}>
-      <Text style={styles.sectionTitle}>Getting Started</Text>
-      
-      <View style={styles.trustElements}>
-        <View style={styles.trustItem}>
-          <Ionicons name="checkmark-circle" size={Responsive.iconSizes.medium} color={Colors.success} />
-          <Text style={styles.trustText}>Powered by accredited cybersecurity professionals</Text>
+      {/* CyberPup Mascot */}
+      <View style={styles.finalMascotContainer}>
+        <View style={styles.finalMascotWrapper}>
+          <Image
+            source={require('../assets/images/cyberpup-sitting.png')}
+            style={styles.finalMascotImage}
+            resizeMode="contain"
+          />
         </View>
-        <View style={styles.trustItem}>
-          <Ionicons name="checkmark-circle" size={Responsive.iconSizes.medium} color={Colors.success} />
-          <Text style={styles.trustText}>Industry best practices</Text>
-        </View>
-      </View>
-
-      <Text style={styles.reassuranceText}>
-        You don't need to be a tech expert - we'll guide you.
+        
+        <Text style={styles.finalSectionTitle}>Let's Go!</Text>
+        
+        <Text style={styles.encouragingText}>
+          Let's get you from at risk to resilient, one simple step at a time.
       </Text>
-
-      {/* Added design element: Security level indicator */}
-      <View style={styles.securityLevelCard}>
-        <View style={styles.securityLevelHeader}>
-          <Ionicons name="shield" size={Responsive.iconSizes.large} color={Colors.accent} />
-          <Text style={styles.securityLevelTitle}>Your Security Journey</Text>
-        </View>
-        <View style={styles.securityLevelProgress}>
-          <View style={styles.securityLevelStep}>
-            <View style={[styles.securityLevelDot, { backgroundColor: Colors.accent }]} />
-            <Text style={styles.securityLevelText}>At Risk</Text>
-          </View>
-          <View style={styles.securityLevelArrow} />
-          <View style={styles.securityLevelStep}>
-            <View style={[styles.securityLevelDot, { backgroundColor: Colors.track }]} />
-            <Text style={styles.securityLevelText}>Resilient</Text>
-          </View>
-        </View>
       </View>
-
-      <TouchableOpacity
-        style={styles.ctaButton}
-        onPress={handleComplete}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.ctaButtonText}>Start My First Health Check</Text>
-        <Ionicons name="arrow-forward" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
-      </TouchableOpacity>
     </View>
   );
 
   const sections = [
     renderSection1,
     renderSection2,
-    renderSection3,
     renderSection4,
     renderSection5,
   ];
@@ -308,18 +277,25 @@ const InitialWelcomeScreen = ({ navigation }) => {
       
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View 
-              style={[
-                styles.progressFill, 
-                { width: `${((currentStep + 1) / 5) * 100}%` }
-              ]} 
-            />
-          </View>
-          <Text style={styles.progressText}>
-            {currentStep + 1} of 5
-          </Text>
+        {currentStep > 0 ? (
+          <TouchableOpacity
+            style={styles.headerBackButton}
+            onPress={handleBack}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="arrow-back" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.headerBackSpacer} />
+        )}
+        
+        <View style={styles.progressBar}>
+          <View 
+            style={[
+              styles.progressFill, 
+              { width: `${((currentStep + 1) / 4) * 100}%` }
+            ]} 
+          />
         </View>
         
         <TouchableOpacity
@@ -339,28 +315,15 @@ const InitialWelcomeScreen = ({ navigation }) => {
 
       {/* Navigation Footer */}
       <View style={styles.footer}>
-        {currentStep > 0 && (
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={handleBack}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.backButtonText}>Back</Text>
-          </TouchableOpacity>
-        )}
-        
         <TouchableOpacity
-          style={[
-            styles.nextButton,
-            currentStep === 4 && styles.ctaButtonStyle
-          ]}
+          style={styles.nextButton}
           onPress={handleNext}
           activeOpacity={0.8}
         >
           <Text style={styles.nextButtonText}>
-            {currentStep === 4 ? 'Get Started' : 'Next'}
+            {currentStep === 3 ? 'Get Started' : 'Next'}
           </Text>
-          {currentStep < 4 && (
+          {currentStep < 3 && (
             <Ionicons name="arrow-forward" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
           )}
         </TouchableOpacity>
@@ -376,33 +339,33 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: Responsive.padding.screen,
     paddingTop: Responsive.spacing.lg,
     paddingBottom: Responsive.spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
-  },
-  progressContainer: {
-    flex: 1,
-    marginRight: Responsive.spacing.md,
+    gap: Responsive.spacing.md,
   },
   progressBar: {
+    flex: 1,
     height: Responsive.spacing.xs,
     backgroundColor: Colors.track,
     borderRadius: Responsive.borderRadius.small,
     overflow: 'hidden',
-    marginBottom: Responsive.spacing.xs,
   },
   progressFill: {
     height: '100%',
     backgroundColor: Colors.accent,
     borderRadius: Responsive.borderRadius.small,
   },
-  progressText: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.textSecondary,
+  headerBackButton: {
+    paddingHorizontal: Responsive.spacing.md,
+    paddingVertical: Responsive.spacing.sm,
+    minWidth: 40,
+  },
+  headerBackSpacer: {
+    minWidth: 40,
   },
   skipButton: {
     paddingHorizontal: Responsive.spacing.md,
@@ -510,138 +473,114 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: Typography.sizes.md * 1.4,
   },
-  tipsContainer: {
-    gap: Responsive.spacing.lg,
-  },
-  tipItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Responsive.spacing.md,
-  },
-  tipNumber: {
-    width: Responsive.iconSizes.large,
-    height: Responsive.iconSizes.large,
-    borderRadius: Responsive.iconSizes.large / 2,
-    backgroundColor: Colors.accent,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexShrink: 0,
-  },
-  tipNumberText: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-  },
-  tipText: {
-    fontSize: Typography.sizes.md,
-    color: Colors.textSecondary,
-    flex: 1,
-    lineHeight: Typography.sizes.md * 1.4,
-  },
-  comparisonTable: {
+
+  problemSection: {
     backgroundColor: Colors.surface,
     borderRadius: Responsive.borderRadius.large,
-    overflow: 'hidden',
+    padding: Responsive.padding.modal,
+    marginBottom: Responsive.spacing.lg,
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.error,
+  },
+  solutionSection: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.modal,
+    marginBottom: Responsive.spacing.lg,
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.success,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Responsive.spacing.sm,
+    marginBottom: Responsive.spacing.md,
+  },
+  sectionHeaderText: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.bold,
+    color: Colors.textPrimary,
+    flex: 1,
+  },
+  sectionDescription: {
+    fontSize: Typography.sizes.md,
+    color: Colors.textSecondary,
+    lineHeight: Typography.sizes.md * 1.4,
     marginBottom: Responsive.spacing.lg,
   },
-  tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: Colors.accent,
-    padding: Responsive.spacing.md,
+  toolsList: {
+    gap: Responsive.spacing.lg,
   },
-  tableHeaderText: {
-    flex: 1,
-    fontSize: Typography.sizes.xs,
+  toolItem: {
+    gap: Responsive.spacing.sm,
+  },
+  toolTitle: {
+    fontSize: Typography.sizes.lg,
     fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
-    textAlign: 'center',
-    paddingHorizontal: Responsive.spacing.xs,
+    marginBottom: Responsive.spacing.xs,
   },
-  tableRow: {
+  toolPoint: {
     flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    alignItems: 'flex-start',
+    gap: Responsive.spacing.sm,
   },
-  tableCell: {
-    flex: 1,
-    fontSize: Typography.sizes.xs,
-    color: Colors.textSecondary,
-    padding: Responsive.spacing.sm,
-    textAlign: 'center',
-    lineHeight: Typography.sizes.xs * 1.4,
-    paddingHorizontal: Responsive.spacing.xs,
-  },
-  summaryCard: {
-    backgroundColor: Colors.accentSoft,
-    padding: Responsive.padding.modal,
-    borderRadius: Responsive.borderRadius.large,
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.accent,
-  },
-  summaryText: {
+  toolPointText: {
     fontSize: Typography.sizes.md,
-    color: Colors.textPrimary,
-    fontWeight: Typography.weights.semibold,
+    color: Colors.textSecondary,
+    lineHeight: Typography.sizes.md * 1.4,
+    flex: 1,
+  },
+
+  bottomLine: {
+    fontSize: Typography.sizes.md,
+    color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: Typography.sizes.md * 1.4,
+    marginVertical: Responsive.spacing.xl,
   },
-  trustElements: {
-    gap: Responsive.spacing.md,
-    marginBottom: Responsive.spacing.xl,
-  },
-  trustItem: {
-    flexDirection: 'row',
+
+  finalMascotContainer: {
     alignItems: 'center',
-    gap: Responsive.spacing.sm,
-  },
-  trustText: {
-    fontSize: Typography.sizes.md,
-    color: Colors.textSecondary,
+    justifyContent: 'center',
     flex: 1,
+    paddingVertical: Responsive.spacing.xl,
   },
-  reassuranceText: {
+  finalMascotWrapper: {
+    width: Responsive.isSmallScreen ? 300 : 400,
+    height: Responsive.isSmallScreen ? 300 : 400,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  finalMascotImage: {
+    width: '100%',
+    height: '100%',
+    maxWidth: Responsive.isSmallScreen ? 300 : 400,
+    maxHeight: Responsive.isSmallScreen ? 300 : 400,
+  },
+  finalSectionTitle: {
+    fontSize: Typography.sizes.xxl,
+    fontWeight: Typography.weights.bold,
+    color: Colors.textPrimary,
+    textAlign: 'center',
+    marginTop: Responsive.spacing.lg,
+    marginBottom: Responsive.spacing.sm,
+  },
+  encouragingText: {
     fontSize: Typography.sizes.lg,
     color: Colors.textPrimary,
     textAlign: 'center',
-    marginBottom: Responsive.spacing.xl,
-    fontStyle: 'italic',
-  },
-  ctaButton: {
-    backgroundColor: Colors.accent,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: Responsive.padding.modal,
-    borderRadius: Responsive.borderRadius.xlarge,
-    gap: Responsive.spacing.sm,
-  },
-  ctaButtonText: {
-    fontSize: Typography.sizes.lg,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
+    fontWeight: Typography.weights.medium,
+    lineHeight: Typography.sizes.lg * 1.3,
   },
   footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     paddingHorizontal: Responsive.padding.screen,
     paddingVertical: Responsive.spacing.lg,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
     backgroundColor: Colors.background,
   },
-  backButton: {
-    backgroundColor: Colors.surface,
-    paddingHorizontal: Responsive.spacing.lg,
-    paddingVertical: Responsive.padding.button,
-    borderRadius: Responsive.borderRadius.large,
-    minWidth: 80,
-    alignItems: 'center',
-  },
-  backButtonText: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
-  },
+
   nextButton: {
     backgroundColor: Colors.accent,
     flexDirection: 'row',
@@ -649,86 +588,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: Responsive.spacing.lg,
     paddingVertical: Responsive.padding.button,
     borderRadius: Responsive.borderRadius.large,
-    minWidth: 120,
     justifyContent: 'center',
     gap: Responsive.spacing.sm,
-  },
-  ctaButtonStyle: {
-    flex: 1,
+    width: '100%',
   },
   nextButtonText: {
     fontSize: Typography.sizes.md,
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
   },
-     progressVisualization: {
-     flexDirection: 'row',
-     alignItems: 'center',
-     justifyContent: 'space-around',
-     marginTop: Responsive.spacing.lg,
-     paddingHorizontal: Responsive.spacing.md,
-   },
-  progressStep: {
-    alignItems: 'center',
-  },
-  progressDot: {
-    width: Responsive.iconSizes.large,
-    height: Responsive.iconSizes.large,
-    borderRadius: Responsive.iconSizes.large / 2,
-    marginBottom: Responsive.spacing.sm,
-  },
-  progressLabel: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.textSecondary,
-  },
-  progressLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: Colors.border,
-    marginHorizontal: Responsive.spacing.sm,
-  },
-  securityLevelCard: {
-    backgroundColor: Colors.surface,
-    padding: Responsive.padding.modal,
-    borderRadius: Responsive.borderRadius.large,
-    marginTop: Responsive.spacing.xl,
-    marginBottom: Responsive.spacing.lg,
-  },
-  securityLevelHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Responsive.spacing.md,
-  },
-  securityLevelTitle: {
-    fontSize: Typography.sizes.xl,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-    marginLeft: Responsive.spacing.sm,
-  },
-  securityLevelProgress: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  securityLevelStep: {
-    alignItems: 'center',
-  },
-  securityLevelDot: {
-    width: Responsive.iconSizes.large,
-    height: Responsive.iconSizes.large,
-    borderRadius: Responsive.iconSizes.large / 2,
-    marginBottom: Responsive.spacing.sm,
-  },
-     securityLevelArrow: {
-     flex: 1,
-     height: 2,
-     backgroundColor: Colors.border,
-     marginHorizontal: Responsive.spacing.md,
-   },
-  securityLevelText: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.textSecondary,
-  },
+
+
 });
 
 export default InitialWelcomeScreen;
+
