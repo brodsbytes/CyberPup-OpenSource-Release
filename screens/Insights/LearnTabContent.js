@@ -1,61 +1,41 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
-  ScrollView,
-  FlatList,
   StyleSheet,
-  RefreshControl,
   Text,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { Colors, Responsive, Typography } from '../../theme';
 import { SCREEN_NAMES } from '../../constants';
-import { topics, tools } from '../../data/insightsMock';
+import { topics, guides } from '../../data/insightsMock';
 import { SecurityAlertsService } from '../../utils/securityAlerts';
 import { LocationUtils } from '../../utils/locationUtils';
+
 import SectionHeader from '../../components/insights/SectionHeader';
 import AlertCard from '../../components/insights/AlertCard';
 import TopicChip from '../../components/insights/TopicChip';
-import ToolCard from '../../components/insights/ToolCard';
+import GuideCard from '../../components/insights/GuideCard';
 
-const ToolsTab = ({ query, navigation, scrollRef, scrollPosition, onScrollPositionChange }) => {
+const LearnTabContent = ({ query, navigation }) => {
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [alertsLoading, setAlertsLoading] = useState(true);
   const [alertsError, setAlertsError] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
   const [userCountry, setUserCountry] = useState('US');
 
   useEffect(() => {
     loadSecurityAlerts();
   }, []);
 
-  // Restore scroll position when component mounts
-  useEffect(() => {
-    if (scrollRef && scrollPosition > 0) {
-      // Use a longer delay and better null checking to ensure the ScrollView is fully rendered
-      const timeoutId = setTimeout(() => {
-        if (scrollRef.current) {
-          try {
-            scrollRef.current.scrollTo({ y: scrollPosition, animated: false });
-          } catch (error) {
-            console.log('Error restoring scroll position:', error);
-          }
-        }
-      }, 100);
-      
-      return () => clearTimeout(timeoutId);
-    }
-  }, [scrollPosition]); // Remove scrollRef from dependencies to prevent re-running
-
   const loadSecurityAlerts = async () => {
     try {
       setAlertsLoading(true);
       setAlertsError(null);
-
+      
       const detectedCountry = await LocationUtils.getUserCountry();
       setUserCountry(detectedCountry);
-
+      
       const securityAlerts = await SecurityAlertsService.getSecurityAlerts(detectedCountry);
       setAlerts(securityAlerts);
     } catch (error) {
@@ -67,8 +47,7 @@ const ToolsTab = ({ query, navigation, scrollRef, scrollPosition, onScrollPositi
     }
   };
 
-  const onRefresh = async () => {
-    setRefreshing(true);
+  const onRefreshAlerts = async () => {
     try {
       setAlertsError(null);
       const detectedCountry = await LocationUtils.getUserCountry();
@@ -78,20 +57,18 @@ const ToolsTab = ({ query, navigation, scrollRef, scrollPosition, onScrollPositi
     } catch (error) {
       console.log('Error refreshing alerts:', error);
       setAlertsError(error.message);
-    } finally {
-      setRefreshing(false);
     }
   };
 
-  // Filter tools based on query and selected topics
-  const filteredTools = useMemo(() => {
-    return tools.filter(tool => {
+  // Filter guides based on query and selected topics
+  const filteredGuides = useMemo(() => {
+    return guides.filter(guide => {
       const matchesQuery = !query || 
-        tool.title.toLowerCase().includes(query.toLowerCase()) ||
-        tool.description.toLowerCase().includes(query.toLowerCase());
+        guide.title.toLowerCase().includes(query.toLowerCase()) ||
+        guide.excerpt.toLowerCase().includes(query.toLowerCase());
       
       const matchesTopics = selectedTopics.length === 0 ||
-        selectedTopics.some(topic => tool.topics.includes(topic));
+        selectedTopics.some(topic => guide.topics.includes(topic));
       
       return matchesQuery && matchesTopics;
     });
@@ -106,36 +83,14 @@ const ToolsTab = ({ query, navigation, scrollRef, scrollPosition, onScrollPositi
   };
 
   const handleAlertPress = (alert) => {
-    // Navigate to alert detail screen
     navigation.navigate(SCREEN_NAMES.ALERT_DETAIL, { 
       alertId: alert.id 
     });
   };
 
-  const handleToolPress = (tool) => {
-    // Navigate to tool detail screen
-    navigation.navigate(SCREEN_NAMES.TOOL_DETAIL, { id: tool.id });
+  const handleGuidePress = (guide) => {
+    navigation.navigate(SCREEN_NAMES.GUIDE_DETAIL, { id: guide.id });
   };
-
-  const renderAlertCard = ({ item }) => (
-    <AlertCard
-      title={item.title}
-      summary={item.summary}
-      tag={item.tag}
-      source={item.source}
-      onPress={() => handleAlertPress(item)}
-    />
-  );
-
-  const renderToolCard = ({ item }) => (
-    <ToolCard
-      tag={item.tag}
-      etaLabel={item.etaLabel}
-      title={item.title}
-      description={item.description}
-      onPress={() => handleToolPress(item)}
-    />
-  );
 
   const renderAlertsSection = () => {
     if (alertsLoading) {
@@ -151,7 +106,7 @@ const ToolsTab = ({ query, navigation, scrollRef, scrollPosition, onScrollPositi
       return (
         <View style={styles.alertsErrorContainer}>
           <Text style={styles.errorText}>Unable to load alerts</Text>
-          <Text style={styles.errorSubtext}>Pull down to refresh</Text>
+          <Text style={styles.errorSubtext}>Using cached data</Text>
         </View>
       );
     }
@@ -159,7 +114,8 @@ const ToolsTab = ({ query, navigation, scrollRef, scrollPosition, onScrollPositi
     if (alerts.length === 0) {
       return (
         <View style={styles.alertsEmptyContainer}>
-          <Text style={styles.emptyText}>No security alerts available</Text>
+          <Text style={styles.emptyText}>No security alerts at this time</Text>
+          <Text style={styles.emptySubtext}>Your security is up to date!</Text>
         </View>
       );
     }
@@ -184,37 +140,15 @@ const ToolsTab = ({ query, navigation, scrollRef, scrollPosition, onScrollPositi
     );
   };
 
-  const handleScroll = (event) => {
-    const { contentOffset } = event.nativeEvent;
-    if (onScrollPositionChange && contentOffset.y >= 0) {
-      onScrollPositionChange(contentOffset.y);
-    }
-  };
-
   return (
-    <ScrollView 
-      ref={scrollRef}
-      style={styles.container}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.contentContainer}
-      onScroll={handleScroll}
-      scrollEventThrottle={100}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          colors={[Colors.accent]}
-          tintColor={Colors.accent}
-        />
-      }
-    >
+    <View style={styles.container}>
       {/* Security Alerts Section */}
       <SectionHeader 
-        title="Security Alerts" 
-        subtitle={userCountry ? LocationUtils.getCountryInfo(userCountry)?.flag : null}
+        title="Security Alerts"
         actionText={alertsLoading ? "Loading..." : "Refresh"}
-        onActionPress={alertsLoading ? undefined : onRefresh}
+        onActionPress={alertsLoading ? undefined : onRefreshAlerts}
       />
+      
       {renderAlertsSection()}
 
       {/* Browse by Topic Section */}
@@ -238,30 +172,33 @@ const ToolsTab = ({ query, navigation, scrollRef, scrollPosition, onScrollPositi
         ))}
       </ScrollView>
 
-      {/* Interactive Tools Section */}
+      {/* Latest Guides Section */}
       <SectionHeader 
-        title="Interactive Tools" 
+        title="Latest Guides" 
         actionText="View all"
         onActionPress={() => {}}
       />
-      <FlatList
-        data={filteredTools}
-        renderItem={renderToolCard}
-        keyExtractor={(item) => item.id}
-        scrollEnabled={false}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.toolsContainer}
-      />
-    </ScrollView>
+      
+      {/* Render guides directly without FlatList */}
+      <View style={styles.guidesContainer}>
+        {filteredGuides.map(guide => (
+          <GuideCard
+            key={guide.id}
+            tag={guide.tag}
+            level={guide.level}
+            title={guide.title}
+            excerpt={guide.excerpt}
+            readMinutes={guide.readMinutes}
+            onPress={() => handleGuidePress(guide)}
+          />
+        ))}
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  contentContainer: {
     paddingBottom: Responsive.spacing.xxl,
   },
   alertsContainer: {
@@ -269,32 +206,36 @@ const styles = StyleSheet.create({
     paddingRight: Responsive.spacing.lg,
   },
   alertsLoadingContainer: {
-    padding: Responsive.padding.screen,
+    paddingVertical: Responsive.spacing.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 120,
+    marginHorizontal: Responsive.padding.screen,
   },
   alertsErrorContainer: {
-    padding: Responsive.padding.screen,
+    paddingVertical: Responsive.spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 120,
+    marginHorizontal: Responsive.padding.screen,
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   alertsEmptyContainer: {
-    padding: Responsive.padding.screen,
+    paddingVertical: Responsive.spacing.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 120,
+    marginHorizontal: Responsive.padding.screen,
   },
   loadingText: {
     fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
-    marginTop: Responsive.spacing.sm,
+    marginTop: Responsive.spacing.md,
   },
   errorText: {
-    fontSize: Typography.sizes.md,
+    fontSize: Typography.sizes.lg,
     color: Colors.error,
-    fontWeight: Typography.weights.medium,
+    fontWeight: Typography.weights.semibold,
   },
   errorSubtext: {
     fontSize: Typography.sizes.sm,
@@ -302,16 +243,22 @@ const styles = StyleSheet.create({
     marginTop: Responsive.spacing.xs,
   },
   emptyText: {
+    fontSize: Typography.sizes.lg,
+    color: Colors.textPrimary,
+    fontWeight: Typography.weights.semibold,
+  },
+  emptySubtext: {
     fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
+    marginTop: Responsive.spacing.xs,
   },
   topicsContainer: {
     paddingLeft: Responsive.padding.screen,
     paddingRight: Responsive.spacing.lg,
   },
-  toolsContainer: {
+  guidesContainer: {
     paddingTop: Responsive.spacing.md,
   },
 });
 
-export default ToolsTab;
+export default LearnTabContent;

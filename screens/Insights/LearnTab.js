@@ -1,20 +1,92 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   ScrollView,
   FlatList,
   StyleSheet,
+  RefreshControl,
+  Text,
+  ActivityIndicator,
 } from 'react-native';
-import { Colors, Responsive } from '../../theme';
+import { Colors, Responsive, Typography } from '../../theme';
 import { SCREEN_NAMES } from '../../constants';
-import { alerts, topics, guides } from '../../data/insightsMock';
+import { topics, guides } from '../../data/insightsMock'; // Keep topics and guides
+import { SecurityAlertsService } from '../../utils/securityAlerts'; // New import
+import { LocationUtils } from '../../utils/locationUtils'; // Country detection
+
 import SectionHeader from '../../components/insights/SectionHeader';
 import AlertCard from '../../components/insights/AlertCard';
 import TopicChip from '../../components/insights/TopicChip';
 import GuideCard from '../../components/insights/GuideCard';
 
-const LearnTab = ({ query, navigation }) => {
+const LearnTab = ({ query, navigation, scrollRef, scrollPosition, onScrollPositionChange }) => {
   const [selectedTopics, setSelectedTopics] = useState([]);
+  const [alerts, setAlerts] = useState([]); // Dynamic alerts
+  const [alertsLoading, setAlertsLoading] = useState(true);
+  const [alertsError, setAlertsError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [userCountry, setUserCountry] = useState('US'); // Track user's country
+
+  // Load security alerts on component mount
+  useEffect(() => {
+    loadSecurityAlerts();
+  }, []);
+
+  // Restore scroll position when component mounts
+  useEffect(() => {
+    if (scrollRef && scrollPosition > 0) {
+      // Use a longer delay and better null checking to ensure the ScrollView is fully rendered
+      const timeoutId = setTimeout(() => {
+        if (scrollRef.current) {
+          try {
+            scrollRef.current.scrollTo({ y: scrollPosition, animated: false });
+          } catch (error) {
+            console.log('Error restoring scroll position:', error);
+          }
+        }
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [scrollPosition]); // Remove scrollRef from dependencies to prevent re-running
+
+  const loadSecurityAlerts = async () => {
+    try {
+      setAlertsLoading(true);
+      setAlertsError(null);
+      
+      // Automatically detect user's country
+      const detectedCountry = await LocationUtils.getUserCountry();
+      setUserCountry(detectedCountry);
+      
+      const securityAlerts = await SecurityAlertsService.getSecurityAlerts(detectedCountry);
+      setAlerts(securityAlerts);
+    } catch (error) {
+      console.log('Error loading security alerts:', error);
+      setAlertsError(error.message);
+      // Set empty array as fallback
+      setAlerts([]);
+    } finally {
+      setAlertsLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      setAlertsError(null);
+      // Force refresh alerts with detected country
+      const detectedCountry = await LocationUtils.getUserCountry();
+      setUserCountry(detectedCountry);
+      const freshAlerts = await SecurityAlertsService.refreshAlerts(detectedCountry);
+      setAlerts(freshAlerts);
+    } catch (error) {
+      console.log('Error refreshing alerts:', error);
+      setAlertsError(error.message);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   // Filter guides based on query and selected topics
   const filteredGuides = useMemo(() => {
@@ -39,45 +111,25 @@ const LearnTab = ({ query, navigation }) => {
   };
 
   const handleAlertPress = (alert) => {
-    // Navigate to alert detail or related check
-    if (alert.relatedCheckId) {
-      // Map to existing check screens
-      const checkRoutes = {
-        '1-1-1': 'Check1_1_StrongPasswordsScreen',
-        '1-1-4': 'Check1_4_MFASetupScreen',
-        '1-1-5': 'Check1_5_BreachCheckScreen',
-      };
-      const routeName = checkRoutes[alert.relatedCheckId];
-      if (routeName) {
-        navigation.navigate(routeName);
-      }
-    }
+    // Navigate to alert detail screen
+    navigation.navigate(SCREEN_NAMES.ALERT_DETAIL, { 
+      alertId: alert.id 
+    });
   };
 
   const handleGuidePress = (guide) => {
-    // Navigate to guide detail or related check
-    if (guide.relatedCheckId) {
-      const checkRoutes = {
-        '1-1-1': 'Check1_1_StrongPasswordsScreen',
-        '1-1-3': 'Check1_3_PasswordManagersScreen',
-        '1-1-4': 'Check1_4_MFASetupScreen',
-        '1-1-5': 'Check1_5_BreachCheckScreen',
-      };
-      const routeName = checkRoutes[guide.relatedCheckId];
-      if (routeName) {
-        navigation.navigate(routeName);
-      }
-    } else {
-      // Navigate to placeholder guide detail
-      navigation.navigate(SCREEN_NAMES.GUIDE_DETAIL, { id: guide.id });
-    }
+    // Navigate to guide detail screen
+    navigation.navigate(SCREEN_NAMES.GUIDE_DETAIL, { id: guide.id });
   };
+
+
 
   const renderAlertCard = ({ item }) => (
     <AlertCard
       title={item.title}
       summary={item.summary}
       tag={item.tag}
+      source={item.source}
       onPress={() => handleAlertPress(item)}
     />
   );
@@ -93,18 +145,35 @@ const LearnTab = ({ query, navigation }) => {
     />
   );
 
-  return (
-    <ScrollView 
-      style={styles.container}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.contentContainer}
-    >
-      {/* Security Alerts Section */}
-      <SectionHeader 
-        title="Security Alerts" 
-        actionText="See all"
-        onActionPress={() => {}}
-      />
+  const renderAlertsSection = () => {
+    if (alertsLoading) {
+      return (
+        <View style={styles.alertsLoadingContainer}>
+          <ActivityIndicator size="large" color={Colors.accent} />
+          <Text style={styles.loadingText}>Loading security alerts...</Text>
+        </View>
+      );
+    }
+
+    if (alertsError) {
+      return (
+        <View style={styles.alertsErrorContainer}>
+          <Text style={styles.errorText}>Unable to load alerts</Text>
+          <Text style={styles.errorSubtext}>Using cached data</Text>
+        </View>
+      );
+    }
+
+    if (alerts.length === 0) {
+      return (
+        <View style={styles.alertsEmptyContainer}>
+          <Text style={styles.emptyText}>No security alerts at this time</Text>
+          <Text style={styles.emptySubtext}>Your security is up to date!</Text>
+        </View>
+      );
+    }
+
+    return (
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -116,10 +185,47 @@ const LearnTab = ({ query, navigation }) => {
             title={alert.title}
             summary={alert.summary}
             tag={alert.tag}
+            source={alert.source}
             onPress={() => handleAlertPress(alert)}
           />
         ))}
       </ScrollView>
+    );
+  };
+
+  const handleScroll = (event) => {
+    const { contentOffset } = event.nativeEvent;
+    if (onScrollPositionChange && contentOffset.y >= 0) {
+      onScrollPositionChange(contentOffset.y);
+    }
+  };
+
+  return (
+    <ScrollView 
+      ref={scrollRef}
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.contentContainer}
+      onScroll={handleScroll}
+      scrollEventThrottle={100}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={[Colors.accent]}
+          tintColor={Colors.accent}
+        />
+      }
+    >
+      {/* Security Alerts Section */}
+      <SectionHeader 
+        title="Security Alerts"
+        actionText={alertsLoading ? "Loading..." : "Refresh"}
+        onActionPress={alertsLoading ? undefined : onRefresh}
+      />
+      
+
+      {renderAlertsSection()}
 
       {/* Browse by Topic Section */}
       <SectionHeader 
@@ -171,6 +277,53 @@ const styles = StyleSheet.create({
   alertsContainer: {
     paddingLeft: Responsive.padding.screen,
     paddingRight: Responsive.spacing.lg,
+  },
+  alertsLoadingContainer: {
+    paddingVertical: Responsive.spacing.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: Responsive.padding.screen,
+  },
+  alertsErrorContainer: {
+    paddingVertical: Responsive.spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: Responsive.padding.screen,
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  alertsEmptyContainer: {
+    paddingVertical: Responsive.spacing.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: Responsive.padding.screen,
+  },
+  loadingText: {
+    fontSize: Typography.sizes.md,
+    color: Colors.textSecondary,
+    marginTop: Responsive.spacing.md,
+  },
+  errorText: {
+    fontSize: Typography.sizes.lg,
+    color: Colors.error,
+    fontWeight: Typography.weights.semibold,
+  },
+  errorSubtext: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    marginTop: Responsive.spacing.xs,
+  },
+  emptyText: {
+    fontSize: Typography.sizes.lg,
+    color: Colors.textPrimary,
+    fontWeight: Typography.weights.semibold,
+  },
+  emptySubtext: {
+    fontSize: Typography.sizes.md,
+    color: Colors.textSecondary,
+    marginTop: Responsive.spacing.xs,
   },
   topicsContainer: {
     paddingLeft: Responsive.padding.screen,

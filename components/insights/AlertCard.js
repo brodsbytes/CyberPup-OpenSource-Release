@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Colors, Typography, Responsive, CommonStyles } from '../../theme';
 
-const AlertCard = ({ title, summary, tag, onPress }) => {
+const AlertCard = ({ title, summary, tag, source, onPress }) => {
   const getTagColor = (tag) => {
     switch (tag) {
       case 'NEW THREAT':
@@ -37,6 +37,11 @@ const AlertCard = ({ title, summary, tag, onPress }) => {
         <Text style={styles.summary} numberOfLines={3}>
           {summary}
         </Text>
+        {source && (
+          <View style={styles.sourceContainer}>
+            <Text style={styles.sourceText}>Source: {source}</Text>
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -86,6 +91,15 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
     lineHeight: Typography.sizes.md * 1.6,
+    marginBottom: Responsive.spacing.sm,
+  },
+  sourceContainer: {
+    marginTop: Responsive.spacing.xs,
+  },
+  sourceText: {
+    fontSize: Typography.sizes.xs,
+    color: Colors.textSecondary,
+    fontWeight: Typography.weights.medium,
   },
 });
 

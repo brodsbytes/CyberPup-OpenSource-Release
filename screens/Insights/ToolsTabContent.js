@@ -1,12 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
-  ScrollView,
-  FlatList,
   StyleSheet,
-  RefreshControl,
   Text,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { Colors, Responsive, Typography } from '../../theme';
 import { SCREEN_NAMES } from '../../constants';
@@ -18,35 +16,16 @@ import AlertCard from '../../components/insights/AlertCard';
 import TopicChip from '../../components/insights/TopicChip';
 import ToolCard from '../../components/insights/ToolCard';
 
-const ToolsTab = ({ query, navigation, scrollRef, scrollPosition, onScrollPositionChange }) => {
+const ToolsTabContent = ({ query, navigation }) => {
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [alertsLoading, setAlertsLoading] = useState(true);
   const [alertsError, setAlertsError] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
   const [userCountry, setUserCountry] = useState('US');
 
   useEffect(() => {
     loadSecurityAlerts();
   }, []);
-
-  // Restore scroll position when component mounts
-  useEffect(() => {
-    if (scrollRef && scrollPosition > 0) {
-      // Use a longer delay and better null checking to ensure the ScrollView is fully rendered
-      const timeoutId = setTimeout(() => {
-        if (scrollRef.current) {
-          try {
-            scrollRef.current.scrollTo({ y: scrollPosition, animated: false });
-          } catch (error) {
-            console.log('Error restoring scroll position:', error);
-          }
-        }
-      }, 100);
-      
-      return () => clearTimeout(timeoutId);
-    }
-  }, [scrollPosition]); // Remove scrollRef from dependencies to prevent re-running
 
   const loadSecurityAlerts = async () => {
     try {
@@ -67,8 +46,7 @@ const ToolsTab = ({ query, navigation, scrollRef, scrollPosition, onScrollPositi
     }
   };
 
-  const onRefresh = async () => {
-    setRefreshing(true);
+  const onRefreshAlerts = async () => {
     try {
       setAlertsError(null);
       const detectedCountry = await LocationUtils.getUserCountry();
@@ -78,8 +56,6 @@ const ToolsTab = ({ query, navigation, scrollRef, scrollPosition, onScrollPositi
     } catch (error) {
       console.log('Error refreshing alerts:', error);
       setAlertsError(error.message);
-    } finally {
-      setRefreshing(false);
     }
   };
 
@@ -106,36 +82,14 @@ const ToolsTab = ({ query, navigation, scrollRef, scrollPosition, onScrollPositi
   };
 
   const handleAlertPress = (alert) => {
-    // Navigate to alert detail screen
     navigation.navigate(SCREEN_NAMES.ALERT_DETAIL, { 
       alertId: alert.id 
     });
   };
 
   const handleToolPress = (tool) => {
-    // Navigate to tool detail screen
     navigation.navigate(SCREEN_NAMES.TOOL_DETAIL, { id: tool.id });
   };
-
-  const renderAlertCard = ({ item }) => (
-    <AlertCard
-      title={item.title}
-      summary={item.summary}
-      tag={item.tag}
-      source={item.source}
-      onPress={() => handleAlertPress(item)}
-    />
-  );
-
-  const renderToolCard = ({ item }) => (
-    <ToolCard
-      tag={item.tag}
-      etaLabel={item.etaLabel}
-      title={item.title}
-      description={item.description}
-      onPress={() => handleToolPress(item)}
-    />
-  );
 
   const renderAlertsSection = () => {
     if (alertsLoading) {
@@ -184,36 +138,14 @@ const ToolsTab = ({ query, navigation, scrollRef, scrollPosition, onScrollPositi
     );
   };
 
-  const handleScroll = (event) => {
-    const { contentOffset } = event.nativeEvent;
-    if (onScrollPositionChange && contentOffset.y >= 0) {
-      onScrollPositionChange(contentOffset.y);
-    }
-  };
-
   return (
-    <ScrollView 
-      ref={scrollRef}
-      style={styles.container}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.contentContainer}
-      onScroll={handleScroll}
-      scrollEventThrottle={100}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          colors={[Colors.accent]}
-          tintColor={Colors.accent}
-        />
-      }
-    >
+    <View style={styles.container}>
       {/* Security Alerts Section */}
       <SectionHeader 
         title="Security Alerts" 
         subtitle={userCountry ? LocationUtils.getCountryInfo(userCountry)?.flag : null}
         actionText={alertsLoading ? "Loading..." : "Refresh"}
-        onActionPress={alertsLoading ? undefined : onRefresh}
+        onActionPress={alertsLoading ? undefined : onRefreshAlerts}
       />
       {renderAlertsSection()}
 
@@ -244,24 +176,26 @@ const ToolsTab = ({ query, navigation, scrollRef, scrollPosition, onScrollPositi
         actionText="View all"
         onActionPress={() => {}}
       />
-      <FlatList
-        data={filteredTools}
-        renderItem={renderToolCard}
-        keyExtractor={(item) => item.id}
-        scrollEnabled={false}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.toolsContainer}
-      />
-    </ScrollView>
+      
+      {/* Render tools directly without FlatList */}
+      <View style={styles.toolsContainer}>
+        {filteredTools.map(tool => (
+          <ToolCard
+            key={tool.id}
+            tag={tool.tag}
+            etaLabel={tool.etaLabel}
+            title={tool.title}
+            description={tool.description}
+            onPress={() => handleToolPress(tool)}
+          />
+        ))}
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  contentContainer: {
     paddingBottom: Responsive.spacing.xxl,
   },
   alertsContainer: {
@@ -314,4 +248,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ToolsTab;
+export default ToolsTabContent;

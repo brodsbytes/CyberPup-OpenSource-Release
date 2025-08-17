@@ -8,47 +8,70 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  Linking,
   Alert,
-  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
-import { GuideService } from '../../../utils/guideService';
+import { SecurityAlertsService } from '../../../utils/securityAlerts';
+import { LocationUtils } from '../../../utils/locationUtils';
 
-const { width } = Dimensions.get('window');
-
-const GuideDetailScreen = ({ navigation, route }) => {
-  const { id: guideId } = route.params || {};
-  const [guide, setGuide] = useState(null);
+const AlertDetailScreen = ({ navigation, route }) => {
+  const { alertId } = route.params || {};
+  const [alert, setAlert] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [readingProgress, setReadingProgress] = useState(0);
 
   useEffect(() => {
-    loadGuideDetail();
-  }, [guideId]);
+    loadAlertDetail();
+  }, [alertId]);
 
-  const loadGuideDetail = async () => {
+  const loadAlertDetail = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      if (!guideId) {
-        throw new Error('No guide ID provided');
+      if (!alertId) {
+        throw new Error('No alert ID provided');
       }
 
-      const guideDetail = await GuideService.getGuideById(guideId);
-      setGuide(guideDetail);
+      // Get user's country for context
+      const userCountry = await LocationUtils.getUserCountry();
+      const alertDetail = await SecurityAlertsService.getAlertById(alertId, userCountry);
+      
+      setAlert(alertDetail);
     } catch (err) {
-      console.log('Error loading guide detail:', err);
+      console.log('Error loading alert detail:', err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleOpenOriginalUrl = async () => {
+    if (!alert?.originalUrl) return;
+
+    Alert.alert(
+      'Open Original Alert',
+      `This will open the official ${alert.source} alert in your browser. Continue?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Open',
+          onPress: async () => {
+            try {
+              await Linking.openURL(alert.originalUrl);
+            } catch (error) {
+              Alert.alert('Error', 'Unable to open the link. Please try again.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const handleNavigateToCheck = () => {
-    if (!guide?.relatedCheckId) return;
+    if (!alert?.relatedCheckId) return;
 
     const checkRoutes = {
       '1-1-1': 'Check1_1_StrongPasswordsScreen',
@@ -57,42 +80,24 @@ const GuideDetailScreen = ({ navigation, route }) => {
       '1-1-5': 'Check1_5_BreachCheckScreen',
     };
 
-    const routeName = checkRoutes[guide.relatedCheckId];
+    const routeName = checkRoutes[alert.relatedCheckId];
     if (routeName) {
       navigation.navigate(routeName);
-    } else {
-      Alert.alert('Coming Soon', 'This security check will be available in a future update.');
     }
-  };
-
-  const handleNavigateToTool = (toolId) => {
-    // For now, show coming soon alert
-    Alert.alert('Coming Soon', 'Interactive tools will be available in a future update.');
   };
 
   const getTagColor = (tag) => {
     switch (tag) {
-      case 'GUIDE':
-        return Colors.success;
-      case 'PLAYBOOK':
-        return Colors.accent;
-      case 'TUTORIAL':
-        return Colors.warning;
-      default:
-        return Colors.success;
-    }
-  };
-
-  const getDifficultyColor = (level) => {
-    switch (level) {
-      case 'Beginner':
-        return Colors.success;
-      case 'Essential':
-        return Colors.warning;
-      case 'Advanced':
+      case 'NEW THREAT':
         return Colors.error;
+      case 'BREACH':
+        return Colors.warning;
+      case 'VULNERABILITY':
+        return Colors.orange;
+      case 'SCAM':
+        return Colors.red;
       default:
-        return Colors.textSecondary;
+        return Colors.error;
     }
   };
 
@@ -109,23 +114,14 @@ const GuideDetailScreen = ({ navigation, route }) => {
     }
   };
 
-  const handleScroll = (event) => {
-    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
-    const scrollProgress = contentOffset.y / (contentSize.height - layoutMeasurement.height);
-    setReadingProgress(Math.min(Math.max(scrollProgress, 0), 1));
-  };
-
   const renderHTMLContent = (htmlContent) => {
     if (!htmlContent) return null;
 
     // Simple HTML to React Native Text conversion
+    // This is a basic implementation - in production you might want to use a library like react-native-render-html
     const cleanContent = htmlContent
-      .replace(/<h1[^>]*>/gi, '\n\n')
-      .replace(/<\/h1>/gi, '\n')
-      .replace(/<h2[^>]*>/gi, '\n\n')
-      .replace(/<\/h2>/gi, '\n')
-      .replace(/<h3[^>]*>/gi, '\n')
-      .replace(/<\/h3>/gi, '\n')
+      .replace(/<h[1-6][^>]*>/gi, '\n\n')
+      .replace(/<\/h[1-6]>/gi, '\n')
       .replace(/<p[^>]*>/gi, '\n')
       .replace(/<\/p>/gi, '\n')
       .replace(/<strong[^>]*>/gi, '')
@@ -135,8 +131,7 @@ const GuideDetailScreen = ({ navigation, route }) => {
       .replace(/<li[^>]*>/gi, '• ')
       .replace(/<\/li>/gi, '\n')
       .replace(/<ul[^>]*>|<\/ul>/gi, '\n')
-      .replace(/<ol[^>]*>/gi, '\n')
-      .replace(/<\/ol>/gi, '\n')
+      .replace(/<ol[^>]*>|<\/ol>/gi, '\n')
       .replace(/<br\s*\/?>/gi, '\n')
       .replace(/<[^>]*>/g, '') // Remove any remaining HTML tags
       .replace(/&lt;/g, '<')
@@ -154,59 +149,6 @@ const GuideDetailScreen = ({ navigation, route }) => {
     );
   };
 
-  const renderKeyTakeaways = () => {
-    if (!guide?.keyTakeaways || guide.keyTakeaways.length === 0) return null;
-
-    return (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Key Takeaways</Text>
-        <View style={styles.takeawaysCard}>
-          {guide.keyTakeaways.map((takeaway, index) => (
-            <View key={index} style={styles.takeawayItem}>
-              <View style={styles.takeawayBullet}>
-                <Ionicons name="checkmark" size={16} color={Colors.success} />
-              </View>
-              <Text style={styles.takeawayText}>{takeaway}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-    );
-  };
-
-  const renderRelatedLinks = () => {
-    if (!guide?.relatedLinks || guide.relatedLinks.length === 0) return null;
-
-    return (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Related Resources</Text>
-        {guide.relatedLinks.map((link, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.relatedLinkCard}
-            onPress={() => {
-              if (link.checkId) {
-                handleNavigateToCheck();
-              } else if (link.toolId) {
-                handleNavigateToTool(link.toolId);
-              }
-            }}
-          >
-            <View style={styles.relatedLinkContent}>
-              <Ionicons 
-                name={link.checkId ? "shield-checkmark" : "build"} 
-                size={20} 
-                color={Colors.accent} 
-              />
-              <Text style={styles.relatedLinkText}>{link.title}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
-          </TouchableOpacity>
-        ))}
-      </View>
-    );
-  };
-
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -221,20 +163,20 @@ const GuideDetailScreen = ({ navigation, route }) => {
           >
             <Ionicons name="arrow-back" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Guide</Text>
+          <Text style={styles.headerTitle}>Alert Detail</Text>
           <View style={styles.placeholder} />
         </View>
 
         {/* Loading */}
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.accent} />
-          <Text style={styles.loadingText}>Loading guide...</Text>
+          <Text style={styles.loadingText}>Loading alert...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  if (error || !guide) {
+  if (error || !alert) {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
@@ -248,20 +190,20 @@ const GuideDetailScreen = ({ navigation, route }) => {
           >
             <Ionicons name="arrow-back" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Guide</Text>
+          <Text style={styles.headerTitle}>Alert Detail</Text>
           <View style={styles.placeholder} />
         </View>
 
         {/* Error */}
         <View style={styles.errorContainer}>
-          <Ionicons name="document-outline" size={Responsive.iconSizes.xxlarge} color={Colors.error} />
-          <Text style={styles.errorTitle}>Guide Not Found</Text>
+          <Ionicons name="alert-circle-outline" size={Responsive.iconSizes.xxlarge} color={Colors.error} />
+          <Text style={styles.errorTitle}>Alert Not Found</Text>
           <Text style={styles.errorMessage}>
-            {error || 'The requested guide could not be loaded.'}
+            {error || 'The requested alert could not be loaded.'}
           </Text>
           <TouchableOpacity
             style={styles.retryButton}
-            onPress={loadGuideDetail}
+            onPress={loadAlertDetail}
           >
             <Text style={styles.retryButtonText}>Try Again</Text>
           </TouchableOpacity>
@@ -274,7 +216,7 @@ const GuideDetailScreen = ({ navigation, route }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
       
-      {/* Header with Reading Progress */}
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -283,13 +225,8 @@ const GuideDetailScreen = ({ navigation, route }) => {
         >
           <Ionicons name="arrow-back" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Security Guide</Text>
+        <Text style={styles.headerTitle}>Security Alert</Text>
         <View style={styles.placeholder} />
-      </View>
-      
-      {/* Reading Progress Bar */}
-      <View style={styles.progressContainer}>
-        <View style={[styles.progressBar, { width: `${readingProgress * 100}%` }]} />
       </View>
 
       {/* Content */}
@@ -297,76 +234,73 @@ const GuideDetailScreen = ({ navigation, route }) => {
         style={styles.content}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
       >
-        {/* Guide Header */}
-        <View style={styles.guideHeader}>
-          <View style={styles.guideTags}>
-            <View style={[styles.guideTag, { backgroundColor: getTagColor(guide.tag) }]}>
-              <Text style={styles.guideTagText}>{guide.tag}</Text>
-            </View>
-            <View style={[styles.difficultyTag, { backgroundColor: getDifficultyColor(guide.level) }]}>
-              <Text style={styles.difficultyTagText}>{guide.level}</Text>
+        {/* Alert Header */}
+        <View style={styles.alertHeader}>
+          <View style={styles.alertTitleRow}>
+            <Text style={styles.alertTitle} numberOfLines={3}>
+              {alert.title}
+            </Text>
+            <View style={[styles.alertTag, { backgroundColor: getTagColor(alert.tag) }]}>
+              <Text style={styles.alertTagText}>{alert.tag}</Text>
             </View>
           </View>
           
-          <Text style={styles.guideTitle}>{guide.title}</Text>
-          
-          <View style={styles.guideMeta}>
+          <View style={styles.alertMeta}>
             <View style={styles.metaItem}>
-              <Ionicons name="time" size={16} color={Colors.textSecondary} />
-              <Text style={styles.metaText}>{guide.readMinutes} min read</Text>
-            </View>
-            <View style={styles.metaItem}>
-              <Ionicons name="person" size={16} color={Colors.textSecondary} />
-              <Text style={styles.metaText}>{guide.author}</Text>
+              <Ionicons name="shield-checkmark" size={16} color={Colors.textSecondary} />
+              <Text style={styles.metaText}>{alert.source}</Text>
             </View>
             <View style={styles.metaItem}>
               <Ionicons name="calendar" size={16} color={Colors.textSecondary} />
-              <Text style={styles.metaText}>{formatDate(guide.publishedDate)}</Text>
+              <Text style={styles.metaText}>{formatDate(alert.publishedDate)}</Text>
             </View>
           </View>
         </View>
 
-        {/* Excerpt */}
+        {/* Summary */}
         <View style={styles.section}>
-          <Text style={styles.excerptText}>{guide.excerpt}</Text>
+          <Text style={styles.sectionTitle}>Summary</Text>
+          <Text style={styles.summaryText}>{alert.summary}</Text>
         </View>
 
-        {/* Main Content */}
-        {guide.fullContent && (
+        {/* Full Content */}
+        {alert.fullContent && (
           <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Detailed Information</Text>
             <View style={styles.contentCard}>
-              {renderHTMLContent(guide.fullContent)}
+              {renderHTMLContent(alert.fullContent)}
             </View>
           </View>
         )}
 
-        {/* Key Takeaways */}
-        {renderKeyTakeaways()}
-
-        {/* Action Button */}
-        {guide.relatedCheckId && (
-          <View style={styles.actionsSection}>
+        {/* Action Buttons */}
+        <View style={styles.actionsSection}>
+          {alert.originalUrl && (
             <TouchableOpacity
               style={[styles.actionButton, styles.primaryAction]}
+              onPress={handleOpenOriginalUrl}
+            >
+              <Ionicons name="open-outline" size={20} color={Colors.textPrimary} />
+              <Text style={styles.actionButtonText}>View Original Alert</Text>
+            </TouchableOpacity>
+          )}
+
+          {alert.relatedCheckId && (
+            <TouchableOpacity
+              style={[styles.actionButton, styles.secondaryAction]}
               onPress={handleNavigateToCheck}
             >
-              <Ionicons name="shield-checkmark" size={20} color={Colors.textPrimary} />
-              <Text style={styles.actionButtonText}>Practice This Security Check</Text>
+              <Ionicons name="checkmark-circle-outline" size={20} color={Colors.accent} />
+              <Text style={[styles.actionButtonText, styles.secondaryActionText]}>Related Security Check</Text>
             </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Related Links */}
-        {renderRelatedLinks()}
+          )}
+        </View>
 
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            This guide is part of the CyberPup security education series. 
-            {guide.lastUpdated && ` Last updated: ${formatDate(guide.lastUpdated)}`}
+            This alert is provided by {alert.source} for your security awareness.
           </Text>
         </View>
       </ScrollView>
@@ -398,15 +332,6 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     width: Responsive.iconSizes.large + Responsive.spacing.sm * 2,
-  },
-  progressContainer: {
-    height: 3,
-    backgroundColor: Colors.border,
-  },
-  progressBar: {
-    height: 3,
-    backgroundColor: Colors.accent,
-    transition: 'width 0.1s ease',
   },
   loadingContainer: {
     flex: 1,
@@ -453,46 +378,36 @@ const styles = StyleSheet.create({
   contentContainer: {
     paddingBottom: Responsive.spacing.xxl,
   },
-  guideHeader: {
+  alertHeader: {
     padding: Responsive.padding.screen,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
-  guideTags: {
+  alertTitleRow: {
     flexDirection: 'row',
-    gap: Responsive.spacing.sm,
+    alignItems: 'flex-start',
     marginBottom: Responsive.spacing.md,
   },
-  guideTag: {
-    paddingHorizontal: Responsive.spacing.md,
-    paddingVertical: Responsive.spacing.xs,
-    borderRadius: Responsive.borderRadius.small,
+  alertTitle: {
+    fontSize: Typography.sizes.xl,
+    fontWeight: Typography.weights.bold,
+    color: Colors.textPrimary,
+    flex: 1,
+    marginRight: Responsive.spacing.md,
+    lineHeight: Typography.sizes.xl * 1.3,
   },
-  guideTagText: {
+  alertTag: {
+    paddingHorizontal: Responsive.spacing.md,
+    paddingVertical: Responsive.spacing.sm,
+    borderRadius: Responsive.borderRadius.medium,
+  },
+  alertTagText: {
     fontSize: Typography.sizes.xs,
     fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
   },
-  difficultyTag: {
-    paddingHorizontal: Responsive.spacing.md,
-    paddingVertical: Responsive.spacing.xs,
-    borderRadius: Responsive.borderRadius.small,
-  },
-  difficultyTagText: {
-    fontSize: Typography.sizes.xs,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-  },
-  guideTitle: {
-    fontSize: Typography.sizes.xxl,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-    lineHeight: Typography.sizes.xxl * 1.2,
-    marginBottom: Responsive.spacing.md,
-  },
-  guideMeta: {
+  alertMeta: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: Responsive.spacing.lg,
   },
   metaItem: {
@@ -515,11 +430,10 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     marginBottom: Responsive.spacing.md,
   },
-  excerptText: {
-    fontSize: Typography.sizes.lg,
+  summaryText: {
+    fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
-    lineHeight: Typography.sizes.lg * 1.5,
-    fontStyle: 'italic',
+    lineHeight: Typography.sizes.md * 1.5,
   },
   contentCard: {
     ...CommonStyles.premiumCard,
@@ -531,55 +445,10 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     lineHeight: Typography.sizes.md * 1.6,
   },
-  takeawaysCard: {
-    ...CommonStyles.premiumCard,
-    backgroundColor: Colors.surface,
-    marginVertical: 0,
-  },
-  takeawayItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: Responsive.spacing.md,
-  },
-  takeawayBullet: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: Colors.success + '20',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Responsive.spacing.md,
-    marginTop: 2,
-  },
-  takeawayText: {
-    fontSize: Typography.sizes.md,
-    color: Colors.textPrimary,
-    lineHeight: Typography.sizes.md * 1.5,
-    flex: 1,
-  },
-  relatedLinkCard: {
-    ...CommonStyles.premiumCard,
-    backgroundColor: Colors.surface,
-    marginBottom: Responsive.spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  relatedLinkContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    gap: Responsive.spacing.md,
-  },
-  relatedLinkText: {
-    fontSize: Typography.sizes.md,
-    color: Colors.textPrimary,
-    fontWeight: Typography.weights.medium,
-    flex: 1,
-  },
   actionsSection: {
     paddingHorizontal: Responsive.padding.screen,
     paddingVertical: Responsive.spacing.lg,
+    gap: Responsive.spacing.md,
   },
   actionButton: {
     flexDirection: 'row',
@@ -594,10 +463,18 @@ const styles = StyleSheet.create({
   primaryAction: {
     backgroundColor: Colors.accent,
   },
+  secondaryAction: {
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.accent,
+  },
   actionButtonText: {
     fontSize: Typography.sizes.md,
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
+  },
+  secondaryActionText: {
+    color: Colors.accent,
   },
   footer: {
     paddingHorizontal: Responsive.padding.screen,
@@ -612,4 +489,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default GuideDetailScreen;
+export default AlertDetailScreen;

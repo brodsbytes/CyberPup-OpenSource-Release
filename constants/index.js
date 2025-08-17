@@ -44,6 +44,7 @@ export const SCREEN_NAMES = {
   // Insights detail screens
   GUIDE_DETAIL: 'GuideDetailScreen',
   TOOL_DETAIL: 'ToolDetailScreen',
+  ALERT_DETAIL: 'AlertDetailScreen',
 };
 
 // Tab navigation constants

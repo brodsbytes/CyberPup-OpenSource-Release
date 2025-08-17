@@ -7,7 +7,7 @@ import CategoryScreen from './screens/CategoryScreen';
 import ModuleListScreen from './screens/ModuleListScreen';
 import InsightsScreen from './screens/InsightsScreen';
 import LoadingScreen from './components/LoadingScreen';
-import { GuideDetailScreen, ToolDetailScreen } from './screens/Insights';
+import { GuideDetailScreen, ToolDetailScreen, AlertDetailScreen } from './screens/Insights';
 
 import { APP_CONSTANTS, SCREEN_NAMES, ERROR_MESSAGES } from './constants';
 import { AppStorage } from './utils/storage';
@@ -26,6 +26,8 @@ import {
 
 import InitialWelcomeScreen from './screens/InitialWelcomeScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import { SecurityAlertsService } from './utils/securityAlerts';
+import { BackgroundAlertsService } from './utils/backgroundAlerts';
 
 const Stack = createNativeStackNavigator();
 
@@ -37,6 +39,16 @@ export default function App() {
 
   useEffect(() => {
     checkAuditStatus();
+  }, []);
+
+  useEffect(() => {
+    // Register background fetch for security alerts
+    BackgroundAlertsService.registerBackgroundFetch();
+    
+    return () => {
+      // Cleanup on app unmount
+      BackgroundAlertsService.unregisterBackgroundFetch();
+    };
   }, []);
 
   const checkAuditStatus = async () => {
@@ -78,6 +90,7 @@ export default function App() {
         {/* Insights detail screens */}
         <Stack.Screen name={SCREEN_NAMES.GUIDE_DETAIL} component={GuideDetailScreen} />
         <Stack.Screen name={SCREEN_NAMES.TOOL_DETAIL} component={ToolDetailScreen} />
+        <Stack.Screen name={SCREEN_NAMES.ALERT_DETAIL} component={AlertDetailScreen} />
         
         {/* Level 1 Check screens */}
         <Stack.Screen name={SCREEN_NAMES.CHECK_1_1_STRONG_PASSWORDS} component={Check1_1_StrongPasswordsScreen} />

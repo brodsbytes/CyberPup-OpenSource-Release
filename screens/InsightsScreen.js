@@ -6,23 +6,35 @@ import {
   SafeAreaView,
   StatusBar,
   TextInput,
+  ScrollView,
+  RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Responsive } from '../theme';
 import BottomNavigation from '../components/BottomNavigation';
 import SegmentedControl from '../components/insights/SegmentedControl';
-import LearnTab from './Insights/LearnTab';
-import ToolsTab from './Insights/ToolsTab';
+import LearnTabContent from './Insights/LearnTabContent';
+import ToolsTabContent from './Insights/ToolsTabContent';
 import { SCREEN_NAMES } from '../constants';
+import StickyGamificationBar from '../components/StickyGamificationBar';
 
 const InsightsScreen = ({ navigation }) => {
   const [tab, setTab] = useState(0); // 0 = Learn, 1 = Tools
   const [query, setQuery] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
 
   const segments = ['Learn', 'Tools'];
 
   const handleTabChange = (index) => {
     setTab(index);
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    // Small delay to show refresh indicator
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
   };
 
   const handleTabPress = (screen) => {
@@ -37,6 +49,13 @@ const InsightsScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
+      
+      {/* Sticky Gamification Bar */}
+      <StickyGamificationBar
+        onMascotPress={() => navigation.navigate(SCREEN_NAMES.WELCOME)}
+        onStreakPress={() => navigation.navigate(SCREEN_NAMES.PROFILE)}
+        onBadgesPress={() => navigation.navigate(SCREEN_NAMES.PROFILE)}
+      />
       
       {/* Sticky Header */}
       <View style={styles.stickyHeader}>
@@ -77,14 +96,31 @@ const InsightsScreen = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Tab Content */}
-      <View style={styles.tabContent}>
+      {/* Single ScrollView for both tabs - Modern mobile app approach */}
+      <ScrollView 
+        style={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[Colors.accent]}
+            tintColor={Colors.accent}
+          />
+        }
+      >
         {tab === 0 ? (
-          <LearnTab query={query} navigation={navigation} />
+          <LearnTabContent 
+            query={query} 
+            navigation={navigation}
+          />
         ) : (
-          <ToolsTab query={query} navigation={navigation} />
+          <ToolsTabContent 
+            query={query} 
+            navigation={navigation}
+          />
         )}
-      </View>
+      </ScrollView>
 
       {/* Bottom Navigation */}
       <BottomNavigation 
@@ -148,7 +184,7 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
     textAlignVertical: 'center',
   },
-  tabContent: {
+  scrollContainer: {
     flex: 1,
   },
 });

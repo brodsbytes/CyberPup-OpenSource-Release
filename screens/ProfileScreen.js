@@ -11,103 +11,60 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import BottomNavigation from '../components/BottomNavigation';
-import Badge from '../components/Badge';
 import { Colors, Typography, Responsive, CommonStyles } from '../theme';
-
-import { 
-  loadUserBadges, 
-  getEarnedBadgesCount, 
-  BADGE_TYPES 
-} from '../utils/badgeStorage';
+import { getStreakStats } from '../utils/streakStorage';
 import { SCREEN_NAMES } from '../constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getAllChecks } from '../data/courseData';
+import StickyGamificationBar from '../components/StickyGamificationBar';
 
 const ProfileScreen = ({ navigation }) => {
-
-  const [userBadges, setUserBadges] = useState([]);
-  const [earnedCount, setEarnedCount] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
-  const [stats, setStats] = useState({
-    totalBadges: 0,
-    areaBadges: 0,
-    levelBadges: 0,
-    specialBadges: 0,
-  });
   const [isLoading, setIsLoading] = useState(true);
-  const [checksProgress, setChecksProgress] = useState({
-    completedChecks: 0,
-    totalChecks: 0,
-    progressPercentage: 0
+  const [activityData, setActivityData] = useState({
+    streak: {
+      currentStreak: 0,
+      longestStreak: 0,
+      totalDays: 0,
+      nextMilestone: null
+    },
+    lastBreachCheck: null,
+    lastMonthlyCheckup: null
   });
 
-  const calculateChecksProgress = async () => {
+  const loadActivityData = async () => {
     try {
-      const allChecks = getAllChecks();
-      setChecksProgress(prev => ({ ...prev, totalChecks: allChecks.length }));
+      // Load streak data
+      const streakData = await getStreakStats();
       
-      let completedCount = 0;
-
-      // Check each check for completion
-      for (const check of allChecks) {
-        const progressKey = `check_${check.id}_completed`;
-        const progressData = await AsyncStorage.getItem(progressKey);
-        
-        if (progressData === 'completed') {
-          completedCount++;
+      // Load last breach check date
+      const breachProgressData = await AsyncStorage.getItem('check_1-1-5_progress');
+      let lastBreachCheck = null;
+      if (breachProgressData) {
+        const breachData = JSON.parse(breachProgressData);
+        if (breachData.completedAt) {
+          lastBreachCheck = new Date(breachData.completedAt);
         }
       }
 
-      const progressPercentage = allChecks.length > 0 ? Math.round((completedCount / allChecks.length) * 100) : 0;
-      
-      setChecksProgress({
-        completedChecks: completedCount,
-        totalChecks: allChecks.length,
-        progressPercentage
-      });
-    } catch (error) {
-      console.log('Error calculating checks progress:', error);
-    }
-  };
+      // Load last monthly checkup (simulate - could be enhanced with actual monthly checkup tracking)
+      const lastMonthlyCheckupData = await AsyncStorage.getItem('last_monthly_checkup');
+      let lastMonthlyCheckup = null;
+      if (lastMonthlyCheckupData) {
+        lastMonthlyCheckup = new Date(lastMonthlyCheckupData);
+      }
 
-  const loadBadges = async () => {
-    try {
-      console.log('Loading badges...');
-      const badges = await loadUserBadges();
-      const earned = await getEarnedBadgesCount();
-      
-      console.log('Badges loaded:', badges.length, 'Earned:', earned);
-      
-      setUserBadges(badges);
-      setEarnedCount(earned);
-      
-      // Calculate stats
-      const areaBadges = badges.filter(b => b.type === BADGE_TYPES.AREA && b.isEarned).length;
-      const levelBadges = badges.filter(b => b.type === BADGE_TYPES.LEVEL && b.isEarned).length;
-      const specialBadges = badges.filter(b => b.type === BADGE_TYPES.SPECIAL && b.isEarned).length;
-      
-      setStats({
-        totalBadges: badges.length,
-        areaBadges,
-        levelBadges,
-        specialBadges,
+      setActivityData({
+        streak: streakData || {
+          currentStreak: 0,
+          longestStreak: 0,
+          totalDays: 0,
+          nextMilestone: null
+        },
+        lastBreachCheck,
+        lastMonthlyCheckup
       });
-      
-      console.log('Stats calculated:', { totalBadges: badges.length, areaBadges, levelBadges, specialBadges });
-      
-      // Calculate checks progress
-      await calculateChecksProgress();
     } catch (error) {
-      console.log('Error loading badges:', error);
-      // Set default values to prevent rendering issues
-      setUserBadges([]);
-      setEarnedCount(0);
-      setStats({
-        totalBadges: 0,
-        areaBadges: 0,
-        levelBadges: 0,
-        specialBadges: 0,
-      });
+      console.log('Error loading activity data:', error);
     } finally {
       setIsLoading(false);
     }
@@ -115,58 +72,70 @@ const ProfileScreen = ({ navigation }) => {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadBadges();
+    await loadActivityData();
     setRefreshing(false);
   };
 
   useEffect(() => {
-    loadBadges();
+    loadActivityData();
   }, []);
 
   useFocusEffect(
     React.useCallback(() => {
-      loadBadges();
+      loadActivityData();
     }, [])
   );
 
-  const getBadgesByType = (type) => {
-    return userBadges.filter(badge => badge.type === type);
+  const formatDate = (date) => {
+    if (!date) return 'Never';
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+    return `${Math.floor(diffDays / 365)} years ago`;
   };
 
-  const renderBadgeSection = (title, badges, type) => {
-    if (!badges || badges.length === 0) {
-      return null;
-    }
-    
-    const earnedBadges = badges.filter(b => b.isEarned);
-    const unearnedBadges = badges.filter(b => !b.isEarned);
-    
-    return (
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{title}</Text>
-          <Text style={styles.sectionSubtitle}>
-            {earnedBadges.length} of {badges.length} earned
-          </Text>
+
+
+  const renderActivityCard = (title, subtitle, icon, value, color = Colors.accent, onPress = null) => (
+    <TouchableOpacity 
+      style={[styles.activityCard, onPress && styles.activityCardPressable]} 
+      onPress={onPress}
+      disabled={!onPress}
+    >
+      <View style={styles.activityCardHeader}>
+        <View style={[styles.activityIcon, { backgroundColor: color + '20' }]}>
+          <Ionicons name={icon} size={Responsive.iconSizes.medium} color={color} />
         </View>
-        
-        <View style={styles.badgesGrid}>
-          {badges.map((badge) => (
-            <Badge
-              key={badge.id}
-              badge={badge}
-              size="medium"
-              showDetails={true}
-              style={styles.badgeItem}
-            />
-          ))}
+        <View style={styles.activityContent}>
+          <Text style={styles.activityTitle}>{title}</Text>
+          <Text style={styles.activitySubtitle}>{subtitle}</Text>
         </View>
+        {onPress && (
+          <Ionicons 
+            name="chevron-forward" 
+            size={Responsive.iconSizes.small} 
+            color={Colors.textSecondary} 
+          />
+        )}
       </View>
-    );
-  };
+      <Text style={[styles.activityValue, { color }]}>{value}</Text>
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Sticky Gamification Bar */}
+      <StickyGamificationBar
+        onMascotPress={() => navigation.navigate(SCREEN_NAMES.WELCOME)}
+        onStreakPress={() => {/* Already on profile screen */}}
+        onBadgesPress={() => {/* Already on profile screen */}}
+      />
+      
       <ScrollView 
         style={styles.scrollView}
         refreshControl={
@@ -187,100 +156,78 @@ const ProfileScreen = ({ navigation }) => {
 
           {isLoading ? (
             <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>Loading badges...</Text>
+              <Text style={styles.loadingText}>Loading profile...</Text>
             </View>
           ) : (
-            <>
-              {/* Stats Cards */}
-          <View style={styles.statsContainer}>
-            <View style={styles.statCard}>
-              <View style={styles.statIcon}>
-                <Ionicons name="trophy" size={Responsive.iconSizes.large} color={Colors.accent} />
+                          <>
+                {/* Activity Tracking Section */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Activity Tracking</Text>
+                
+                {/* Streak Card */}
+                <View style={[styles.activityCard, styles.activityCardPressable]}>
+                  <View style={styles.activityCardHeader}>
+                    <View style={[styles.activityIcon, { backgroundColor: Colors.orange + '20' }]}>
+                      <Ionicons name="flame" size={Responsive.iconSizes.medium} color={Colors.orange} />
+                    </View>
+                    <View style={styles.activityContent}>
+                      <Text style={styles.activityTitle}>Current Streak</Text>
+                      <Text style={styles.activitySubtitle}>
+                        {activityData.streak.nextMilestone 
+                          ? `${activityData.streak.nextMilestone.daysRemaining} days to ${activityData.streak.nextMilestone.title}`
+                          : 'Keep up the great work!'
+                        }
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={[styles.activityValue, { color: Colors.orange }]}>
+                    {activityData.streak.currentStreak} days
+                  </Text>
+                </View>
+
+                {/* Last Breach Check */}
+                {renderActivityCard(
+                  'Last Breach Audit',
+                  'Check for compromised accounts',
+                  'shield-checkmark',
+                  formatDate(activityData.lastBreachCheck),
+                  activityData.lastBreachCheck ? Colors.success : Colors.textSecondary,
+                  () => navigation.navigate(SCREEN_NAMES.CHECK_1_5_BREACH_CHECK)
+                )}
+
+                {/* Last Monthly Checkup */}
+                {renderActivityCard(
+                  'Last Monthly Checkup',
+                  'Review your security status',
+                  'calendar',
+                  formatDate(activityData.lastMonthlyCheckup),
+                  activityData.lastMonthlyCheckup ? Colors.success : Colors.textSecondary,
+                  () => navigation.navigate(SCREEN_NAMES.WELCOME)
+                )}
               </View>
-              <Text style={styles.statNumber}>{earnedCount}</Text>
-              <Text style={styles.statLabel}>Badges Earned</Text>
-            </View>
-            
-            <View style={styles.statCard}>
-              <View style={styles.statIcon}>
-                <Ionicons name="shield-checkmark" size={Responsive.iconSizes.large} color={Colors.accent} />
+
+              {/* Settings Section */}
+              <View style={[styles.settingsSection, styles.activityCardPressable]}>
+                <Text style={styles.settingsTitle}>Settings</Text>
+                
+                <TouchableOpacity style={styles.settingItem}>
+                  <Ionicons name="notifications" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
+                  <Text style={styles.settingText}>Notification Preferences</Text>
+                  <Ionicons name="chevron-forward" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
+                </TouchableOpacity>
+                
+                <TouchableOpacity style={styles.settingItem}>
+                  <Ionicons name="help-circle" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
+                  <Text style={styles.settingText}>Help & Support</Text>
+                  <Ionicons name="chevron-forward" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
+                </TouchableOpacity>
+                
+                <TouchableOpacity style={styles.settingItem}>
+                  <Ionicons name="information-circle" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
+                  <Text style={styles.settingText}>About CyberPup</Text>
+                  <Ionicons name="chevron-forward" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
+                </TouchableOpacity>
               </View>
-              <Text style={styles.statNumber}>{stats.areaBadges}</Text>
-              <Text style={styles.statLabel}>Areas Mastered</Text>
-            </View>
-            
-            <View style={styles.statCard}>
-              <View style={styles.statIcon}>
-                <Ionicons name="star" size={Responsive.iconSizes.large} color={Colors.accent} />
-              </View>
-              <Text style={styles.statNumber}>{stats.specialBadges}</Text>
-              <Text style={styles.statLabel}>Special Achievements</Text>
-            </View>
-          </View>
-
-          {/* Checks Progress Overview */}
-          <View style={styles.progressSection}>
-            <Text style={styles.progressTitle}>Security Checks Progress</Text>
-            <View style={styles.progressBar}>
-              <View 
-                style={[
-                  styles.progressFill, 
-                  { 
-                    width: `${checksProgress.progressPercentage}%`
-                  }
-                ]} 
-              />
-            </View>
-            <Text style={styles.progressText}>
-              {checksProgress.completedChecks} of {checksProgress.totalChecks} checks completed
-            </Text>
-          </View>
-
-          {/* Area Badges */}
-          {renderBadgeSection(
-            'Area Badges', 
-            getBadgesByType(BADGE_TYPES.AREA),
-            BADGE_TYPES.AREA
-          )}
-
-          {/* Level Badges */}
-          {renderBadgeSection(
-            'Level Badges', 
-            getBadgesByType(BADGE_TYPES.LEVEL),
-            BADGE_TYPES.LEVEL
-          )}
-
-          {/* Special Badges */}
-          {renderBadgeSection(
-            'Special Achievements', 
-            getBadgesByType(BADGE_TYPES.SPECIAL),
-            BADGE_TYPES.SPECIAL
-          )}
-
-          {/* Settings Section */}
-          <View style={styles.settingsSection}>
-            <Text style={styles.settingsTitle}>Settings</Text>
-            
-
-            
-            <TouchableOpacity style={styles.settingItem}>
-              <Ionicons name="notifications" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
-              <Text style={styles.settingText}>Notification Preferences</Text>
-              <Ionicons name="chevron-forward" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.settingItem}>
-              <Ionicons name="help-circle" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
-              <Text style={styles.settingText}>Help & Support</Text>
-              <Ionicons name="chevron-forward" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.settingItem}>
-              <Ionicons name="information-circle" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
-              <Text style={styles.settingText}>About CyberPup</Text>
-              <Ionicons name="chevron-forward" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
-            </TouchableOpacity>
-          </View>
             </>
           )}
         </View>
@@ -330,87 +277,56 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
   },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: Responsive.spacing.lg,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.large,
-    padding: Responsive.padding.card,
-    alignItems: 'center',
-    marginHorizontal: Responsive.spacing.xs,
-  },
-  statIcon: {
-    marginBottom: Responsive.spacing.sm,
-  },
-  statNumber: {
-    fontSize: Typography.sizes.xxl,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-    marginBottom: Responsive.spacing.xs,
-  },
-  statLabel: {
-    fontSize: Typography.sizes.xs,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-  },
-  progressSection: {
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.large,
-    padding: Responsive.padding.card,
-    marginBottom: Responsive.spacing.lg,
-  },
-  progressTitle: {
-    fontSize: Typography.sizes.lg,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
-    marginBottom: Responsive.spacing.sm,
-  },
-  progressBar: {
-    height: Responsive.spacing.sm,
-    backgroundColor: Colors.border,
-    borderRadius: Responsive.borderRadius.small,
-    marginBottom: Responsive.spacing.sm,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: Colors.accent,
-    borderRadius: Responsive.borderRadius.small,
-  },
-  progressText: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-  },
+
   section: {
     marginBottom: Responsive.spacing.lg,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Responsive.spacing.md,
   },
   sectionTitle: {
     fontSize: Typography.sizes.xl,
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.md,
   },
-  sectionSubtitle: {
+  activityCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.md,
+  },
+  activityCardPressable: {
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  activityCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Responsive.spacing.sm,
+  },
+  activityIcon: {
+    width: Responsive.iconSizes.large,
+    height: Responsive.iconSizes.large,
+    borderRadius: Responsive.borderRadius.medium,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Responsive.spacing.sm,
+  },
+  activityContent: {
+    flex: 1,
+  },
+  activityTitle: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.medium,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.xs,
+  },
+  activitySubtitle: {
     fontSize: Typography.sizes.sm,
     color: Colors.textSecondary,
   },
-  badgesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  badgeItem: {
-    marginBottom: Responsive.spacing.md,
-    width: '30%',
+  activityValue: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    textAlign: 'right',
   },
   settingsSection: {
     backgroundColor: Colors.surface,

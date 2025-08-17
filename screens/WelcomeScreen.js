@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -27,8 +27,9 @@ import { SCREEN_NAMES } from '../constants';
 import { updateStreak, getCurrentStreak } from '../utils/streakStorage';
 import { getEarnedBadges } from '../utils/badgeStorage';
 import * as Haptics from 'expo-haptics';
+import StickyGamificationBar from '../components/StickyGamificationBar';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 const WelcomeScreen = ({ navigation }) => {
   const [overallProgress, setOverallProgress] = useState(0);
@@ -37,18 +38,15 @@ const WelcomeScreen = ({ navigation }) => {
   const [showStreakDetails, setShowStreakDetails] = useState(false);
   const [showBadges, setShowBadges] = useState(false);
   const [showCatalogue, setShowCatalogue] = useState(false);
+  const [catalogueOpenedFromSkipAhead, setCatalogueOpenedFromSkipAhead] = useState(false);
+  const catalogueOpenedFromSkipAheadRef = useRef(false);
 
   const [isLoadingActiveLevel, setIsLoadingActiveLevel] = useState(true);
   const [nextLevel, setNextLevel] = useState(null);
   const [nextArea, setNextArea] = useState(null);
   
-  // Gamification data
-  const [currentStreak, setCurrentStreak] = useState(0);
-  const [badgeCount, setBadgeCount] = useState(0);
-  
   // Animation states for card interactions
   const [cardAnimations] = useState(new Map());
-  const [gamificationAnimations] = useState(new Map());
 
   // Get check data from our course data
   const getCheckData = () => {
@@ -110,49 +108,11 @@ const WelcomeScreen = ({ navigation }) => {
     React.useCallback(() => {
       calculateOverallProgress();
       loadActiveLevelView();
-      loadGamificationData();
       updateStreak(); // Update streak when screen is focused
     }, [])
   );
 
-  // Load gamification data
-  const loadGamificationData = async () => {
-    try {
-      // Load streak data
-      const streakData = await getCurrentStreak();
-      setCurrentStreak(streakData.currentStreak || 0);
-      
-      // Load badge count
-      const earnedBadges = await getEarnedBadges();
-      setBadgeCount(earnedBadges.length || 0);
-    } catch (error) {
-      console.log('Error loading gamification data:', error);
-    }
-  };
 
-  // Gamification bar animation functions
-  const getGamificationAnimation = (iconId) => {
-    if (!gamificationAnimations.has(iconId)) {
-      gamificationAnimations.set(iconId, new Animated.Value(1));
-    }
-    return gamificationAnimations.get(iconId);
-  };
-
-  const animateGamificationPress = (iconId) => {
-    const anim = getGamificationAnimation(iconId);
-    Animated.sequence([
-      Animated.timing(anim, {
-        toValue: 0.9,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(anim, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
 
 
 
@@ -171,9 +131,6 @@ const WelcomeScreen = ({ navigation }) => {
         
         if (progressData === 'completed') {
           completedCount++;
-          console.log(`✅ Check ${check.id} is completed`);
-        } else {
-          console.log(`❌ Check ${check.id} is not completed (${progressData})`);
         }
       }
       
@@ -381,62 +338,7 @@ const WelcomeScreen = ({ navigation }) => {
     }
   };
 
-  // Gamification Bar Component
-  const GamificationBar = () => (
-    <View style={styles.gamificationBar}>
-      <View style={styles.gamificationContent}>
-        {/* CyberPup Mascot */}
-        <Animated.View style={{ transform: [{ scale: getGamificationAnimation('mascot') }] }}>
-          <TouchableOpacity
-            style={styles.gamificationIcon}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              animateGamificationPress('mascot');
-              setShowCatalogue(true);
-            }}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.mascotIcon}>🐾</Text>
-            {activeLevel && (
-              <Text style={styles.gamificationText}>{activeLevel.id}</Text>
-            )}
-          </TouchableOpacity>
-        </Animated.View>
 
-        {/* Streak */}
-        <Animated.View style={{ transform: [{ scale: getGamificationAnimation('streak') }] }}>
-          <TouchableOpacity
-            style={styles.gamificationIcon}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              animateGamificationPress('streak');
-              setShowStreakDetails(true);
-            }}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.streakIcon}>🔥</Text>
-            <Text style={styles.gamificationText}>{currentStreak}</Text>
-          </TouchableOpacity>
-        </Animated.View>
-
-        {/* Badges */}
-        <Animated.View style={{ transform: [{ scale: getGamificationAnimation('badges') }] }}>
-          <TouchableOpacity
-            style={styles.gamificationIcon}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              animateGamificationPress('badges');
-              setShowBadges(true);
-            }}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.badgeIcon}>🏅</Text>
-            <Text style={styles.gamificationText}>{badgeCount}</Text>
-          </TouchableOpacity>
-        </Animated.View>
-      </View>
-    </View>
-  );
 
   const ProgressCard = ({ icon, title, subtitle, progress, levelId }) => (
     <TouchableOpacity
@@ -513,14 +415,51 @@ const WelcomeScreen = ({ navigation }) => {
 
   // Catalogue Modal Component
   const CatalogueModal = () => {
-    const [expandedLevels, setExpandedLevels] = useState(new Set([activeLevel?.id || 1]));
+    const [expandedLevels, setExpandedLevels] = useState(new Set());
     const [checkProgress, setCheckProgress] = useState({});
 
     useEffect(() => {
       if (showCatalogue) {
         loadCheckProgress();
+        
+        // Determine which level to expand based on how the modal was opened
+        if (catalogueOpenedFromSkipAheadRef.current) {
+          // Find the next level (first incomplete level)
+          const nextLevelId = findNextLevelId();
+          setExpandedLevels(new Set([nextLevelId]));
+          catalogueOpenedFromSkipAheadRef.current = false; // Reset the ref
+        } else {
+          // Default behavior: expand current active level
+          const defaultLevelId = activeLevel?.id || 1;
+          setExpandedLevels(new Set([defaultLevelId]));
+        }
       }
     }, [showCatalogue]);
+
+    const findNextLevelId = () => {
+      const orderedLevels = getOrderedLevels();
+      
+      // If no active level, return the first level
+      if (!activeLevel) {
+        return orderedLevels[0]?.id || 1;
+      }
+      
+      // Find the next level after the current active level
+      const currentLevelIndex = orderedLevels.findIndex(level => level.id === activeLevel.id);
+      const nextLevel = orderedLevels[currentLevelIndex + 1];
+      
+      // If there's a next level, return it; otherwise return the current level
+      return nextLevel?.id || activeLevel.id;
+    };
+
+    const toggleLevel = (levelId) => {
+      // Accordion behavior: only one level can be expanded at a time
+      if (expandedLevels.has(levelId)) {
+        setExpandedLevels(new Set()); // Collapse all
+      } else {
+        setExpandedLevels(new Set([levelId])); // Expand only this level
+      }
+    };
 
     const loadCheckProgress = async () => {
       try {
@@ -530,7 +469,29 @@ const WelcomeScreen = ({ navigation }) => {
         for (const check of allChecks) {
           const progressKey = `check_${check.id}_completed`;
           const progressData = await AsyncStorage.getItem(progressKey);
-          progress[check.id] = progressData === 'completed';
+          
+          if (progressData === 'completed') {
+            progress[check.id] = 'completed';
+          } else {
+            // Check for partial progress
+            const partialProgressKey = `check_${check.id}_progress`;
+            const partialProgressData = await AsyncStorage.getItem(partialProgressKey);
+            
+            if (partialProgressData) {
+              try {
+                const data = JSON.parse(partialProgressData);
+                if (data.checklistItems && data.checklistItems.some(item => item.completed)) {
+                  progress[check.id] = 'in-progress';
+                } else {
+                  progress[check.id] = 'not-started';
+                }
+              } catch (error) {
+                progress[check.id] = 'not-started';
+              }
+            } else {
+              progress[check.id] = 'not-started';
+            }
+          }
         }
         
         setCheckProgress(progress);
@@ -539,17 +500,14 @@ const WelcomeScreen = ({ navigation }) => {
       }
     };
 
-    const toggleLevel = (levelId) => {
-      const newExpanded = new Set(expandedLevels);
-      if (newExpanded.has(levelId)) {
-        newExpanded.delete(levelId);
-      } else {
-        newExpanded.add(levelId);
-      }
-      setExpandedLevels(newExpanded);
-    };
+
 
     const navigateToCheck = (checkId) => {
+      // Don't navigate for placeholder checks
+      if (checkId === '2-1-1' || checkId === '3-1-1') {
+        return; // These are "Coming Soon!" placeholder checks
+      }
+      
       setShowCatalogue(false);
       // Map check id to its screen
       const checkRoutes = {
@@ -583,7 +541,10 @@ const WelcomeScreen = ({ navigation }) => {
           
           <View style={styles.catalogueContent}>
             <View style={styles.catalogueHeader}>
-              <Text style={styles.catalogueTitle}>Security Check Catalogue</Text>
+              <View style={styles.catalogueHeaderContent}>
+                <Text style={styles.catalogueTitle}>Security Check Catalogue</Text>
+                <Text style={styles.catalogueSubtitle}>Revisit finished checks or see what's ahead</Text>
+              </View>
               <TouchableOpacity
                 style={styles.catalogueCloseButton}
                 onPress={() => setShowCatalogue(false)}
@@ -628,32 +589,55 @@ const WelcomeScreen = ({ navigation }) => {
                         {levelAreas.map((area) => (
                           <View key={area.id} style={styles.catalogueArea}>
                             <Text style={styles.catalogueAreaTitle}>{area.title}</Text>
-                            {area.checks.map((check) => (
-                              <TouchableOpacity
-                                key={check.id}
-                                style={[
-                                  styles.catalogueCheck,
-                                  checkProgress[check.id] && styles.catalogueCheckCompleted
-                                ]}
-                                onPress={() => navigateToCheck(check.id)}
-                                activeOpacity={0.8}
-                              >
+                            {area.checks.map((check) => {
+                              const isPlaceholder = check.id === '2-1-1' || check.id === '3-1-1';
+                              return (
+                                <TouchableOpacity
+                                  key={check.id}
+                                  style={[
+                                    styles.catalogueCheck,
+                                    isPlaceholder && styles.catalogueCheckPlaceholder,
+                                    !isPlaceholder && checkProgress[check.id] === 'completed' && styles.catalogueCheckCompleted,
+                                    !isPlaceholder && checkProgress[check.id] === 'in-progress' && styles.catalogueCheckInProgress,
+                                    !isPlaceholder && checkProgress[check.id] === 'not-started' && styles.catalogueCheckNotStarted
+                                  ]}
+                                  onPress={() => navigateToCheck(check.id)}
+                                  activeOpacity={isPlaceholder ? 1 : 0.8}
+                                >
                                 <View style={styles.catalogueCheckInfo}>
                                   <Ionicons 
-                                    name={checkProgress[check.id] ? "checkmark-circle" : "ellipse-outline"} 
+                                    name={
+                                      checkProgress[check.id] === 'completed' ? "checkmark-circle" : 
+                                      checkProgress[check.id] === 'in-progress' ? "ellipse" : 
+                                      "ellipse-outline"
+                                    } 
                                     size={16} 
-                                    color={checkProgress[check.id] ? Colors.accent : Colors.textSecondary} 
+                                    color={
+                                      checkProgress[check.id] === 'completed' ? Colors.cardCompletedIconColor :
+                                      checkProgress[check.id] === 'in-progress' ? Colors.cardInProgressIconColor :
+                                      Colors.cardNotStartedIconColor
+                                    } 
                                   />
                                   <Text style={[
                                     styles.catalogueCheckTitle,
-                                    checkProgress[check.id] && styles.catalogueCheckTitleCompleted
+                                    checkProgress[check.id] === 'completed' && styles.catalogueCheckTitleCompleted,
+                                    checkProgress[check.id] === 'in-progress' && styles.catalogueCheckTitleInProgress,
+                                    checkProgress[check.id] === 'not-started' && styles.catalogueCheckTitleNotStarted
                                   ]}>
                                     {check.title}
                                   </Text>
                                 </View>
-                                <Text style={styles.catalogueCheckDuration}>{check.duration}</Text>
+                                <Text style={[
+                                  styles.catalogueCheckDuration,
+                                  checkProgress[check.id] === 'completed' && styles.catalogueCheckDurationCompleted,
+                                  checkProgress[check.id] === 'in-progress' && styles.catalogueCheckDurationInProgress,
+                                  checkProgress[check.id] === 'not-started' && styles.catalogueCheckDurationNotStarted
+                                ]}>
+                                  {check.duration}
+                                </Text>
                               </TouchableOpacity>
-                            ))}
+                            );
+                            })}
                           </View>
                         ))}
                       </View>
@@ -673,7 +657,12 @@ const WelcomeScreen = ({ navigation }) => {
       <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
       
       {/* Sticky Gamification Bar */}
-      <GamificationBar />
+      <StickyGamificationBar
+        onMascotPress={() => setShowCatalogue(true)}
+        onStreakPress={() => setShowStreakDetails(true)}
+        onBadgesPress={() => setShowBadges(true)}
+        activeLevel={activeLevel}
+      />
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header removed as requested */}
@@ -870,7 +859,10 @@ const WelcomeScreen = ({ navigation }) => {
 
                     <TouchableOpacity
                       style={[styles.skipAheadButton, { borderColor: Colors.accent }]}
-                      onPress={() => navigation.navigate(SCREEN_NAMES.CATEGORY)}
+                      onPress={() => {
+                        catalogueOpenedFromSkipAheadRef.current = true;
+                        setShowCatalogue(true);
+                      }}
                       activeOpacity={0.85}
                     >
                       <Text style={styles.skipAheadText}>Skip Ahead</Text>
@@ -940,50 +932,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  // Gamification Bar Styles
-  gamificationBar: {
-    backgroundColor: 'transparent',
-    paddingVertical: Responsive.spacing.xs,
-    paddingHorizontal: Responsive.padding.screen,
-    shadowColor: Colors.background,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-    elevation: 2,
-    zIndex: 1000,
-  },
-  gamificationContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  gamificationIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: Responsive.spacing.xs,
-  },
-  mascotIcon: {
-    fontSize: Typography.sizes.xxl,
-  },
-  streakIcon: {
-    fontSize: Typography.sizes.xxl,
-  },
-  badgeIcon: {
-    fontSize: Typography.sizes.xxl,
-  },
-  gamificationText: {
-    fontSize: Typography.sizes.sm,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-    marginLeft: Responsive.spacing.xs,
-  },
+
   // Catalogue Modal Styles
   catalogueOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
   catalogueBackdrop: {
     position: 'absolute',
@@ -993,30 +947,35 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   catalogueContent: {
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.xlarge,
-    marginHorizontal: Responsive.padding.screen,
-    width: width - (Responsive.padding.screen * 2),
-    maxHeight: '80%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    backgroundColor: Colors.background,
+    borderTopLeftRadius: Responsive.borderRadius.xlarge,
+    borderTopRightRadius: Responsive.borderRadius.xlarge,
+    maxHeight: height * 0.85,
+    minHeight: height * 0.5,
   },
   catalogueHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     paddingHorizontal: Responsive.padding.modal,
     paddingVertical: Responsive.spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
+  catalogueHeaderContent: {
+    flex: 1,
+    marginRight: Responsive.spacing.md,
+  },
   catalogueTitle: {
     fontSize: Typography.sizes.lg,
     fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.xs,
+  },
+  catalogueSubtitle: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    lineHeight: Typography.sizes.sm * 1.3,
   },
   catalogueCloseButton: {
     width: 40,
@@ -1087,14 +1046,36 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: Responsive.spacing.sm,
     paddingHorizontal: Responsive.spacing.sm,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.cardNotStarted,
     borderRadius: Responsive.borderRadius.small,
     marginBottom: Responsive.spacing.xs,
+    borderWidth: 1,
+    borderColor: Colors.cardNotStartedBorder,
+    opacity: Colors.cardNotStartedOpacity,
   },
   catalogueCheckCompleted: {
     backgroundColor: Colors.cardCompleted,
     borderColor: Colors.cardCompletedBorder,
     borderWidth: 1,
+    opacity: Colors.cardCompletedOpacity,
+  },
+  catalogueCheckInProgress: {
+    backgroundColor: Colors.cardInProgress,
+    borderColor: Colors.cardInProgressBorder,
+    borderWidth: 2,
+    opacity: Colors.cardInProgressOpacity,
+  },
+  catalogueCheckNotStarted: {
+    backgroundColor: Colors.cardNotStarted,
+    borderColor: Colors.cardNotStartedBorder,
+    borderWidth: 1,
+    opacity: Colors.cardNotStartedOpacity,
+  },
+  catalogueCheckPlaceholder: {
+    backgroundColor: Colors.muted,
+    borderColor: Colors.border,
+    borderWidth: 1,
+    opacity: 0.5,
   },
   catalogueCheckInfo: {
     flexDirection: 'row',
@@ -1103,16 +1084,32 @@ const styles = StyleSheet.create({
   },
   catalogueCheckTitle: {
     fontSize: Typography.sizes.sm,
-    color: Colors.textPrimary,
+    color: Colors.cardNotStartedTitleColor,
     marginLeft: Responsive.spacing.sm,
   },
   catalogueCheckTitleCompleted: {
-    color: Colors.accent,
+    color: Colors.cardCompletedTitleColor,
     fontWeight: Typography.weights.semibold,
+  },
+  catalogueCheckTitleInProgress: {
+    color: Colors.cardInProgressTitleColor,
+    fontWeight: Typography.weights.semibold,
+  },
+  catalogueCheckTitleNotStarted: {
+    color: Colors.cardNotStartedTitleColor,
   },
   catalogueCheckDuration: {
     fontSize: Typography.sizes.xs,
-    color: Colors.textSecondary,
+    color: Colors.cardNotStartedSubtitleColor,
+  },
+  catalogueCheckDurationCompleted: {
+    color: Colors.cardCompletedSubtitleColor,
+  },
+  catalogueCheckDurationInProgress: {
+    color: Colors.cardInProgressSubtitleColor,
+  },
+  catalogueCheckDurationNotStarted: {
+    color: Colors.cardNotStartedSubtitleColor,
   },
   welcomeMessage: {
     fontSize: Typography.sizes.md,
@@ -1196,7 +1193,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Responsive.spacing.xl, // Space between title row and button
+    marginBottom: Responsive.spacing.lg, // Space between title row and button
   },
   activeLevelTitle: {
     fontSize: Typography.sizes.xxxl, // Increased from xxl to xxxl for more prominence

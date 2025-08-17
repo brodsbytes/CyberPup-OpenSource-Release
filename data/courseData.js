@@ -195,7 +195,23 @@ export const levels = [
     whatYoullLearn: 'You\'ll learn advanced security techniques, network protection, privacy tools, and threat detection to earn your CyberPup Watchdog badge.',
     icon: '👁️',
     color: '#27ae60',
-    areas: []
+    areas: [
+      {
+        id: '2-1',
+        title: 'Advanced Security',
+        description: 'Coming soon with advanced security practices.',
+        checks: [
+          {
+            id: '2-1-1',
+            title: 'Coming Soon!',
+            description: 'Advanced security content is being developed.',
+            duration: 'TBD',
+            tasks: 0,
+          }
+        ],
+        badge: 'Advanced Security'
+      }
+    ]
   },
   {
     id: 3,
@@ -207,7 +223,23 @@ export const levels = [
     whatYoullLearn: 'You\'ll learn expert security techniques, threat hunting, advanced privacy, and security monitoring to earn your CyberPup Guardian badge.',
     icon: '🛡️',
     color: '#e74c3c',
-    areas: []
+    areas: [
+      {
+        id: '3-1',
+        title: 'Expert Security',
+        description: 'Coming soon with expert-level security practices.',
+        checks: [
+          {
+            id: '3-1-1',
+            title: 'Coming Soon!',
+            description: 'Expert security content is being developed.',
+            duration: 'TBD',
+            tasks: 0,
+          }
+        ],
+        badge: 'Expert Security'
+      }
+    ]
   }
 ];
 
