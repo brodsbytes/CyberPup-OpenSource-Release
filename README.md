@@ -49,7 +49,7 @@ CyberPup helps users complete a comprehensive cybersecurity health check with an
 - **React Native**: Cross-platform mobile development
 - **Expo**: Development platform and tools
 - **React Navigation**: Screen navigation with focus effects
-- **AsyncStorage**: Persistent progress tracking
+- **AsyncStorage**: Persistent progress tracking and device storage
 - **React Native Screens**: Native screen components
 - **React Native Safe Area Context**: Safe area handling
 
@@ -220,6 +220,29 @@ The app uses AsyncStorage for persistent progress tracking with the following pa
 - **Testing**: Comprehensive testing checklist for progress persistence
 
 See `screens/lessons/README.md` for detailed implementation patterns.
+
+## Device Management
+
+The app includes a comprehensive device audit system for personalized security recommendations:
+
+- **Device Storage**: User devices are stored in AsyncStorage under the key `user_devices`
+- **Device Types**: Supports Mobile Devices (iOS/Android) and Computers (macOS/Windows)  
+- **Hierarchical Selection**: Three-tier device selection system (Type → Platform → Model)
+- **Auto-Detection**: Automatically detects current mobile device during onboarding
+- **Profile Management**: Users can update their device list from the Profile tab
+
+Device data structure:
+```javascript
+{
+  id: string,           // Unique identifier
+  name: string,         // Device display name (e.g., "iPhone 15 Pro", "MacBook Air M3")
+  type: string,         // 'mobile' or 'computer'
+  tier1: string,        // Device category
+  tier2: string,        // Platform/brand (apple, android, macos, windows)
+  tier3: string,        // Specific model/version (optional)
+  autoDetected: boolean // Whether device was auto-detected
+}
+```
 
 ## Design System
 

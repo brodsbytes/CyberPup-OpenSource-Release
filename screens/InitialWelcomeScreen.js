@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -19,10 +19,13 @@ const { width } = Dimensions.get('window');
 
 const InitialWelcomeScreen = ({ navigation }) => {
   const [currentStep, setCurrentStep] = useState(0);
+  const scrollViewRef = useRef(null);
 
   const handleNext = () => {
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
+      // Reset scroll position to top when advancing to next step
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
     } else {
       handleComplete();
     }
@@ -34,23 +37,6 @@ const InitialWelcomeScreen = ({ navigation }) => {
     }
   };
 
-  const handleSkip = async () => {
-    try {
-      await AsyncStorage.setItem('welcome_completed', 'true');
-      await AsyncStorage.setItem('welcome_skipped', 'true');
-      // Award the CyberPup Scout badge even when skipped
-      await AsyncStorage.setItem('badge_cyberpup_scout_earned', 'true');
-      await AsyncStorage.setItem('badge_cyberpup_scout_earned_date', new Date().toISOString());
-      // Mark the welcome check as completed for progress tracking
-      await AsyncStorage.setItem('check_1-0-1_completed', 'completed');
-      // Navigate directly to first check
-      navigation.replace(SCREEN_NAMES.CHECK_1_1_STRONG_PASSWORDS);
-    } catch (error) {
-      console.log('Error saving skip status:', error);
-      navigation.replace(SCREEN_NAMES.CHECK_1_1_STRONG_PASSWORDS);
-    }
-  };
-
   const handleComplete = async () => {
     try {
       await AsyncStorage.setItem('welcome_completed', 'true');
@@ -59,11 +45,11 @@ const InitialWelcomeScreen = ({ navigation }) => {
       await AsyncStorage.setItem('badge_cyberpup_scout_earned_date', new Date().toISOString());
       // Mark the welcome check as completed for progress tracking
       await AsyncStorage.setItem('check_1-0-1_completed', 'completed');
-      // Navigate to first check
-      navigation.replace(SCREEN_NAMES.CHECK_1_1_STRONG_PASSWORDS);
+      // Navigate to device audit screen
+      navigation.replace(SCREEN_NAMES.DEVICE_AUDIT);
     } catch (error) {
       console.log('Error completing welcome:', error);
-      navigation.replace(SCREEN_NAMES.CHECK_1_1_STRONG_PASSWORDS);
+      navigation.replace(SCREEN_NAMES.DEVICE_AUDIT);
     }
   };
 
@@ -73,7 +59,7 @@ const InitialWelcomeScreen = ({ navigation }) => {
       <View style={styles.mascotContainer}>
         <View style={styles.mascotWrapper}>
           <Image
-            source={require('../assets/images/cyberpup-mascot.png')}
+            source={require('../assets/images/cyberpup-sitting.png')}
             style={styles.mascotImage}
             resizeMode="contain"
           />
@@ -83,13 +69,13 @@ const InitialWelcomeScreen = ({ navigation }) => {
       <Text style={styles.mainTitle}>Welcome to CyberPup - Your Personal Cybersecurity Guide</Text>
       
       <Text style={styles.mainDescription}>
-        CyberPup is your step-by-step guide to securing your entire cybersecurity footprint without the jargon. <br /> We'll help you go from 'at risk' to 'resilient' in just a few minutes a day.
+        CyberPup is your step-by-step guide to securing your entire cybersecurity footprint, without the jargon. <br /> We'll take you from 'at risk' to 'resilient' in just a few minutes a day.
       </Text>
 
       <View style={styles.keyPointsContainer}>
         <View style={styles.keyPoint}>
           <Ionicons name="shield-checkmark" size={Responsive.iconSizes.medium} color={Colors.accent} />
-          <Text style={styles.keyPointText}>Unbiased expert advice that remains passionately vendor-agnostic. No upsells.</Text>
+          <Text style={styles.keyPointText}>Unbiased expert advice that remains passionately vendor-agnostic, no upsells</Text>
         </View>
         <View style={styles.keyPoint}>
           <Ionicons name="flash" size={Responsive.iconSizes.medium} color={Colors.accent} />
@@ -187,7 +173,7 @@ const InitialWelcomeScreen = ({ navigation }) => {
             <Text style={styles.toolTitle}>One-click "Cleanup" apps</Text>
             <View style={styles.toolPoint}>
               <Ionicons name="checkmark-circle" size={Responsive.iconSizes.small} color={Colors.success} />
-              <Text style={styles.toolPointText}>Clear junk files</Text>
+              <Text style={styles.toolPointText}>Clears junk files</Text>
             </View>
             <View style={styles.toolPoint}>
               <Ionicons name="close-circle" size={Responsive.iconSizes.small} color={Colors.error} />
@@ -205,7 +191,7 @@ const InitialWelcomeScreen = ({ navigation }) => {
         </View>
         
         <Text style={styles.sectionDescription}>
-          CyberPup helps you protect all areas of your digital life:
+          CyberPup helps you protect ALL areas of your digital life:
         </Text>
 
         <View style={styles.toolsList}>
@@ -235,7 +221,7 @@ const InitialWelcomeScreen = ({ navigation }) => {
         </View>
 
         <Text style={styles.bottomLine}>
-          No misleading marketing or sales tactics. Just expert-backed steps that actually make you safer.
+          No misleading marketing or sales tactics. Just industry standard best pracitses that actually make you safer.
         </Text>
       </View>
 
@@ -249,16 +235,16 @@ const InitialWelcomeScreen = ({ navigation }) => {
       <View style={styles.finalMascotContainer}>
         <View style={styles.finalMascotWrapper}>
           <Image
-            source={require('../assets/images/cyberpup-sitting.png')}
+            source={require('../assets/images/cyberpup-mascot.png')}
             style={styles.finalMascotImage}
             resizeMode="contain"
           />
         </View>
         
-        <Text style={styles.finalSectionTitle}>Let's Go!</Text>
+        <Text style={styles.finalSectionTitle}>Ready?</Text>
         
         <Text style={styles.encouragingText}>
-          Let's get you from at risk to resilient, one simple step at a time.
+          Let's transform your digital security, one simple step at a time.
       </Text>
       </View>
     </View>
@@ -298,16 +284,12 @@ const InitialWelcomeScreen = ({ navigation }) => {
           />
         </View>
         
-        <TouchableOpacity
-          style={styles.skipButton}
-          onPress={handleSkip}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.skipButtonText}>Skip</Text>
-        </TouchableOpacity>
+        <View style={styles.stepIndicator}>
+          <Text style={styles.stepIndicatorText}>{currentStep + 1} of 4</Text>
+        </View>
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollViewRef} style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           {sections[currentStep]()}
         </View>
@@ -367,14 +349,19 @@ const styles = StyleSheet.create({
   headerBackSpacer: {
     minWidth: 40,
   },
-  skipButton: {
+  stepIndicator: {
     paddingHorizontal: Responsive.spacing.md,
     paddingVertical: Responsive.spacing.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 60,
   },
-  skipButtonText: {
+  stepIndicatorText: {
     fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
     fontWeight: Typography.weights.medium,
+    fontFamily: Typography.fontFamily,
+    textAlign: 'center',
   },
   scrollView: {
     flex: 1,
@@ -390,18 +377,18 @@ const styles = StyleSheet.create({
   },
   mascotContainer: {
     alignItems: 'center',
-    marginBottom: Responsive.spacing.lg,
-    marginTop: Responsive.spacing.md,
+    marginBottom: Responsive.spacing.md,
+    marginTop: Responsive.spacing.xs,
   },
   mascotWrapper: {
-    width: Responsive.isSmallScreen ? 150 : 200,
-    height: Responsive.isSmallScreen ? 150 : 200,
+    width: Responsive.isSmallScreen ? 200 : 250,
+    height: Responsive.isSmallScreen ? 200 : 250,
     justifyContent: 'center',
     alignItems: 'center',
   },
   mascotImage: {
-    width: Responsive.isSmallScreen ? 150 : 200,
-    height: Responsive.isSmallScreen ? 150 : 200,
+    width: Responsive.isSmallScreen ? 200 : 250,
+    height: Responsive.isSmallScreen ? 200 : 250,
   },
   mainTitle: {
     fontSize: Responsive.isSmallScreen ? Typography.sizes.xxl : Typography.sizes.xxxl,
@@ -593,7 +580,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   nextButtonText: {
-    fontSize: Typography.sizes.md,
+    fontSize: Typography.sizes.xxl,
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
   },

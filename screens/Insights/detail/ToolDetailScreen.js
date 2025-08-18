@@ -164,10 +164,59 @@ const ToolDetailScreen = ({ navigation, route }) => {
               <View style={styles.breachesContainer}>
                 {interactionResult.breaches.map((breach, index) => (
                   <View key={index} style={styles.breachItem}>
-                    <Text style={styles.breachName}>{breach.name}</Text>
-                    <Text style={styles.breachDate}>Date: {breach.date}</Text>
-                    <Text style={styles.breachRecords}>Records: {breach.records}</Text>
-                    <Text style={styles.breachData}>Data: {breach.dataTypes.join(', ')}</Text>
+                    <View style={styles.breachHeader}>
+                      <Text style={styles.breachName}>{breach.name || breach}</Text>
+                      {breach.verified && (
+                        <View style={styles.verifiedBadge}>
+                          <Text style={styles.verifiedText}>✓ Verified</Text>
+                        </View>
+                      )}
+                    </View>
+                    
+                    <Text style={styles.breachDate}>Date: {breach.date || 'Unknown'}</Text>
+                    <Text style={styles.breachRecords}>Records: {breach.records || 'Unknown'}</Text>
+                    
+                    {breach.industry && breach.industry !== 'Unknown' && (
+                      <Text style={styles.breachIndustry}>Industry: {breach.industry}</Text>
+                    )}
+                    
+                    <Text style={styles.breachData}>
+                      Data: {breach.dataTypes ? 
+                        (Array.isArray(breach.dataTypes) ? breach.dataTypes.join(', ') : breach.dataTypes) : 
+                        'Email addresses and potentially other data'
+                      }
+                    </Text>
+                    
+                    {breach.passwordRisk && breach.passwordRisk !== 'unknown' && (
+                      <View style={[styles.riskBadge, { 
+                        backgroundColor: breach.passwordRisk === 'plaintext' ? Colors.error : 
+                                       breach.passwordRisk === 'easytocrack' ? Colors.warning : Colors.success 
+                      }]}>
+                        <Text style={styles.passwordRiskText}>
+                          Password Risk: {breach.passwordRisk === 'plaintext' ? 'High (Plain Text)' : 
+                                        breach.passwordRisk === 'easytocrack' ? 'Medium (Weak Hash)' : 'Low (Strong Hash)'}
+                        </Text>
+                      </View>
+                    )}
+                    
+                    {breach.description && (
+                      <Text style={styles.breachDescription} numberOfLines={3}>
+                        {breach.description}
+                      </Text>
+                    )}
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* Enhanced recommendations section */}
+            {interactionResult.recommendations && interactionResult.recommendations.length > 0 && (
+              <View style={styles.recommendationsContainer}>
+                <Text style={styles.recommendationsTitle}>Recommended Actions:</Text>
+                {interactionResult.recommendations.map((recommendation, index) => (
+                  <View key={index} style={styles.recommendationItem}>
+                    <Text style={styles.recommendationBullet}>•</Text>
+                    <Text style={styles.recommendationText}>{recommendation}</Text>
                   </View>
                 ))}
               </View>
@@ -194,7 +243,7 @@ const ToolDetailScreen = ({ navigation, route }) => {
               <View style={styles.risksContainer}>
                 <Text style={styles.risksTitle}>Risk Factors:</Text>
                 {interactionResult.risks.map((risk, index) => (
-                  <Text key={index} style={styles.riskText}>• {risk}</Text>
+                  <Text key={index} style={styles.riskFactorText}>• {risk}</Text>
                 ))}
               </View>
             )}
@@ -645,7 +694,7 @@ const styles = StyleSheet.create({
   breachName: {
     fontSize: Typography.sizes.md,
     fontWeight: Typography.weights.semibold,
-    color: Colors.error,
+    color: '#FF6B6B', // Brighter red for better contrast on dark background
   },
   breachDate: {
     fontSize: Typography.sizes.sm,
@@ -659,6 +708,84 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.sm,
     color: Colors.textSecondary,
   },
+  breachHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Responsive.spacing.xs,
+  },
+  verifiedBadge: {
+    backgroundColor: '#27AE60', // Green background
+    paddingHorizontal: Responsive.spacing.sm,
+    paddingVertical: Responsive.spacing.xs,
+    borderRadius: Responsive.borderRadius.small,
+  },
+  verifiedText: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: Typography.weights.bold,
+    color: '#FFFFFF', // Pure white text for maximum contrast on green
+  },
+  breachIndustry: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    fontStyle: 'italic',
+  },
+  riskBadge: {
+    paddingHorizontal: Responsive.spacing.sm,
+    paddingVertical: Responsive.spacing.xs,
+    borderRadius: Responsive.borderRadius.small,
+    marginTop: Responsive.spacing.xs,
+  },
+  riskText: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: Typography.weights.bold,
+    color: '#FFFFFF', // Pure white text for maximum contrast on colored badges
+  },
+  passwordRiskText: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: Typography.weights.bold,
+    color: '#FFFFFF', // Pure white text for password risk badges
+  },
+  riskFactorText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.error,
+    marginBottom: Responsive.spacing.xs,
+  },
+  breachDescription: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    marginTop: Responsive.spacing.xs,
+    lineHeight: Typography.sizes.sm * 1.4,
+  },
+  recommendationsContainer: {
+    marginTop: Responsive.spacing.lg,
+    backgroundColor: Colors.background,
+    padding: Responsive.spacing.md,
+    borderRadius: Responsive.borderRadius.medium,
+  },
+  recommendationsTitle: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.accent,
+    marginBottom: Responsive.spacing.sm,
+  },
+  recommendationItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: Responsive.spacing.xs,
+  },
+  recommendationBullet: {
+    fontSize: Typography.sizes.md,
+    color: Colors.accent,
+    marginRight: Responsive.spacing.xs,
+    marginTop: 2,
+  },
+  recommendationText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textPrimary,
+    flex: 1,
+    lineHeight: Typography.sizes.sm * 1.3,
+  },
   statusChip: {
     paddingHorizontal: Responsive.spacing.md,
     paddingVertical: Responsive.spacing.xs,
@@ -669,11 +796,7 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
   },
-  recommendationText: {
-    fontSize: Typography.sizes.md,
-    color: Colors.textPrimary,
-    marginBottom: Responsive.spacing.md,
-  },
+
   risksContainer: {
     marginTop: Responsive.spacing.md,
   },
@@ -683,11 +806,7 @@ const styles = StyleSheet.create({
     color: Colors.error,
     marginBottom: Responsive.spacing.xs,
   },
-  riskText: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.error,
-    marginBottom: Responsive.spacing.xs,
-  },
+
   riskChip: {
     paddingHorizontal: Responsive.spacing.md,
     paddingVertical: Responsive.spacing.xs,

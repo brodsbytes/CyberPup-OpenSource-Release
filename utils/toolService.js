@@ -1,6 +1,8 @@
 // Tool Service - Provides enhanced tool content and mock interactions for detail screens
 // Similar structure to GuideService but for interactive security tools
 
+import { BreachCheckService } from './breachCheckService';
+
 export class ToolService {
   
   // Get tool by ID with enhanced content and mock interactions
@@ -108,11 +110,9 @@ export class ToolService {
         topics: ['data-breach', 'account-security'],
         relatedCheckId: '1-1-5',
         author: 'CyberPup Security Team',
-        lastUpdated: '2025-01-15',
+        lastUpdated: '2025-01-27',
         category: 'Security Monitoring',
-        fullDescription: `
-          Discover if your email address has been exposed in data breaches. Our breach lookup tool searches through databases of known security incidents to help you understand your exposure and take appropriate action.
-        `,
+        fullDescription: `See if your accounts have been exposed in a data breach. CyberPup will check safely through XposedOrNot and guide you on the next steps if your details are found.`,
         features: [
           'Search across major breach databases',
           'Real-time breach monitoring',
@@ -617,7 +617,7 @@ export class ToolService {
       case 'password-checker':
         return this.mockPasswordCheck(inputData.password);
       case 'breach-lookup':
-        return this.mockBreachLookup(inputData.email);
+        return this.realBreachLookup(inputData.email);
       case 'link-checker':
         return this.mockLinkCheck(inputData.url);
       case 'scam-detector':
@@ -682,6 +682,187 @@ export class ToolService {
     };
   }
 
+  static async realBreachLookup(email) {
+    if (!email) return { error: 'Please enter an email address' };
+    
+    try {
+      // First try the detailed analytics API for rich data
+      const analyticsResult = await BreachCheckService.getBreachAnalytics(email);
+      
+      if (analyticsResult.hasAnalytics && analyticsResult.exposedBreaches) {
+        return this.formatAnalyticsResult(analyticsResult, email);
+      }
+      
+      // Fallback to basic API if analytics not available
+      const result = await BreachCheckService.checkEmailBreach(email);
+      const formattedResult = BreachCheckService.formatBreachResult(result);
+      
+      // Transform breach names to match UI expectations
+      const formattedBreaches = Array.isArray(result.breaches) 
+        ? result.breaches.map(breachName => ({
+            name: breachName,
+            date: 'Unknown', // Basic API doesn't provide dates
+            records: 'Unknown', // Basic API doesn't provide record counts
+            dataTypes: ['Email addresses', 'Potentially passwords and personal data'] // Generic data types
+          }))
+        : [];
+      
+      return {
+        isBreached: result.isBreached,
+        breaches: formattedBreaches,
+        breachCount: result.breachCount || 0,
+        message: result.message,
+        severity: formattedResult.severity,
+        recommendations: formattedResult.recommendations,
+        status: formattedResult.status,
+        title: formattedResult.title,
+        checkedAt: result.checkedAt
+      };
+    } catch (error) {
+      console.log('Real breach lookup error:', error.message);
+      return { 
+        error: error.message,
+        isBreached: false,
+        breaches: [],
+        message: 'Unable to check for breaches. Please try again later.'
+      };
+    }
+  }
+
+  static formatAnalyticsResult(analyticsResult, email) {
+    const exposedBreaches = analyticsResult.exposedBreaches.breaches_details || [];
+    
+    // Debug logging to understand the data structure
+    console.log('🔍 Analytics result structure:', JSON.stringify(analyticsResult, null, 2));
+    console.log('🔍 Exposed breaches details:', JSON.stringify(exposedBreaches, null, 2));
+    
+    // Transform detailed breach data to match UI expectations
+    const formattedBreaches = exposedBreaches.map(breach => {
+      // Parse the date from xposed_date field
+      let formattedDate = 'Unknown';
+      if (breach.xposed_date) {
+        // Handle different date formats
+        if (breach.xposed_date.length === 4) {
+          // Just year (e.g., "2015")
+          formattedDate = breach.xposed_date;
+        } else {
+          // Try parsing as full date
+          const date = new Date(breach.xposed_date);
+          if (!isNaN(date.getTime())) {
+            formattedDate = date.toLocaleDateString();
+          } else {
+            formattedDate = breach.xposed_date; // Use as-is if can't parse
+          }
+        }
+      } else if (breach.breachedDate) {
+        // Fallback to breachedDate format
+        formattedDate = new Date(breach.breachedDate).toLocaleDateString();
+      }
+
+      // Format record count from xposed_records
+      let formattedRecords = 'Unknown';
+      if (breach.xposed_records && typeof breach.xposed_records === 'number') {
+        if (breach.xposed_records >= 1000000) {
+          formattedRecords = `${(breach.xposed_records / 1000000).toFixed(1)}M`;
+        } else if (breach.xposed_records >= 1000) {
+          formattedRecords = `${(breach.xposed_records / 1000).toFixed(0)}K`;
+        } else {
+          formattedRecords = breach.xposed_records.toLocaleString();
+        }
+      } else if (breach.exposedRecords) {
+        // Fallback to exposedRecords format
+        formattedRecords = `${(breach.exposedRecords / 1000000).toFixed(1)}M`;
+      }
+
+      // Parse exposed data types from xposed_data (semicolon separated)
+      let dataTypes = ['Email addresses'];
+      if (breach.xposed_data && typeof breach.xposed_data === 'string') {
+        dataTypes = breach.xposed_data.split(';').map(type => type.trim());
+      } else if (breach.exposedData && Array.isArray(breach.exposedData)) {
+        dataTypes = breach.exposedData;
+      }
+
+      return {
+        name: breach.breach || breach.breachID || 'Unknown',
+        date: formattedDate,
+        records: formattedRecords,
+        dataTypes: dataTypes,
+        description: breach.details || breach.exposureDescription || '',
+        industry: breach.industry || 'Unknown',
+        passwordRisk: breach.password_risk || breach.passwordRisk || 'unknown',
+        verified: breach.verified === 'Yes' || breach.verified === true,
+        domain: breach.domain || '',
+        searchable: breach.searchable === 'Yes' || breach.searchable === true
+      };
+    });
+
+    const breachCount = formattedBreaches.length;
+    const severity = breachCount > 5 ? 'high' : breachCount > 2 ? 'medium' : 'low';
+
+    return {
+      isBreached: breachCount > 0,
+      breaches: formattedBreaches,
+      breachCount: breachCount,
+      message: breachCount > 0 
+        ? `Your email was found in ${breachCount} data breach${breachCount > 1 ? 'es' : ''} with detailed information available.`
+        : 'Good news! Your email was not found in any known data breaches.',
+      severity: severity,
+      recommendations: this.getDetailedRecommendations(formattedBreaches),
+      status: breachCount > 0 ? 'breached' : 'safe',
+      title: breachCount > 0 ? `Found in ${breachCount} Breach${breachCount > 1 ? 'es' : ''}` : 'No Breaches Found',
+      checkedAt: new Date().toISOString(),
+      hasDetailedData: true
+    };
+  }
+
+  static getDetailedRecommendations(breaches) {
+    const recommendations = [
+      'Change your password immediately for any accounts using this email'
+    ];
+
+    const hasPasswordExposure = breaches.some(breach => 
+      breach.dataTypes.some(type => 
+        type.toLowerCase().includes('password')
+      )
+    );
+
+    const hasFinancialData = breaches.some(breach => 
+      breach.dataTypes.some(type => 
+        type.toLowerCase().includes('credit') || 
+        type.toLowerCase().includes('financial') ||
+        type.toLowerCase().includes('payment')
+      )
+    );
+
+    const hasPersonalData = breaches.some(breach => 
+      breach.dataTypes.some(type => 
+        type.toLowerCase().includes('name') || 
+        type.toLowerCase().includes('address') ||
+        type.toLowerCase().includes('phone')
+      )
+    );
+
+    if (hasPasswordExposure) {
+      recommendations.push('Enable two-factor authentication on all important accounts');
+      recommendations.push('Use a password manager to generate unique passwords');
+    }
+
+    if (hasFinancialData) {
+      recommendations.push('Monitor your bank and credit card statements closely');
+      recommendations.push('Consider placing a fraud alert on your credit reports');
+    }
+
+    if (hasPersonalData) {
+      recommendations.push('Be vigilant about phishing attempts using your personal information');
+      recommendations.push('Update security questions and recovery information');
+    }
+
+    recommendations.push('Monitor your accounts closely for suspicious activity');
+
+    return recommendations;
+  }
+
+  // Keep the mock function for reference/fallback
   static mockBreachLookup(email) {
     if (!email) return { error: 'Please enter an email address' };
     

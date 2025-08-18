@@ -843,7 +843,8 @@ const WelcomeScreen = ({ navigation }) => {
                                   <Ionicons 
                                     name="play" 
                                     size={20} 
-                                    color={Colors.heroButtonTextColor} 
+                                    color={Colors.heroButtonTextColor}
+                                    style={{ marginLeft: 2 }}
                                   />
                                 </TouchableOpacity>
                               )}
@@ -1250,7 +1251,6 @@ const styles = StyleSheet.create({
     shadowColor: Colors.heroButtonShadowColor,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: Colors.heroButtonShadowOpacity,
-    shadowRadius: Colors.heroButtonShadowRadius,
     elevation: Colors.heroButtonElevation,
   },
   securityCheckButtonText: {
@@ -1391,16 +1391,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accent, // Solid accent color
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: Colors.accent,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-    elevation: 8,
     // Ensure it's above other elements
     zIndex: 10,
-    // Add subtle animation hint
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
 
   activeLevelMetaRow: {

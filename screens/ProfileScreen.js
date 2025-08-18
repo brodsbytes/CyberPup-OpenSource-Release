@@ -154,6 +154,23 @@ const ProfileScreen = ({ navigation }) => {
             <Text style={styles.subtitle}>Your Cyber Security Journey</Text>
           </View>
 
+          {/* Device Management Section */}
+          <TouchableOpacity
+            style={styles.profileSection}
+            onPress={() => navigation.navigate(SCREEN_NAMES.DEVICE_AUDIT, { fromProfile: true })}
+          >
+            <View style={styles.profileSectionIcon}>
+              <Ionicons name="phone-portrait" size={24} color={Colors.accent} />
+            </View>
+            <View style={styles.profileSectionContent}>
+              <Text style={styles.profileSectionTitle}>Manage Devices</Text>
+              <Text style={styles.profileSectionDescription}>
+                Update your device list for personalized recommendations
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+          </TouchableOpacity>
+
           {isLoading ? (
             <View style={styles.loadingContainer}>
               <Text style={styles.loadingText}>Loading profile...</Text>
@@ -352,6 +369,39 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
     color: Colors.textPrimary,
     marginLeft: Responsive.spacing.sm,
+  },
+  profileSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    padding: Responsive.spacing.lg,
+    borderRadius: Responsive.borderRadius.large,
+    marginBottom: Responsive.spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  profileSectionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.accentSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Responsive.spacing.md,
+  },
+  profileSectionContent: {
+    flex: 1,
+  },
+  profileSectionTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.medium,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.xs,
+  },
+  profileSectionDescription: {
+    fontSize: Typography.sizes.md,
+    color: Colors.textSecondary,
+    lineHeight: Typography.sizes.md * 1.3,
   },
   loadingContainer: {
     flex: 1,

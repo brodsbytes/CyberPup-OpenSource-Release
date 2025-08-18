@@ -25,6 +25,7 @@ import {
 } from './screens/lessons';
 
 import InitialWelcomeScreen from './screens/InitialWelcomeScreen';
+import DeviceAuditScreen from './screens/DeviceAuditScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import { SecurityAlertsService } from './utils/securityAlerts';
 import { BackgroundAlertsService } from './utils/backgroundAlerts';
@@ -82,6 +83,7 @@ export default function App() {
         }}
       >
         <Stack.Screen name={SCREEN_NAMES.INITIAL_WELCOME} component={InitialWelcomeScreen} />
+        <Stack.Screen name={SCREEN_NAMES.DEVICE_AUDIT} component={DeviceAuditScreen} />
         <Stack.Screen name={SCREEN_NAMES.WELCOME} component={WelcomeScreen} />
         <Stack.Screen name={SCREEN_NAMES.CATEGORY} component={CategoryScreen} />
         <Stack.Screen name={SCREEN_NAMES.MODULE_LIST} component={ModuleListScreen} />

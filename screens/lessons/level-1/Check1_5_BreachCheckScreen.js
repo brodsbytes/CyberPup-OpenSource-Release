@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
+import { BreachCheckService } from '../../../utils/breachCheckService';
 
 const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
 
@@ -46,9 +47,7 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
   const [breachResult, setBreachResult] = useState(null);
   const [showBreachModal, setShowBreachModal] = useState(false);
   
-  // Password manager guidance state
-  const [selectedPasswordManager, setSelectedPasswordManager] = useState('');
-  const [showGuidanceModal, setShowGuidanceModal] = useState(false);
+
 
   useEffect(() => {
     loadProgress();
@@ -82,12 +81,7 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
         setIsCompleted(true);
       }
       
-      // Load password manager data from Check 1.3
-      const pmProgressData = await AsyncStorage.getItem('check_1-1-3_progress');
-      if (pmProgressData) {
-        const pmData = JSON.parse(pmProgressData);
-        setSelectedPasswordManager(pmData.selectedPasswordManager || '');
-      }
+
     } catch (error) {
       console.log('Error loading progress:', error);
     }
@@ -190,7 +184,7 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
   };
 
   const checkBreach = async () => {
-    if (!email || !email.includes('@')) {
+    if (!email || !BreachCheckService.validateEmail(email)) {
       Alert.alert('Invalid Email', 'Please enter a valid email address.');
       return;
     }
@@ -198,22 +192,89 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
     setIsCheckingBreach(true);
     
     try {
-      // Simulate API call to breach checker
-      // In a real app, this would call a service like HaveIBeenPwned API
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // First try the detailed analytics API for rich data
+      const analyticsResult = await BreachCheckService.getBreachAnalytics(email);
       
-      // Simulate different results based on email
-      const isBreached = email.includes('test') || email.includes('demo');
-      const result = {
-        isBreached,
-        breaches: isBreached ? [
-          { name: 'Test Breach 2023', date: '2023-06-15', severity: 'Medium' },
-          { name: 'Demo Data Leak 2022', date: '2022-11-03', severity: 'Low' }
-        ] : [],
-        message: isBreached 
-          ? 'Your email was found in 2 data breaches. We recommend changing your passwords immediately.'
-          : 'Good news! Your email was not found in any known data breaches.'
-      };
+      let result;
+      if (analyticsResult.hasAnalytics && analyticsResult.exposedBreaches) {
+        // Use enhanced analytics data
+        const exposedBreaches = analyticsResult.exposedBreaches.breaches_details || [];
+        
+        // Transform detailed breach data for Check 1.5 UI
+        const formattedBreaches = exposedBreaches.map(breach => {
+          // Parse the date from xposed_date field
+          let formattedDate = 'Unknown';
+          if (breach.xposed_date) {
+            if (breach.xposed_date.length === 4) {
+              formattedDate = breach.xposed_date;
+            } else {
+              const date = new Date(breach.xposed_date);
+              if (!isNaN(date.getTime())) {
+                formattedDate = date.toLocaleDateString();
+              } else {
+                formattedDate = breach.xposed_date;
+              }
+            }
+          }
+
+          // Format record count from xposed_records
+          let formattedRecords = 'Unknown';
+          if (breach.xposed_records && typeof breach.xposed_records === 'number') {
+            if (breach.xposed_records >= 1000000) {
+              formattedRecords = `${(breach.xposed_records / 1000000).toFixed(1)}M`;
+            } else if (breach.xposed_records >= 1000) {
+              formattedRecords = `${(breach.xposed_records / 1000).toFixed(0)}K`;
+            } else {
+              formattedRecords = breach.xposed_records.toLocaleString();
+            }
+          }
+
+          return {
+            name: breach.breach || breach.breachID || 'Unknown',
+            date: formattedDate,
+            records: formattedRecords,
+            dataTypes: breach.xposed_data ? breach.xposed_data.split(';').map(type => type.trim()) : ['Email addresses'],
+            industry: breach.industry || 'Unknown'
+          };
+        });
+
+        const breachCount = formattedBreaches.length;
+        result = {
+          isBreached: breachCount > 0,
+          breaches: formattedBreaches,
+          breachCount: breachCount,
+          message: breachCount > 0 
+            ? `Your email was found in ${breachCount} data breach${breachCount > 1 ? 'es' : ''}. We recommend changing your passwords immediately.`
+            : 'Good news! Your email was not found in any known data breaches.',
+          severity: breachCount > 5 ? 'high' : breachCount > 2 ? 'medium' : 'low',
+          checkedAt: new Date().toISOString()
+        };
+      } else {
+        // Fallback to basic API
+        const apiResult = await BreachCheckService.checkEmailBreach(email);
+        const formattedResult = BreachCheckService.formatBreachResult(apiResult);
+        
+        // Transform basic breach names to objects for UI compatibility
+        const formattedBreaches = Array.isArray(apiResult.breaches) 
+          ? apiResult.breaches.map(breachName => ({
+              name: breachName,
+              date: 'Unknown',
+              records: 'Unknown',
+              dataTypes: ['Email addresses'],
+              industry: 'Unknown'
+            }))
+          : [];
+        
+        result = {
+          isBreached: apiResult.isBreached,
+          breaches: formattedBreaches,
+          breachCount: apiResult.breachCount || 0,
+          message: apiResult.message,
+          severity: formattedResult.severity,
+          recommendations: formattedResult.recommendations,
+          checkedAt: apiResult.checkedAt
+        };
+      }
       
       setBreachResult(result);
       setShowBreachModal(true);
@@ -229,7 +290,8 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
       }
       
     } catch (error) {
-      Alert.alert('Error', 'Unable to check for breaches. Please try again.');
+      console.log('Breach check error:', error.message);
+      Alert.alert('Error', error.message);
     } finally {
       setIsCheckingBreach(false);
     }
@@ -248,144 +310,7 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
     navigation.navigate('Welcome');
   };
 
-  // Password manager guidance functions
-  const getPasswordManagerGuidance = () => {
-    const guidance = {
-      '1password': {
-        title: '1Password Password Change Guide',
-        steps: [
-          'Open 1Password and go to the affected website',
-          'Click the 1Password extension icon in your browser',
-          'Select "Generate Password" to create a strong passphrase',
-          'Use the generated password to update your account',
-          '1Password will automatically save the new password',
-          'Repeat for all affected accounts from the breach'
-        ],
-        tips: [
-          'Use 1Password\'s "Watchtower" feature to monitor for breaches',
-          'Enable 2FA on all accounts after changing passwords',
-          'Consider using passphrases for better security'
-        ]
-      },
-      'bitwarden': {
-        title: 'Bitwarden Password Change Guide',
-        steps: [
-          'Open Bitwarden and navigate to the affected website',
-          'Click the Bitwarden extension icon in your browser',
-          'Use the password generator to create a strong passphrase',
-          'Update your account with the new password',
-          'Bitwarden will prompt to save the updated credentials',
-          'Repeat for all affected accounts from the breach'
-        ],
-        tips: [
-          'Use Bitwarden\'s "Security Report" to check for weak passwords',
-          'Enable 2FA on all accounts after changing passwords',
-          'Consider using passphrases for better security'
-        ]
-      },
-      'lastpass': {
-        title: 'LastPass Password Change Guide',
-        steps: [
-          'Open LastPass and go to the affected website',
-          'Click the LastPass extension icon in your browser',
-          'Use the password generator to create a strong passphrase',
-          'Update your account with the new password',
-          'LastPass will automatically save the new credentials',
-          'Repeat for all affected accounts from the breach'
-        ],
-        tips: [
-          'Use LastPass\'s "Security Challenge" to identify weak passwords',
-          'Enable 2FA on all accounts after changing passwords',
-          'Consider using passphrases for better security'
-        ]
-      },
-      'dashlane': {
-        title: 'Dashlane Password Change Guide',
-        steps: [
-          'Open Dashlane and navigate to the affected website',
-          'Click the Dashlane extension icon in your browser',
-          'Use the password generator to create a strong passphrase',
-          'Update your account with the new password',
-          'Dashlane will prompt to save the updated credentials',
-          'Repeat for all affected accounts from the breach'
-        ],
-        tips: [
-          'Use Dashlane\'s "Password Health" feature to monitor security',
-          'Enable 2FA on all accounts after changing passwords',
-          'Consider using passphrases for better security'
-        ]
-      },
-      'nordpass': {
-        title: 'NordPass Password Change Guide',
-        steps: [
-          'Open NordPass and go to the affected website',
-          'Click the NordPass extension icon in your browser',
-          'Use the password generator to create a strong passphrase',
-          'Update your account with the new password',
-          'NordPass will automatically save the new credentials',
-          'Repeat for all affected accounts from the breach'
-        ],
-        tips: [
-          'Use NordPass\'s "Password Health" feature to check security',
-          'Enable 2FA on all accounts after changing passwords',
-          'Consider using passphrases for better security'
-        ]
-      },
-      'keeper': {
-        title: 'Keeper Password Change Guide',
-        steps: [
-          'Open Keeper and navigate to the affected website',
-          'Click the Keeper extension icon in your browser',
-          'Use the password generator to create a strong passphrase',
-          'Update your account with the new password',
-          'Keeper will prompt to save the updated credentials',
-          'Repeat for all affected accounts from the breach'
-        ],
-        tips: [
-          'Use Keeper\'s "Security Audit" feature to identify weak passwords',
-          'Enable 2FA on all accounts after changing passwords',
-          'Consider using passphrases for better security'
-        ]
-      },
-      'roboform': {
-        title: 'RoboForm Password Change Guide',
-        steps: [
-          'Open RoboForm and go to the affected website',
-          'Click the RoboForm extension icon in your browser',
-          'Use the password generator to create a strong passphrase',
-          'Update your account with the new password',
-          'RoboForm will automatically save the new credentials',
-          'Repeat for all affected accounts from the breach'
-        ],
-        tips: [
-          'Use RoboForm\'s "Security Center" to monitor password strength',
-          'Enable 2FA on all accounts after changing passwords',
-          'Consider using passphrases for better security'
-        ]
-      }
-    };
-    
-    return guidance[selectedPasswordManager] || {
-      title: 'General Password Change Guide',
-      steps: [
-        'Open your password manager and go to the affected website',
-        'Use your password manager\'s generator to create a strong passphrase',
-        'Update your account with the new password',
-        'Save the new credentials in your password manager',
-        'Repeat for all affected accounts from the breach'
-      ],
-      tips: [
-        'Use your password manager\'s security features to monitor for weak passwords',
-        'Enable 2FA on all accounts after changing passwords',
-        'Consider using passphrases for better security'
-      ]
-    };
-  };
 
-  const handleShowGuidance = () => {
-    setShowBreachModal(false);
-    setShowGuidanceModal(true);
-  };
 
   const renderChecklistItem = (item) => (
     <Animated.View
@@ -519,7 +444,18 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
                 {breachResult.breaches.map((breach, index) => (
                   <View key={index} style={styles.breachItem}>
                     <Text style={styles.breachName}>{breach.name}</Text>
-                    <Text style={styles.breachDate}>{breach.date}</Text>
+                    <Text style={styles.breachDate}>Date: {breach.date}</Text>
+                    {breach.records && breach.records !== 'Unknown' && (
+                      <Text style={styles.breachRecords}>Records: {breach.records}</Text>
+                    )}
+                    {breach.industry && breach.industry !== 'Unknown' && (
+                      <Text style={styles.breachIndustry}>Industry: {breach.industry}</Text>
+                    )}
+                    {breach.dataTypes && breach.dataTypes.length > 0 && (
+                      <Text style={styles.breachData}>
+                        Data: {Array.isArray(breach.dataTypes) ? breach.dataTypes.join(', ') : breach.dataTypes}
+                      </Text>
+                    )}
                   </View>
                 ))}
               </View>
@@ -530,7 +466,8 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
                 style={styles.primaryButton}
                 onPress={() => {
                   if (breachResult?.isBreached) {
-                    handleShowGuidance();
+                    setShowBreachModal(false);
+                    navigation.navigate('GuideDetailScreen', { id: 'guide-7' });
                   } else {
                     setShowBreachModal(false);
                   }
@@ -546,82 +483,7 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
         </View>
       </Modal>
 
-      {/* Password Manager Guidance Modal */}
-      <Modal
-        visible={showGuidanceModal}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowGuidanceModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.guidanceModalContent}>
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setShowGuidanceModal(false)}
-            >
-              <Ionicons name="close" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
-            </TouchableOpacity>
 
-            <ScrollView style={styles.guidanceScrollView} showsVerticalScrollIndicator={false}>
-              <View style={styles.guidanceHeader}>
-                <Ionicons name="shield-checkmark" size={Responsive.iconSizes.xxlarge} color={Colors.accent} />
-                <Text style={styles.guidanceTitle}>
-                  {getPasswordManagerGuidance().title}
-                </Text>
-              </View>
-
-              <Text style={styles.guidanceMessage}>
-                Don't worry! Changing passwords after a breach is a normal part of digital security. 
-                This process will take some time, but your password manager will make it much easier. 
-                Here's how to update your passwords securely:
-              </Text>
-
-              <View style={styles.stepsSection}>
-                <Text style={styles.stepsTitle}>Step-by-Step Instructions:</Text>
-                {getPasswordManagerGuidance().steps.map((step, index) => (
-                  <View key={index} style={styles.stepItem}>
-                    <View style={styles.stepNumber}>
-                      <Text style={styles.stepNumberText}>{index + 1}</Text>
-                    </View>
-                    <Text style={styles.stepText}>{step}</Text>
-                  </View>
-                ))}
-              </View>
-
-              <View style={styles.tipsSection}>
-                <Text style={styles.tipsTitle}>💡 Security Tips:</Text>
-                {getPasswordManagerGuidance().tips.map((tip, index) => (
-                  <View key={index} style={styles.tipItem}>
-                    <Ionicons name="checkmark-circle" size={Responsive.iconSizes.small} color={Colors.accent} />
-                    <Text style={styles.tipText}>{tip}</Text>
-                  </View>
-                ))}
-              </View>
-
-              <View style={styles.encouragementSection}>
-                <Text style={styles.encouragementTitle}>You've Got This! 💪</Text>
-                <Text style={styles.encouragementText}>
-                  Changing passwords after a breach is one of the most important security steps you can take. 
-                  Your password manager will handle the complexity, so you can focus on staying secure. 
-                  Take your time and be thorough - your future self will thank you!
-                </Text>
-              </View>
-            </ScrollView>
-
-            <View style={styles.guidanceModalButtons}>
-              <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={() => {
-                  setShowGuidanceModal(false);
-                }}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.primaryButtonText}>I'll Start Changing My Passwords</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
@@ -1164,6 +1026,20 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.sm,
     color: Colors.textSecondary,
   },
+  breachRecords: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+  },
+  breachIndustry: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    fontStyle: 'italic',
+  },
+  breachData: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    marginTop: Responsive.spacing.xs,
+  },
   breachModalButtons: {
     marginTop: Responsive.spacing.lg,
   },
@@ -1180,106 +1056,7 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
   },
-  // Guidance Modal Styles
-  guidanceModalContent: {
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.xxlarge,
-    marginHorizontal: Responsive.padding.screen,
-    maxHeight: '90%',
-    width: Responsive.modal.width,
-  },
-  guidanceScrollView: {
-    maxHeight: '80%',
-  },
-  guidanceHeader: {
-    alignItems: 'center',
-    marginTop: Responsive.spacing.lg,
-    marginBottom: Responsive.spacing.md,
-    paddingHorizontal: Responsive.padding.modal,
-  },
-  guidanceTitle: {
-    fontSize: Typography.sizes.xl,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-    textAlign: 'center',
-    marginTop: Responsive.spacing.sm,
-  },
-  guidanceMessage: {
-    fontSize: Typography.sizes.md,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: Typography.sizes.md * 1.4,
-    marginBottom: Responsive.spacing.lg,
-    paddingHorizontal: Responsive.padding.modal,
-  },
-  stepsSection: {
-    marginBottom: Responsive.spacing.lg,
-    paddingHorizontal: Responsive.padding.modal,
-  },
-  stepsTitle: {
-    fontSize: Typography.sizes.lg,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
-    marginBottom: Responsive.spacing.sm,
-  },
-  stepItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: Responsive.spacing.sm,
-    gap: Responsive.spacing.sm,
-  },
-  stepNumber: {
-    width: Responsive.iconSizes.large,
-    height: Responsive.iconSizes.large,
-    borderRadius: Responsive.iconSizes.large / 2,
-    backgroundColor: Colors.accent,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexShrink: 0,
-  },
-  stepNumberText: {
-    fontSize: Typography.sizes.sm,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
-  },
-  stepText: {
-    fontSize: Typography.sizes.md,
-    color: Colors.textPrimary,
-    lineHeight: Typography.sizes.md * 1.4,
-    flex: 1,
-  },
-  tipsSection: {
-    marginBottom: Responsive.spacing.lg,
-    paddingHorizontal: Responsive.padding.modal,
-  },
-  tipsTitle: {
-    fontSize: Typography.sizes.lg,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
-    marginBottom: Responsive.spacing.sm,
-  },
-  encouragementSection: {
-    backgroundColor: Colors.accentSoft,
-    borderRadius: Responsive.borderRadius.large,
-    padding: Responsive.padding.card,
-    marginHorizontal: Responsive.padding.modal,
-    marginBottom: Responsive.spacing.lg,
-  },
-  encouragementTitle: {
-    fontSize: Typography.sizes.lg,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
-    marginBottom: Responsive.spacing.sm,
-  },
-  encouragementText: {
-    fontSize: Typography.sizes.md,
-    color: Colors.textSecondary,
-    lineHeight: Typography.sizes.md * 1.4,
-  },
-  guidanceModalButtons: {
-    paddingHorizontal: Responsive.padding.modal,
-    paddingBottom: Responsive.padding.modal,
-  },
+
 });
 
 export default Check1_5_BreachCheckScreen;

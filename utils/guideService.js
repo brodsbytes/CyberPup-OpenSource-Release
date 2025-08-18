@@ -1183,6 +1183,158 @@ export class GuideService {
           { title: 'Privacy Settings Scanner Tool', toolId: 'tool-5' },
           { title: 'Online Safety Best Practices', checkId: '1-1-1' }
         ]
+      },
+      {
+        id: 'guide-7',
+        tag: 'GUIDE',
+        level: 'Beginner',
+        title: 'Password Change After Data Breach',
+        excerpt: 'Step-by-step guide to securely change passwords after discovering your accounts have been compromised in a data breach.',
+        readMinutes: 5,
+        topics: ['passwords', 'data-breach', 'account-security'],
+        relatedCheckId: '1-1-5',
+        author: 'CyberPup Security Team',
+        publishedDate: '2025-01-27',
+        lastUpdated: '2025-01-27',
+        difficulty: 'Beginner',
+        fullContent: `
+          <h1>Password Change After Data Breach: Secure Your Accounts</h1>
+          
+          <p>Discovering your accounts have been compromised in a data breach can be stressful, but taking immediate action to change your passwords is crucial for protecting your digital security. This guide will walk you through the process step-by-step, making it as smooth and secure as possible.</p>
+          
+          <h2>Why Immediate Action Matters</h2>
+          <p>When your passwords are exposed in a data breach, cybercriminals can quickly attempt to access your accounts. The faster you change your passwords, the less time attackers have to cause damage. Even if you don't see any suspicious activity, changing passwords is a critical preventive measure.</p>
+          
+          <h3>What Happens in a Data Breach</h3>
+          <ul>
+            <li><strong>Passwords are exposed</strong> - Often in plain text or weak hashes</li>
+            <li><strong>Personal information leaked</strong> - Names, emails, addresses</li>
+            <li><strong>Account takeover attempts</strong> - Criminals try to access your accounts</li>
+            <li><strong>Identity theft risk</strong> - Your information can be used fraudulently</li>
+            <li><strong>Credential stuffing</strong> - Attackers try your password on other sites</li>
+          </ul>
+          
+          <h2>Step-by-Step Password Change Process</h2>
+          <p>Follow these steps to securely update your passwords after a breach:</p>
+          
+          <h3>Step 1: Open Your Password Manager</h3>
+          <p>Start by opening your password manager and navigating to the affected website. Your password manager will make this process much easier by:</p>
+          <ul>
+            <li>Storing your current credentials securely</li>
+            <li>Generating strong new passwords automatically</li>
+            <li>Filling in forms for you</li>
+            <li>Keeping track of all your passwords</li>
+          </ul>
+          
+          <h3>Step 2: Generate a Strong New Password</h3>
+          <p>Use your password manager's built-in password generator to create a strong, unique password. Look for these features:</p>
+          <ul>
+            <li><strong>Length:</strong> At least 16 characters</li>
+            <li><strong>Complexity:</strong> Mix of letters, numbers, and symbols</li>
+            <li><strong>Uniqueness:</strong> Different from all other passwords</li>
+            <li><strong>Randomness:</strong> No patterns or dictionary words</li>
+          </ul>
+          
+          <h3>Step 3: Update Your Account</h3>
+          <p>Navigate to the account settings or password change page on the affected website. Common locations include:</p>
+          <ul>
+            <li>Account Settings → Security → Change Password</li>
+            <li>Profile → Password & Security</li>
+            <li>Settings → Account → Password</li>
+            <li>Security Center → Password Management</li>
+          </ul>
+          
+          <h3>Step 4: Save New Credentials</h3>
+          <p>After updating your password, your password manager should prompt you to save the new credentials. If it doesn't:</p>
+          <ul>
+            <li>Manually add the new password to your vault</li>
+            <li>Update the existing entry if one exists</li>
+            <li>Add any additional security notes</li>
+            <li>Tag the entry for easy identification</li>
+          </ul>
+          
+          <h3>Step 5: Repeat for All Affected Accounts</h3>
+          <p>Go through this process for every account that was compromised in the breach. Don't skip any accounts, even if they seem less important. Remember:</p>
+          <ul>
+            <li>Each compromised account needs a new password</li>
+            <li>Use unique passwords for each account</li>
+            <li>Don't reuse passwords across different sites</li>
+            <li>Consider this an opportunity to improve overall security</li>
+          </ul>
+          
+          <h2>💡 Essential Security Tips</h2>
+          
+          <h3>Use Your Password Manager's Security Features</h3>
+          <p>Most password managers offer security monitoring tools:</p>
+          <ul>
+            <li><strong>Security audits</strong> - Identify weak or reused passwords</li>
+            <li><strong>Breach monitoring</strong> - Get notified of new breaches</li>
+            <li><strong>Password health scores</strong> - Track overall security</li>
+            <li><strong>Dark web monitoring</strong> - Check if credentials are for sale</li>
+          </ul>
+          
+          <h3>Enable Two-Factor Authentication (2FA)</h3>
+          <p>After changing passwords, add an extra layer of security:</p>
+          <ul>
+            <li>Enable 2FA on all important accounts</li>
+            <li>Use authenticator apps when possible</li>
+            <li>Keep backup codes in a secure location</li>
+            <li>Consider hardware security keys for maximum protection</li>
+          </ul>
+          
+          <h3>Consider Using Passphrases</h3>
+          <p>For maximum security and memorability:</p>
+          <ul>
+            <li>Use long, memorable phrases</li>
+            <li>Add numbers and symbols for complexity</li>
+            <li>Make them unique to each account</li>
+            <li>Example: "Coffee!Mountain@Sunrise2025"</li>
+          </ul>
+          
+          <h2>You've Got This! 💪</h2>
+          
+          <p>Changing passwords after a breach is one of the most important security steps you can take. While it may seem overwhelming, your password manager will handle most of the complexity, allowing you to focus on staying secure.</p>
+          
+          <h3>Remember These Key Points</h3>
+          <ul>
+            <li><strong>Take your time</strong> - Rushing can lead to mistakes</li>
+            <li><strong>Be thorough</strong> - Don't skip any compromised accounts</li>
+            <li><strong>Stay organized</strong> - Keep track of which accounts you've updated</li>
+            <li><strong>Monitor for suspicious activity</strong> - Watch for unauthorized access</li>
+            <li><strong>Your future self will thank you</strong> - This effort protects you long-term</li>
+          </ul>
+          
+          <h3>Additional Resources</h3>
+          <p>If you need more help with password security:</p>
+          <ul>
+            <li>Check your password manager's help documentation</li>
+            <li>Enable breach notifications for early warning</li>
+            <li>Consider a security audit of all your accounts</li>
+            <li>Set up regular password change reminders</li>
+          </ul>
+          
+          <p><strong>Remember:</strong> You're taking control of your digital security, and that's something to be proud of. Every password you change makes you more secure and less vulnerable to future attacks.</p>
+        `,
+        keyTakeaways: [
+          'Change passwords immediately after discovering a breach',
+          'Use your password manager to generate strong, unique passwords',
+          'Enable two-factor authentication on all important accounts',
+          'Monitor accounts for suspicious activity after password changes',
+          'Consider this an opportunity to improve overall security posture'
+        ],
+        tips: [
+          'Use your password manager\'s security features to monitor for weak passwords',
+          'Enable 2FA on all accounts after changing passwords',
+          'Consider using passphrases for better security',
+          'Monitor your accounts closely for suspicious activity',
+          'Keep backup codes in a secure location'
+        ],
+        relatedLinks: [
+          { title: 'Creating Strong Passwords', guideId: 'guide-1' },
+          { title: 'Two-Factor Authentication Setup', guideId: 'guide-4' },
+          { title: 'Breach Check Security Module', checkId: '1-1-5' },
+          { title: 'Password Manager Setup', guideId: 'guide-4' }
+        ]
       }
       // Additional guides would continue here...
     ];

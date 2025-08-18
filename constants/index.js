@@ -4,6 +4,8 @@ export const APP_CONSTANTS = {
     AUDIT_COMPLETED: 'audit_completed',
     USER_PROGRESS: 'user_progress',
     COMPLETED_CHECKS: 'completed_checks',
+    DEVICE_AUDIT_COMPLETED: 'device_audit_completed',
+    USER_DEVICES: 'user_devices',
   },
   NAVIGATION: {
     INITIAL_ROUTES: {
@@ -25,6 +27,7 @@ export const APP_CONSTANTS = {
 // Screen names for navigation
 export const SCREEN_NAMES = {
   INITIAL_WELCOME: 'InitialWelcomeScreen',
+  DEVICE_AUDIT: 'DeviceAuditScreen',
   WELCOME: 'Welcome',
   CATEGORY: 'CategoryScreen',
   MODULE_LIST: 'ModuleListScreen',
