@@ -7,6 +7,12 @@ This directory contains all the course content for CyberPup in a structured, mai
 - `courseData.js` - Main data file containing all categories, modules, and lessons
 - `README.md` - This documentation file
 
+**Note:** The `insightsMock.js` file has been removed. Insights data is now managed through dedicated services:
+- `utils/guideService.js` - Guide content and metadata
+- `utils/toolService.js` - Tool content and metadata  
+- `utils/topicsService.js` - Topic filtering data
+- `utils/securityAlerts.js` - Security alerts from government sources
+
 ## Data Structure
 
 ### Categories

@@ -26,7 +26,7 @@ components/insights/
 └── ToolCard.js (tool cards)
 
 data/
-└── insightsMock.js (mock data)
+└── (removed - now using services)
 ```
 
 ## Features Implemented
@@ -76,11 +76,11 @@ data/
 - ETA indicator
 - CTA button for tool interaction
 
-### 5. Mock Data
-- **Alerts**: 4 security alerts with different types and topics
-- **Topics**: 10 security-related topics for filtering
-- **Guides**: 6 guides with different levels and types
-- **Tools**: 6 interactive tools with different types and ETAs
+### 5. Data Services
+- **Alerts**: Real security alerts from government sources via SecurityAlertsService
+- **Topics**: 12 security-related topics for filtering via TopicsService
+- **Guides**: Enhanced guides with full content via GuideService
+- **Tools**: Interactive tools with detailed descriptions via ToolService
 
 ## Navigation Integration
 

@@ -16,10 +16,16 @@ import { getStreakStats } from '../utils/streakStorage';
 import { SCREEN_NAMES } from '../constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import StickyGamificationBar from '../components/StickyGamificationBar';
+import StreakDetailsModal from './StreakDetailsScreen';
+import BadgesModal from './BadgesScreen';
+import CatalogueModal from '../components/CatalogueModal';
 
 const ProfileScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showStreakDetails, setShowStreakDetails] = useState(false);
+  const [showBadges, setShowBadges] = useState(false);
+  const [showCatalogue, setShowCatalogue] = useState(false);
   const [activityData, setActivityData] = useState({
     streak: {
       currentStreak: 0,
@@ -131,9 +137,9 @@ const ProfileScreen = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       {/* Sticky Gamification Bar */}
       <StickyGamificationBar
-        onMascotPress={() => navigation.navigate(SCREEN_NAMES.WELCOME)}
-        onStreakPress={() => {/* Already on profile screen */}}
-        onBadgesPress={() => {/* Already on profile screen */}}
+        onMascotPress={() => setShowCatalogue(true)}
+        onStreakPress={() => setShowStreakDetails(true)}
+        onBadgesPress={() => setShowBadges(true)}
       />
       
       <ScrollView 
@@ -154,23 +160,6 @@ const ProfileScreen = ({ navigation }) => {
             <Text style={styles.subtitle}>Your Cyber Security Journey</Text>
           </View>
 
-          {/* Device Management Section */}
-          <TouchableOpacity
-            style={styles.profileSection}
-            onPress={() => navigation.navigate(SCREEN_NAMES.DEVICE_AUDIT, { fromProfile: true })}
-          >
-            <View style={styles.profileSectionIcon}>
-              <Ionicons name="phone-portrait" size={24} color={Colors.accent} />
-            </View>
-            <View style={styles.profileSectionContent}>
-              <Text style={styles.profileSectionTitle}>Manage Devices</Text>
-              <Text style={styles.profileSectionDescription}>
-                Update your device list for personalized recommendations
-              </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
-          </TouchableOpacity>
-
           {isLoading ? (
             <View style={styles.loadingContainer}>
               <Text style={styles.loadingText}>Loading profile...</Text>
@@ -179,29 +168,6 @@ const ProfileScreen = ({ navigation }) => {
                           <>
                 {/* Activity Tracking Section */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Activity Tracking</Text>
-                
-                {/* Streak Card */}
-                <View style={[styles.activityCard, styles.activityCardPressable]}>
-                  <View style={styles.activityCardHeader}>
-                    <View style={[styles.activityIcon, { backgroundColor: Colors.orange + '20' }]}>
-                      <Ionicons name="flame" size={Responsive.iconSizes.medium} color={Colors.orange} />
-                    </View>
-                    <View style={styles.activityContent}>
-                      <Text style={styles.activityTitle}>Current Streak</Text>
-                      <Text style={styles.activitySubtitle}>
-                        {activityData.streak.nextMilestone 
-                          ? `${activityData.streak.nextMilestone.daysRemaining} days to ${activityData.streak.nextMilestone.title}`
-                          : 'Keep up the great work!'
-                        }
-                      </Text>
-                    </View>
-                  </View>
-                  <Text style={[styles.activityValue, { color: Colors.orange }]}>
-                    {activityData.streak.currentStreak} days
-                  </Text>
-                </View>
-
                 {/* Last Breach Check */}
                 {renderActivityCard(
                   'Last Breach Audit',
@@ -220,6 +186,16 @@ const ProfileScreen = ({ navigation }) => {
                   formatDate(activityData.lastMonthlyCheckup),
                   activityData.lastMonthlyCheckup ? Colors.success : Colors.textSecondary,
                   () => navigation.navigate(SCREEN_NAMES.WELCOME)
+                )}
+
+                {/* Device Management Section */}
+                {renderActivityCard(
+                  'Manage Devices',
+                  'Update your device list for personalized recommendations',
+                  'phone-portrait',
+                  '',
+                  Colors.accent,
+                  () => navigation.navigate(SCREEN_NAMES.DEVICE_AUDIT, { fromProfile: true })
                 )}
               </View>
 
@@ -264,6 +240,23 @@ const ProfileScreen = ({ navigation }) => {
             console.log('Already on profile screen');
           }
         }}
+      />
+
+      {/* Modal Components */}
+      <StreakDetailsModal
+        visible={showStreakDetails}
+        onClose={() => setShowStreakDetails(false)}
+      />
+      
+      <BadgesModal
+        visible={showBadges}
+        onClose={() => setShowBadges(false)}
+      />
+
+      <CatalogueModal
+        visible={showCatalogue}
+        onClose={() => setShowCatalogue(false)}
+        navigation={navigation}
       />
     </SafeAreaView>
   );

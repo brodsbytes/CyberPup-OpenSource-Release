@@ -195,7 +195,7 @@ export class GuideService {
       },
       {
         id: 'guide-2',
-        tag: 'PLAYBOOK',
+        tag: 'GUIDE',
         level: 'Essential',
         title: 'Setting Up Two-Factor Authentication',
         excerpt: 'Step-by-step guide to enabling 2FA on your most important accounts for enhanced security.',
@@ -768,7 +768,7 @@ export class GuideService {
       },
       {
         id: 'guide-4',
-        tag: 'PLAYBOOK',
+        tag: 'GUIDE',
         level: 'Essential',
         title: 'Password Manager Setup',
         excerpt: 'Complete walkthrough for setting up and using a password manager to secure all your accounts.',
@@ -1011,179 +1011,7 @@ export class GuideService {
           { title: 'Password Strength Checker Tool', toolId: 'tool-1' }
         ]
       },
-      {
-        id: 'guide-5',
-        tag: 'GUIDE',
-        level: 'Beginner',
-        title: 'Social Media Privacy Settings',
-        excerpt: 'How to configure your social media accounts for maximum privacy and security.',
-        readMinutes: 6,
-        topics: ['social-media', 'privacy'],
-        author: 'CyberPup Security Team',
-        publishedDate: '2025-01-05',
-        lastUpdated: '2025-01-15',
-        difficulty: 'Beginner',
-        fullContent: `
-          <h1>Social Media Privacy Settings: Protect Your Digital Identity</h1>
-          
-          <p>Social media platforms collect vast amounts of personal data and often share it with third parties. By properly configuring your privacy settings, you can significantly reduce your exposure while still enjoying social connections. This guide covers the essential privacy settings for major platforms.</p>
-          
-          <h2>Why Social Media Privacy Matters</h2>
-          
-          <h3>Common Privacy Risks</h3>
-          <ul>
-            <li><strong>Data harvesting:</strong> Companies collect and sell your personal information</li>
-            <li><strong>Identity theft:</strong> Criminals use posted information for fraud</li>
-            <li><strong>Location tracking:</strong> Your movements can be monitored and predicted</li>
-            <li><strong>Social engineering:</strong> Information used to hack other accounts</li>
-            <li><strong>Employment impact:</strong> Employers and colleges review social media</li>
-          </ul>
-          
-          <h2>Facebook Privacy Settings</h2>
-          
-          <h3>Profile Privacy</h3>
-          <ol>
-            <li>Settings → Privacy → Who can see your future posts → Friends</li>
-            <li>Who can see your friends list → Only me</li>
-            <li>Who can look you up using your email/phone → Friends</li>
-            <li>Do you want search engines to link to your profile → No</li>
-          </ol>
-          
-          <h3>Timeline and Tagging</h3>
-          <ul>
-            <li>Review posts you're tagged in before they appear → Enable</li>
-            <li>Who can post on your timeline → Friends</li>
-            <li>Review tags people add to your posts → Enable</li>
-          </ul>
-          
-          <h3>Apps and Websites</h3>
-          <ul>
-            <li>Remove old app permissions regularly</li>
-            <li>Turn off "Apps others use" to prevent data sharing</li>
-            <li>Disable website data sharing</li>
-          </ul>
-          
-          <h2>Instagram Privacy Settings</h2>
-          
-          <h3>Account Privacy</h3>
-          <ol>
-            <li>Settings → Privacy → Account Privacy → Private Account</li>
-            <li>Story Controls → Hide story from specific people</li>
-            <li>Comments → Filter offensive comments</li>
-            <li>Tags → Manually approve tags</li>
-          </ol>
-          
-          <h3>Activity Status</h3>
-          <ul>
-            <li>Settings → Privacy → Activity Status → Turn off</li>
-            <li>This prevents others from seeing when you're online</li>
-          </ul>
-          
-          <h2>Twitter/X Privacy Settings</h2>
-          
-          <h3>Privacy and Safety</h3>
-          <ol>
-            <li>Settings → Privacy and safety → Protect your posts</li>
-            <li>Photo tagging → No one can tag you</li>
-            <li>Discoverability → Prevent search engine indexing</li>
-            <li>Personalization → Limit ad tracking</li>
-          </ol>
-          
-          <h3>Data Sharing</h3>
-          <ul>
-            <li>Turn off all data sharing with business partners</li>
-            <li>Disable location information sharing</li>
-            <li>Limit interest-based advertising</li>
-          </ul>
-          
-          <h2>LinkedIn Privacy Settings</h2>
-          
-          <h3>Public Profile</h3>
-          <ol>
-            <li>Settings → Public profile → Customize your public profile</li>
-            <li>Limit visible information to basics only</li>
-            <li>Turn off public profile visibility in search engines</li>
-          </ol>
-          
-          <h3>Activity Broadcasts</h3>
-          <ul>
-            <li>Settings → Privacy → Share profile updates → No</li>
-            <li>This prevents notifications when you update your profile</li>
-          </ul>
-          
-          <h2>TikTok Privacy Settings</h2>
-          
-          <h3>Account Privacy</h3>
-          <ol>
-            <li>Settings → Privacy → Private account</li>
-            <li>Safety → Comments → Friends only</li>
-            <li>Safety → Duet and Stitch → Friends only</li>
-            <li>Safety → Downloads → Off</li>
-          </ol>
-          
-          <h3>Data Collection</h3>
-          <ul>
-            <li>Settings → Privacy → Personalization → Turn off ad personalization</li>
-            <li>Analytics Services → Opt out of analytics</li>
-          </ul>
-          
-          <h2>Universal Privacy Best Practices</h2>
-          
-          <h3>Information Sharing Guidelines</h3>
-          <ul>
-            <li><strong>Never share:</strong> Full birth date, phone number, home address</li>
-            <li><strong>Be cautious with:</strong> Location check-ins, vacation plans</li>
-            <li><strong>Think twice about:</strong> Family information, workplace details</li>
-            <li><strong>Avoid:</strong> Photos with personal information visible</li>
-          </ul>
-          
-          <h3>Photo and Location Safety</h3>
-          <ul>
-            <li>Turn off location services for social media apps</li>
-            <li>Remove metadata from photos before posting</li>
-            <li>Don't post vacation photos until you return</li>
-            <li>Be careful with background details in photos</li>
-          </ul>
-          
-          <h3>Friend and Connection Management</h3>
-          <ul>
-            <li>Only accept requests from people you know</li>
-            <li>Regularly review and remove inactive connections</li>
-            <li>Be wary of fake profiles and catfishing</li>
-            <li>Use different privacy levels for different groups</li>
-          </ul>
-          
-          <h2>Advanced Privacy Techniques</h2>
-          
-          <h3>Regular Privacy Audits</h3>
-          <ol>
-            <li>Monthly: Review recent posts and tagged photos</li>
-            <li>Quarterly: Update privacy settings and review connections</li>
-            <li>Annually: Complete privacy checkup on all platforms</li>
-          </ol>
-          
-          <h3>Data Download and Deletion</h3>
-          <ul>
-            <li>Download your data to see what platforms have collected</li>
-            <li>Delete old posts that might be problematic</li>
-            <li>Remove personal information from bio sections</li>
-            <li>Consider deleting accounts you no longer use</li>
-          </ul>
-          
-          <p><strong>Remember:</strong> Privacy settings change frequently. Check your settings quarterly and stay informed about platform updates that might affect your privacy.</p>
-        `,
-        keyTakeaways: [
-          'Set all social media accounts to private by default',
-          'Regularly review and limit who can see your posts and information',
-          'Turn off location services and data sharing with third parties',
-          'Be mindful of what personal information you share in posts',
-          'Conduct quarterly privacy audits of all your social media accounts'
-        ],
-        relatedLinks: [
-          { title: 'Privacy Settings Scanner Tool', toolId: 'tool-5' },
-          { title: 'Online Safety Best Practices', checkId: '1-1-1' }
-        ]
-      },
+
       {
         id: 'guide-7',
         tag: 'GUIDE',

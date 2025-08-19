@@ -8,7 +8,8 @@ import {
 } from 'react-native';
 import { Colors, Responsive, Typography } from '../../theme';
 import { SCREEN_NAMES } from '../../constants';
-import { topics, guides } from '../../data/insightsMock';
+import { GuideService } from '../../utils/guideService';
+import { TopicsService } from '../../utils/topicsService';
 import { SecurityAlertsService } from '../../utils/securityAlerts';
 import { LocationUtils } from '../../utils/locationUtils';
 
@@ -62,6 +63,7 @@ const LearnTabContent = ({ query, navigation }) => {
 
   // Filter guides based on query and selected topics
   const filteredGuides = useMemo(() => {
+    const guides = GuideService.getEnhancedGuides();
     return guides.filter(guide => {
       const matchesQuery = !query || 
         guide.title.toLowerCase().includes(query.toLowerCase()) ||
@@ -162,7 +164,7 @@ const LearnTabContent = ({ query, navigation }) => {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.topicsContainer}
       >
-        {topics.map(topic => (
+        {TopicsService.getAllTopics().map(topic => (
           <TopicChip
             key={topic.id}
             label={topic.label}

@@ -10,9 +10,10 @@ import {
 } from 'react-native';
 import { Colors, Responsive, Typography } from '../../theme';
 import { SCREEN_NAMES } from '../../constants';
-import { topics, guides } from '../../data/insightsMock'; // Keep topics and guides
-import { SecurityAlertsService } from '../../utils/securityAlerts'; // New import
-import { LocationUtils } from '../../utils/locationUtils'; // Country detection
+import { GuideService } from '../../utils/guideService';
+import { TopicsService } from '../../utils/topicsService';
+import { SecurityAlertsService } from '../../utils/securityAlerts';
+import { LocationUtils } from '../../utils/locationUtils';
 
 import SectionHeader from '../../components/insights/SectionHeader';
 import AlertCard from '../../components/insights/AlertCard';
@@ -90,6 +91,7 @@ const LearnTab = ({ query, navigation, scrollRef, scrollPosition, onScrollPositi
 
   // Filter guides based on query and selected topics
   const filteredGuides = useMemo(() => {
+    const guides = GuideService.getEnhancedGuides();
     return guides.filter(guide => {
       const matchesQuery = !query || 
         guide.title.toLowerCase().includes(query.toLowerCase()) ||
@@ -238,7 +240,7 @@ const LearnTab = ({ query, navigation, scrollRef, scrollPosition, onScrollPositi
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.topicsContainer}
       >
-        {topics.map(topic => (
+        {TopicsService.getAllTopics().map(topic => (
           <TopicChip
             key={topic.id}
             label={topic.label}

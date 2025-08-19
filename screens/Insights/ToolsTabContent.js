@@ -8,7 +8,8 @@ import {
 } from 'react-native';
 import { Colors, Responsive, Typography } from '../../theme';
 import { SCREEN_NAMES } from '../../constants';
-import { topics, tools } from '../../data/insightsMock';
+import { ToolService } from '../../utils/toolService';
+import { TopicsService } from '../../utils/topicsService';
 import { SecurityAlertsService } from '../../utils/securityAlerts';
 import { LocationUtils } from '../../utils/locationUtils';
 import SectionHeader from '../../components/insights/SectionHeader';
@@ -61,6 +62,7 @@ const ToolsTabContent = ({ query, navigation }) => {
 
   // Filter tools based on query and selected topics
   const filteredTools = useMemo(() => {
+    const tools = ToolService.getEnhancedTools();
     return tools.filter(tool => {
       const matchesQuery = !query || 
         tool.title.toLowerCase().includes(query.toLowerCase()) ||
@@ -160,7 +162,7 @@ const ToolsTabContent = ({ query, navigation }) => {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.topicsContainer}
       >
-        {topics.map(topic => (
+        {TopicsService.getAllTopics().map(topic => (
           <TopicChip
             key={topic.id}
             label={topic.label}

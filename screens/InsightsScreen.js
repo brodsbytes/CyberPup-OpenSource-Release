@@ -17,11 +17,17 @@ import LearnTabContent from './Insights/LearnTabContent';
 import ToolsTabContent from './Insights/ToolsTabContent';
 import { SCREEN_NAMES } from '../constants';
 import StickyGamificationBar from '../components/StickyGamificationBar';
+import StreakDetailsModal from './StreakDetailsScreen';
+import BadgesModal from './BadgesScreen';
+import CatalogueModal from '../components/CatalogueModal';
 
 const InsightsScreen = ({ navigation }) => {
   const [tab, setTab] = useState(0); // 0 = Learn, 1 = Tools
   const [query, setQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const [showStreakDetails, setShowStreakDetails] = useState(false);
+  const [showBadges, setShowBadges] = useState(false);
+  const [showCatalogue, setShowCatalogue] = useState(false);
 
   const segments = ['Learn', 'Tools'];
 
@@ -52,9 +58,9 @@ const InsightsScreen = ({ navigation }) => {
       
       {/* Sticky Gamification Bar */}
       <StickyGamificationBar
-        onMascotPress={() => navigation.navigate(SCREEN_NAMES.WELCOME)}
-        onStreakPress={() => navigation.navigate(SCREEN_NAMES.PROFILE)}
-        onBadgesPress={() => navigation.navigate(SCREEN_NAMES.PROFILE)}
+        onMascotPress={() => setShowCatalogue(true)}
+        onStreakPress={() => setShowStreakDetails(true)}
+        onBadgesPress={() => setShowBadges(true)}
       />
       
       {/* Sticky Header */}
@@ -126,6 +132,23 @@ const InsightsScreen = ({ navigation }) => {
       <BottomNavigation 
         activeTab="insights"
         onTabPress={handleTabPress}
+      />
+
+      {/* Modal Components */}
+      <StreakDetailsModal
+        visible={showStreakDetails}
+        onClose={() => setShowStreakDetails(false)}
+      />
+      
+      <BadgesModal
+        visible={showBadges}
+        onClose={() => setShowBadges(false)}
+      />
+
+      <CatalogueModal
+        visible={showCatalogue}
+        onClose={() => setShowCatalogue(false)}
+        navigation={navigation}
       />
     </SafeAreaView>
   );
