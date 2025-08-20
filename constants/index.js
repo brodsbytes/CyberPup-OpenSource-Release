@@ -41,6 +41,7 @@ export const SCREEN_NAMES = {
   CHECK_1_2_HIGH_VALUE_ACCOUNTS: 'Check1_2_HighValueAccountsScreen',
   CHECK_1_3_PASSWORD_MANAGERS: 'Check1_3_PasswordManagersScreen',
   CHECK_1_4_MFA_SETUP: 'Check1_4_MFASetupScreen',
+  CHECK_1_4_1_SCAM_RECOGNITION: 'Check1_4_1_ScamRecognitionScreen',
   CHECK_1_5_BREACH_CHECK: 'Check1_5_BreachCheckScreen',
   CHECK_1_2_1_SCREEN_LOCK: 'Check1_2_1_ScreenLockScreen',
   PHISHING_PRACTICE: 'PhishingPracticeScreen',

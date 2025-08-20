@@ -18,6 +18,7 @@ import {
   Check1_2_HighValueAccountsScreen,
   Check1_3_PasswordManagersScreen,
   Check1_4_MFASetupScreen,
+  Check1_4_1_ScamRecognitionScreen,
   Check1_5_BreachCheckScreen,
   Check1_2_1_ScreenLockScreen,
   // Reusable components
@@ -99,6 +100,7 @@ export default function App() {
         <Stack.Screen name={SCREEN_NAMES.CHECK_1_2_HIGH_VALUE_ACCOUNTS} component={Check1_2_HighValueAccountsScreen} />
         <Stack.Screen name={SCREEN_NAMES.CHECK_1_3_PASSWORD_MANAGERS} component={Check1_3_PasswordManagersScreen} />
         <Stack.Screen name={SCREEN_NAMES.CHECK_1_4_MFA_SETUP} component={Check1_4_MFASetupScreen} />
+        <Stack.Screen name={SCREEN_NAMES.CHECK_1_4_1_SCAM_RECOGNITION} component={Check1_4_1_ScamRecognitionScreen} />
         <Stack.Screen name={SCREEN_NAMES.CHECK_1_5_BREACH_CHECK} component={Check1_5_BreachCheckScreen} />
         <Stack.Screen name={SCREEN_NAMES.CHECK_1_2_1_SCREEN_LOCK} component={Check1_2_1_ScreenLockScreen} />
         <Stack.Screen name={SCREEN_NAMES.PHISHING_PRACTICE} component={PhishingPracticeScreen} />

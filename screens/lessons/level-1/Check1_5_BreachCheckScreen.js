@@ -18,6 +18,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
 import { BreachCheckService } from '../../../utils/breachCheckService';
+import InteractiveValidationFlow from '../../../components/InteractiveValidationFlow';
+import BreachCheckStep from '../../../components/validation-steps/BreachCheckStep';
 
 const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
 
@@ -47,6 +49,10 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
   const [breachResult, setBreachResult] = useState(null);
   const [showBreachModal, setShowBreachModal] = useState(false);
   
+  // Pattern C - Interactive flow state (always enabled)
+  const [useInteractiveFlow, setUseInteractiveFlow] = useState(true);
+  const [flowCompleted, setFlowCompleted] = useState(false);
+  
 
 
   useEffect(() => {
@@ -72,6 +78,7 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
         setIsCompleted(data.isCompleted || false);
         setEmail(data.email || '');
         setBreachResult(data.breachResult || null);
+        setFlowCompleted(data.flowCompleted || false);
         console.log('📊 Loaded progress data:', { isCompleted: data.isCompleted, checklistItems: data.checklistItems?.length });
       }
       
@@ -79,6 +86,7 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
       if (completedData === 'completed') {
         console.log('✅ Check 1.1.5 is marked as completed in storage');
         setIsCompleted(true);
+        setFlowCompleted(true);
       }
       
 
@@ -97,6 +105,7 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
         isCompleted: completionStatus,
         email,
         breachResult,
+        flowCompleted,
         completedAt: new Date().toISOString(),
       };
       await AsyncStorage.setItem('check_1-1-5_progress', JSON.stringify(progressData));
@@ -310,7 +319,57 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
     navigation.navigate('Welcome');
   };
 
+  // Pattern C - Interactive Flow Configuration
+  const interactiveFlowSteps = [
+    {
+      id: 'breach-check',
+      type: 'email-breach-check',
+      title: 'Check for Data Breaches',
+      description: 'Enter your email to see if it appears in known data breaches',
+      component: BreachCheckStep,
+      allowSkip: false
+    }
+  ];
 
+  const handleFlowComplete = async (flowSummary) => {
+    console.log('🎯 Interactive flow completed:', flowSummary);
+    
+    setFlowCompleted(true);
+    
+    // Auto-complete the first checklist item
+    const updatedItems = checklistItems.map(item =>
+      item.id === 1 ? { ...item, completed: true } : item
+    );
+    setChecklistItems(updatedItems);
+    
+    // Mark the check as completed
+    const newIsCompleted = true;
+    setIsCompleted(newIsCompleted);
+    
+    // Save progress
+    await saveProgress(updatedItems, newIsCompleted);
+    
+    // Show completion celebration
+    celebrateCompletion();
+  };
+
+  const handleStepComplete = (stepId, validationResult) => {
+    console.log('📋 Step completed:', stepId, validationResult);
+    
+    if (stepId === 'breach-check') {
+      console.log('🔍 Breach check step completed, validation result:', {
+        isValid: validationResult.isValid,
+        feedback: validationResult.feedback,
+        hasBreachResult: !!validationResult.feedback?.breachResult
+      });
+      
+      if (validationResult.isValid) {
+        console.log('✅ Breach check validation passed');
+      } else {
+        console.log('❌ Breach check validation failed:', validationResult.feedback);
+      }
+    }
+  };
 
   const renderChecklistItem = (item) => (
     <Animated.View
@@ -494,120 +553,64 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
               Find out if your information has been compromised in data breaches and take action to protect your accounts.
             </Text>
           </View>
+          
 
-          {/* Learn More Section */}
-          <TouchableOpacity
-            style={styles.learnMoreButton}
-            onPress={() => setShowLearnMore(!showLearnMore)}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.learnMoreText}>Why check for data breaches?</Text>
-            <Ionicons
-              name={showLearnMore ? 'chevron-up' : 'chevron-down'}
-              size={Responsive.iconSizes.medium}
-              color={Colors.accent}
-            />
-          </TouchableOpacity>
-
-          {showLearnMore && (
-            <View style={styles.learnMoreContent}>
-              <Text style={styles.learnMoreTitle}>Data Breach Risks</Text>
-              <Text style={styles.learnMoreBody}>
-                • Stolen passwords can be used to access your accounts{'\n'}
-                • Personal information can be used for identity theft{'\n'}
-                • Breached data is often sold on the dark web{'\n'}
-                • Early detection helps minimize damage{'\n'}
-                • Regular checks help you stay ahead of threats
-              </Text>
+          
+          {/* Interactive Flow */}
+          {!flowCompleted ? (
+            <View style={styles.interactiveFlowContainer}>
+              <InteractiveValidationFlow
+                flowId="breach-check-1-5"
+                steps={interactiveFlowSteps}
+                onComplete={handleFlowComplete}
+                onStepComplete={handleStepComplete}
+                navigation={navigation}
+                config={{
+                  enableScoring: true,
+                  enableTiming: true,
+                  passingScore: 100
+                }}
+              />
+            </View>
+          ) : (
+            <View style={styles.completedFlowContent}>
+              {/* Show summary of completed flow */}
+              <View style={styles.completedSummary}>
+                <Ionicons name="checkmark-circle" size={Responsive.iconSizes.xxlarge} color={Colors.success} />
+                <Text style={styles.completedTitle}>Breach Check Complete!</Text>
+                <Text style={styles.completedDescription}>
+                  You've successfully completed the interactive breach check. Your email has been verified and you're now better protected.
+                </Text>
+                
+                {/* Tool link card */}
+                <TouchableOpacity
+                  style={styles.toolCard}
+                  onPress={() => {
+                    console.log('🔗 Navigating to tool-2 (additional email checking)');
+                    navigation.navigate('ToolDetailScreen', { id: 'tool-2' });
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="mail" size={Responsive.iconSizes.medium} color={Colors.accent} />
+                  <View style={styles.toolCardContent}>
+                    <Text style={styles.toolCardTitle}>Check More Emails</Text>
+                    <Text style={styles.toolCardDescription}>
+                      You can check your other email addresses anytime in the Insights tab
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={Responsive.iconSizes.medium} color={Colors.accent} />
+                </TouchableOpacity>
+              </View>
             </View>
           )}
-
-          {/* Breach Checker Section */}
-          <View style={styles.breachCheckerSection}>
-            <Text style={styles.breachCheckerTitle}>Check Your Email</Text>
-            <Text style={styles.breachCheckerSubtitle}>
-              Enter your email address to check if it appears in known data breaches
-            </Text>
-            
-            <View style={styles.emailInputContainer}>
-              <TextInput
-                style={styles.emailInput}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Enter your email address"
-                placeholderTextColor={Colors.textSecondary}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-              <TouchableOpacity
-                style={[
-                  styles.checkButton,
-                  (!email || isCheckingBreach) && styles.checkButtonDisabled
-                ]}
-                onPress={checkBreach}
-                disabled={!email || isCheckingBreach}
-                activeOpacity={0.8}
-              >
-                {isCheckingBreach ? (
-                  <ActivityIndicator size="small" color={Colors.textPrimary} />
-                ) : (
-                  <Text style={styles.checkButtonText}>Check</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-
-            {breachResult && (
-              <View style={[
-                styles.breachResultCard,
-                { backgroundColor: breachResult.isBreached ? Colors.warningSoft : Colors.accentSoft }
-              ]}>
-                <Ionicons 
-                  name={breachResult.isBreached ? "warning" : "checkmark-circle"} 
-                  size={Responsive.iconSizes.large} 
-                  color={breachResult.isBreached ? Colors.warning : Colors.accent} 
-                />
-                <Text style={styles.breachResultText}>
-                  {breachResult.message}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          {/* Checklist Section */}
-          <View style={styles.checklistSection}>
-            <Text style={styles.checklistTitle}>Breach Response Checklist</Text>
-            <Text style={styles.checklistSubtitle}>
-              Complete these steps to secure any compromised accounts
-            </Text>
-            
-            {checklistItems.map(renderChecklistItem)}
-          </View>
-
-          {/* Tips Section */}
-          <View style={styles.tipsSection}>
-            <Text style={styles.tipsTitle}>💡 Security Tips</Text>
-            <View style={styles.tipItem}>
-              <Ionicons name="shield-checkmark" size={Responsive.iconSizes.medium} color={Colors.accent} />
-              <Text style={styles.tipText}>Check for breaches regularly, especially after major incidents</Text>
-            </View>
-            <View style={styles.tipItem}>
-              <Ionicons name="key" size={Responsive.iconSizes.medium} color={Colors.accent} />
-              <Text style={styles.tipText}>Use unique passwords for each account to limit damage</Text>
-            </View>
-            <View style={styles.tipItem}>
-              <Ionicons name="notifications" size={Responsive.iconSizes.medium} color={Colors.accent} />
-              <Text style={styles.tipText}>Enable breach notifications on your password manager</Text>
-            </View>
-          </View>
-
+          
           {/* Completion Status */}
           {isCompleted && (
             <View style={styles.completionCard}>
               <Ionicons name="checkmark-circle" size={Responsive.iconSizes.xxlarge} color={Colors.accent} />
               <Text style={styles.completionTitle}>Check Complete!</Text>
               <Text style={styles.completionText}>
-                You've successfully checked for data breaches and secured any compromised accounts. Great job protecting your digital identity!
+                You completed the interactive breach check! Great job protecting your digital identity.
               </Text>
               
               <TouchableOpacity
@@ -1055,6 +1058,66 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
+  },
+  
+  // Interactive Flow Styles
+  interactiveFlowContainer: {
+    flex: 1,
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.xlarge,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+    minHeight: 400,
+  },
+  completedFlowContent: {
+    marginBottom: Responsive.spacing.lg,
+  },
+  completedSummary: {
+    backgroundColor: Colors.successSoft,
+    borderRadius: Responsive.borderRadius.xlarge,
+    padding: Responsive.padding.card,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.success,
+  },
+  completedTitle: {
+    fontSize: Typography.sizes.xl,
+    fontWeight: Typography.weights.bold,
+    color: Colors.textPrimary,
+    marginTop: Responsive.spacing.sm,
+    marginBottom: Responsive.spacing.sm,
+    textAlign: 'center',
+  },
+  completedDescription: {
+    fontSize: Typography.sizes.md,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: Typography.sizes.md * 1.4,
+    marginBottom: Responsive.spacing.lg,
+  },
+  toolCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.accentSoft,
+    borderRadius: Responsive.borderRadius.medium,
+    padding: Responsive.spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.accent,
+    gap: Responsive.spacing.sm,
+  },
+  toolCardContent: {
+    flex: 1,
+  },
+  toolCardTitle: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.xs,
+  },
+  toolCardDescription: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    lineHeight: Typography.sizes.sm * 1.3,
   },
 
 });
