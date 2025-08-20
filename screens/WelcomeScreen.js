@@ -156,7 +156,7 @@ const WelcomeScreen = ({ navigation }) => {
         let isCompleted = false;
         let progressPercentage = 0;
 
-        // Check for completion using new check keys
+        // Check for completion using check keys with dash format
         const progressKey = `check_${check.id}_completed`;
         const progressData = await AsyncStorage.getItem(progressKey);
         

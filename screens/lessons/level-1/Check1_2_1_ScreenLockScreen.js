@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -8,158 +9,321 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
-  Animated,
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
+import { DeviceCapabilities } from '../../../utils/deviceCapabilities';
+import CollapsibleDeviceSection from '../../../components/CollapsibleDeviceSection';
+import { SettingsGuide } from '../../../utils/settingsGuide';
+import * as Haptics from 'expo-haptics';
 
+/**
+ * Check1_2_1_ScreenLockScreen - Pattern B Implementation
+ * 
+ * Enhanced screen lock setup with device-specific deep links and guided
+ * security configuration. Applies Phase 1 lessons:
+ * - User-controlled verification flows
+ * - Platform-specific deep links with fallbacks
+ * - Contextual security recommendations
+ * - Proper progress persistence
+ */
 const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
-
-  
-  const [checklistItems, setChecklistItems] = useState([
-    {
-      id: 1,
-      text: 'My phone auto-locks after inactivity',
-      completed: false,
-      action: 'openScreenLockSettings',
-    },
-    {
-      id: 2,
-      text: 'I use a strong PIN/passphrase',
-      completed: false,
-      action: 'openSecuritySettings',
-    },
-  ]);
-  const [showLearnMore, setShowLearnMore] = useState(false);
+  // Core state
+  const [userDevices, setUserDevices] = useState([]);
+  const [deviceActions, setDeviceActions] = useState({});
   const [isCompleted, setIsCompleted] = useState(false);
-  const [scaleAnim] = useState(new Animated.Value(1));
   const [showExitModal, setShowExitModal] = useState(false);
+  const [showLearnMore, setShowLearnMore] = useState(false);
+
+  // Track completion per device
+  const [deviceCompletionStatus, setDeviceCompletionStatus] = useState({});
 
   useEffect(() => {
+    initializeDeviceContent();
     loadProgress();
   }, []);
 
-  // Add focus listener to refresh progress when returning to this screen
   useFocusEffect(
     React.useCallback(() => {
       loadProgress();
     }, [])
   );
 
+  const initializeDeviceContent = async () => {
+    try {
+      // Get user's registered devices
+      const devices = await DeviceCapabilities.getUserDevices();
+      const currentDevice = DeviceCapabilities.getCurrentDevice();
+      
+      // Add current device if not already in the list
+      let allDevices = [...devices];
+      const hasCurrentDevice = devices.some(d => 
+        d.platform === currentDevice.platform && d.type === currentDevice.type
+      );
+      
+      if (!hasCurrentDevice) {
+        allDevices.unshift({
+          id: 'current-device',
+          name: currentDevice.type,
+          type: currentDevice.platform === 'ios' || currentDevice.platform === 'android' ? 'mobile' : 'computer',
+          platform: currentDevice.platform,
+          tier2: currentDevice.platform,
+          autoDetected: true,
+          supportsDeepLinks: currentDevice.supportsDeepLinks,
+          settingsUrl: currentDevice.settingsUrl,
+          icon: getDeviceIcon(currentDevice)
+        });
+      }
+
+      setUserDevices(allDevices);
+
+      // Create device-specific actions for screen lock setup
+      const actions = {};
+      for (const device of allDevices) {
+        actions[device.id] = await createScreenLockActions(device);
+      }
+      setDeviceActions(actions);
+
+    } catch (error) {
+      console.error('Error initializing device content:', error);
+      // Fallback to current device only
+      const currentDevice = DeviceCapabilities.getCurrentDevice();
+      const fallbackDevice = {
+        id: 'current-device',
+        name: currentDevice.type,
+        platform: currentDevice.platform,
+        autoDetected: true,
+        supportsDeepLinks: currentDevice.supportsDeepLinks,
+        settingsUrl: currentDevice.settingsUrl
+      };
+      setUserDevices([fallbackDevice]);
+      setDeviceActions({
+        'current-device': await createScreenLockActions(fallbackDevice)
+      });
+    }
+  };
+
+  const createScreenLockActions = async (device) => {
+    const platform = device.platform || device.tier2;
+    const settingsGuide = SettingsGuide.createGuidance('security', device);
+    const deviceContent = DeviceCapabilities.getDeviceContent('screen-lock', platform);
+
+    const actions = [
+      {
+        id: `${device.id}-enable-lock`,
+        title: 'Enable Screen Lock',
+        description: 'Set up a secure screen lock (PIN, password, pattern, or biometric)',
+        completed: false,
+        steps: deviceContent?.steps || [
+          'Open Settings',
+          'Navigate to Security settings',
+          'Set up screen lock method',
+          'Choose a strong PIN or password'
+        ],
+        deepLink: deviceContent?.deepLink || settingsGuide.deepLink.url,
+        verification: 'settings_check',
+        priority: 'high'
+      },
+      {
+        id: `${device.id}-auto-lock`,
+        title: 'Configure Auto-Lock Timer',
+        description: 'Set device to lock automatically after a short period of inactivity',
+        completed: false,
+        steps: platform === 'ios' ? [
+          'Open Settings',
+          'Tap Face ID & Passcode (or Touch ID & Passcode)',
+          'Tap Auto-Lock',
+          'Select "30 seconds" or "1 minute"'
+        ] : platform === 'android' ? [
+          'Open Settings',
+          'Tap Security & Privacy',
+          'Tap Screen Lock',
+          'Set Auto-lock to 30 seconds or 1 minute'
+        ] : [
+          'Open Settings or System Preferences',
+          'Navigate to security settings',
+          'Find sleep/lock timer settings',
+          'Set to lock after 1-5 minutes of inactivity'
+        ],
+        deepLink: deviceContent?.deepLink,
+        verification: 'settings_check',
+        priority: 'high'
+      }
+    ];
+
+    // Add biometric setup if supported
+    const biometricCapability = DeviceCapabilities.getDeviceCapability('biometric');
+    if (biometricCapability.supported) {
+      actions.push({
+        id: `${device.id}-biometric`,
+        title: `Set Up ${platform === 'ios' ? 'Face ID/Touch ID' : 'Biometric Unlock'}`,
+        description: 'Enable biometric authentication for quick and secure access',
+        completed: false,
+        steps: platform === 'ios' ? [
+          'Open Settings',
+          'Tap Face ID & Passcode (or Touch ID & Passcode)',
+          'Set up Face ID or Touch ID',
+          'Test the biometric authentication'
+        ] : platform === 'android' ? [
+          'Open Settings',
+          'Tap Security & Privacy',
+          'Tap Fingerprint or Face unlock',
+          'Follow the setup instructions'
+        ] : [
+          'Open security settings',
+          'Look for biometric options',
+          'Set up available biometric authentication',
+          'Test the setup'
+        ],
+        deepLink: biometricCapability.settingsPath,
+        verification: 'manual',
+        priority: 'medium'
+      });
+    }
+
+    return actions;
+  };
+
+  const getDeviceIcon = (device) => {
+    const iconMap = {
+      'iPhone': 'phone-portrait',
+      'iPad': 'tablet-portrait',
+      'Android Phone': 'phone-portrait',
+      'Android Tablet': 'tablet-portrait',
+      'MacBook': 'laptop',
+      'iMac': 'desktop',
+      'Windows': 'laptop',
+      'Computer': 'desktop',
+    };
+    return iconMap[device.type] || 'phone-portrait';
+  };
+
   const loadProgress = async () => {
     try {
       const progressData = await AsyncStorage.getItem('check_1-2-1_progress');
+      const completedData = await AsyncStorage.getItem('check_1-2-1_completed');
+      
       if (progressData) {
         const data = JSON.parse(progressData);
-        setChecklistItems(data.checklistItems || checklistItems);
         setIsCompleted(data.isCompleted || false);
+        setDeviceCompletionStatus(data.deviceCompletionStatus || {});
+        
+        // Restore action completion states
+        if (data.deviceActions) {
+          setDeviceActions(prev => {
+            const updated = { ...prev };
+            Object.keys(data.deviceActions).forEach(deviceId => {
+              if (updated[deviceId]) {
+                updated[deviceId] = updated[deviceId].map(action => {
+                  const savedAction = data.deviceActions[deviceId].find(a => a.id === action.id);
+                  return savedAction ? { ...action, completed: savedAction.completed } : action;
+                });
+              }
+            });
+            return updated;
+          });
+        }
+      }
+      
+      if (completedData === 'completed') {
+        setIsCompleted(true);
       }
     } catch (error) {
-      console.log('Error loading progress:', error);
+      console.error('Error loading progress:', error);
     }
   };
 
   const saveProgress = async () => {
     try {
       const progressData = {
-        checklistItems,
         isCompleted,
+        deviceCompletionStatus,
+        deviceActions,
         completedAt: new Date().toISOString(),
       };
+      
       await AsyncStorage.setItem('check_1-2-1_progress', JSON.stringify(progressData));
       
       if (isCompleted) {
         await AsyncStorage.setItem('check_1-2-1_completed', 'completed');
+      } else {
+        await AsyncStorage.removeItem('check_1-2-1_completed');
       }
     } catch (error) {
-      console.log('Error saving progress:', error);
+      console.error('Error saving progress:', error);
     }
   };
 
-  const toggleChecklistItem = async (id) => {
-    const updatedItems = checklistItems.map(item =>
-      item.id === id ? { ...item, completed: !item.completed } : item
-    );
-    setChecklistItems(updatedItems);
-
-    // Animate the checkbox
-    Animated.sequence([
-      Animated.timing(scaleAnim, {
-        toValue: 1.2,
-        duration: 100,
-        useNativeDriver: false,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: false,
-      }),
-    ]).start();
-
-    // Check if all items are completed
-    const allCompleted = updatedItems.every(item => item.completed);
-    if (allCompleted && !isCompleted) {
-      setIsCompleted(true);
-      celebrateCompletion();
+  const handleActionComplete = async (deviceId, actionId, completed) => {
+    // Update action completion status
+    const updatedDeviceActions = { ...deviceActions };
+    if (updatedDeviceActions[deviceId]) {
+      updatedDeviceActions[deviceId] = updatedDeviceActions[deviceId].map(action =>
+        action.id === actionId ? { ...action, completed } : action
+      );
     }
+    setDeviceActions(updatedDeviceActions);
 
-    await saveProgress();
+    // Check if all actions for this device are completed
+    const deviceCompleted = updatedDeviceActions[deviceId]?.every(action => action.completed) || false;
+    
+    // Update device completion status
+    const updatedDeviceCompletionStatus = {
+      ...deviceCompletionStatus,
+      [deviceId]: deviceCompleted
+    };
+    setDeviceCompletionStatus(updatedDeviceCompletionStatus);
+
+    // Check if all devices are completed
+    const allDevicesCompleted = userDevices.every(device => {
+      return updatedDeviceCompletionStatus[device.id] === true;
+    });
+
+    if (allDevicesCompleted && !isCompleted) {
+      setIsCompleted(true);
+      if (Haptics?.impactAsync) {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      }
+      
+      // Save progress immediately with the new completion status
+      setTimeout(async () => {
+        try {
+          const progressData = {
+            isCompleted: true,
+            deviceCompletionStatus: updatedDeviceCompletionStatus,
+            deviceActions: updatedDeviceActions,
+            completedAt: new Date().toISOString(),
+          };
+          
+          await AsyncStorage.setItem('check_1-2-1_progress', JSON.stringify(progressData));
+          await AsyncStorage.setItem('check_1-2-1_completed', 'completed');
+        } catch (error) {
+          console.error('Error saving completion progress:', error);
+        }
+      }, 50);
+      
+      celebrateCompletion();
+    } else {
+      // Save progress for partial completion
+      setTimeout(saveProgress, 100);
+    }
   };
 
   const celebrateCompletion = () => {
     Alert.alert(
-      '🎉 Check Complete!',
-      'Excellent! You\'ve secured your device with proper screen lock settings. This is the first line of defense for your device.',
+      '🔒 Screen Lock Setup Complete!',
+      'Excellent! You\'ve secured your devices with proper screen locks. This prevents unauthorized access if your device is lost or stolen.',
       [
         {
           text: 'Continue to Next Check',
-          onPress: () => {
-            // Navigate to the next check (Check 1.2.2)
-            navigation.navigate('Check1_2_2_RemoteLockScreen');
-          },
+          onPress: () => navigation.navigate('Check1_3_PasswordManagersScreen'),
         },
         {
           text: 'Go Back',
           style: 'cancel',
-          onPress: () => {
-            // Force refresh of WelcomeScreen progress
-            navigation.navigate('Welcome');
-          },
-        },
-      ]
-    );
-  };
-
-  const openScreenLockSettings = () => {
-    Alert.alert(
-      'Set Auto-Lock',
-      'To set your phone to auto-lock:\n\n1. Open Settings > Display & Brightness\n2. Tap "Auto-Lock"\n3. Choose a short time (30 seconds or 1 minute)\n4. This ensures your phone locks quickly when not in use',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'I\'ve Done This',
-          onPress: () => {
-            toggleChecklistItem(1);
-          },
-        },
-      ]
-    );
-  };
-
-  const openSecuritySettings = () => {
-    Alert.alert(
-      'Set Strong PIN/Passphrase',
-      'To set a strong PIN or passphrase:\n\n1. Open Settings > Face ID & Passcode (iOS) or Security (Android)\n2. Tap "Change Passcode" or "Screen Lock"\n3. Choose a 6-digit PIN or custom passphrase\n4. Avoid common patterns like 123456 or your birthday',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'I\'ve Done This',
-          onPress: () => {
-            toggleChecklistItem(2);
-          },
+          onPress: () => navigation.navigate('Welcome'),
         },
       ]
     );
@@ -178,49 +342,20 @@ const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
     navigation.navigate('Welcome');
   };
 
-  const renderChecklistItem = (item) => (
-    <Animated.View
-      key={item.id}
-      style={[
-        styles.checklistItem,
-        item.completed && styles.checklistItemCompleted,
-        { transform: [{ scale: scaleAnim }] }
-      ]}
-    >
-      <TouchableOpacity
-        style={styles.checklistRow}
-        onPress={() => toggleChecklistItem(item.id)}
-        activeOpacity={0.7}
-        disabled={item.action} // Disable if it has an action button
-      >
-        <View style={[styles.checkbox, item.completed && styles.checkboxCompleted]}>
-          {item.completed && (
-            <Ionicons name="checkmark" size={Responsive.iconSizes.small} color={Colors.textPrimary} />
-          )}
-        </View>
-        <Text style={[styles.checklistText, item.completed && styles.checklistTextCompleted]}>
-          {item.text}
-        </Text>
-      </TouchableOpacity>
-      
-      {item.action && !item.completed && (
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => {
-            if (item.action === 'openScreenLockSettings') {
-              openScreenLockSettings();
-            } else if (item.action === 'openSecuritySettings') {
-              openSecuritySettings();
-            }
-          }}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.actionButtonText}>I did it</Text>
-                      <Ionicons name="arrow-forward" size={Responsive.iconSizes.small} color={Colors.accent} />
-        </TouchableOpacity>
-      )}
-    </Animated.View>
-  );
+  const getOverallProgress = () => {
+    const totalActions = Object.values(deviceActions).flat().length;
+    const completedActions = Object.values(deviceActions).flat().filter(action => action.completed).length;
+    return totalActions > 0 ? (completedActions / totalActions) * 100 : 0;
+  };
+
+  const getSecurityLevel = () => {
+    const progress = getOverallProgress();
+    if (progress === 100) return { level: 'Excellent', color: Colors.success, icon: 'shield-checkmark' };
+    if (progress >= 50) return { level: 'Good', color: Colors.warning, icon: 'shield' };
+    return { level: 'Needs Improvement', color: Colors.error, icon: 'shield-outline' };
+  };
+
+  const securityLevel = getSecurityLevel();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -248,7 +383,6 @@ const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            {/* Close Button */}
             <TouchableOpacity
               style={styles.modalCloseButton}
               onPress={() => setShowExitModal(false)}
@@ -256,27 +390,22 @@ const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
               <Ionicons name="close" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
             </TouchableOpacity>
 
-            {/* Sad Character */}
             <View style={styles.modalCharacter}>
-              <Text style={styles.characterText}>😢</Text>
+              <Text style={styles.characterText}>🔐</Text>
             </View>
 
-            {/* Title */}
-            <Text style={styles.modalTitle}>Wait, don't go!</Text>
-
-            {/* Message */}
+            <Text style={styles.modalTitle}>Secure your devices!</Text>
             <Text style={styles.modalMessage}>
-              You're doing well! If you quit now, you'll lose your progress for this lesson.
+              Screen locks are your first line of defense. Don't leave your devices vulnerable!
             </Text>
 
-            {/* Action Buttons */}
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={styles.keepLearningButton}
                 onPress={handleKeepLearning}
                 activeOpacity={0.8}
               >
-                <Text style={styles.keepLearningButtonText}>Keep learning</Text>
+                <Text style={styles.keepLearningButtonText}>Continue setup</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -295,10 +424,35 @@ const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
         <View style={styles.content}>
           {/* Title and Description */}
           <View style={styles.titleSection}>
-            <Text style={styles.title}>Lock Your Device Automatically</Text>
+            <Text style={styles.title}>Configure Screen Locks</Text>
             <Text style={styles.description}>
-              Secure your device with proper lock settings to protect your data if your device is lost or stolen.
+              Set up secure screen locks on all your devices to prevent unauthorized access. This is your first line of defense if a device is lost or stolen.
             </Text>
+            
+            {/* Security Level Indicator */}
+            <View style={styles.securitySection}>
+              <View style={styles.securityHeader}>
+                <Ionicons 
+                  name={securityLevel.icon} 
+                  size={Responsive.iconSizes.large} 
+                  color={securityLevel.color} 
+                />
+                <Text style={[styles.securityTitle, { color: securityLevel.color }]}>
+                  Security Level: {securityLevel.level}
+                </Text>
+              </View>
+              <View style={styles.progressContainer}>
+                <View style={styles.progressBar}>
+                  <View 
+                    style={[
+                      styles.progressFill, 
+                      { width: `${getOverallProgress()}%`, backgroundColor: securityLevel.color }
+                    ]} 
+                  />
+                </View>
+                <Text style={styles.progressText}>{Math.round(getOverallProgress())}%</Text>
+              </View>
+            </View>
           </View>
 
           {/* Learn More Section */}
@@ -317,61 +471,94 @@ const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
 
           {showLearnMore && (
             <View style={styles.learnMoreContent}>
-              <Text style={styles.learnMoreTitle}>Device Security Benefits</Text>
+              <Text style={styles.learnMoreTitle}>Screen Lock Security Benefits</Text>
               <Text style={styles.learnMoreBody}>
-                • Prevents unauthorized access if device is lost or stolen{'\n'}
-                • Protects personal photos, messages, and financial apps{'\n'}
-                • Required for many workplace and banking apps{'\n'}
-                • Auto-lock ensures device secures itself quickly{'\n'}
-                • Strong PINs are harder to guess than simple patterns
+                • Prevents unauthorized access to your device{'\n'}
+                • Protects your personal data and accounts{'\n'}
+                • Required for banking and secure apps{'\n'}
+                • Enables remote wipe if device is stolen{'\n'}
+                • Prevents shoulder surfing attacks{'\n'}
+                • Keeps your digital life private
               </Text>
             </View>
           )}
 
-          {/* Checklist Section */}
-          <View style={styles.checklistSection}>
-            <Text style={styles.checklistTitle}>Screen Lock Setup</Text>
-            <Text style={styles.checklistSubtitle}>
-              Configure your device to lock automatically and use a strong passcode
+          {/* Device-Specific Sections */}
+          <View style={styles.devicesSection}>
+            <Text style={styles.devicesSectionTitle}>Screen Lock Setup by Device</Text>
+            <Text style={styles.devicesSectionSubtitle}>
+              Configure secure screen locks on each of your devices
             </Text>
             
-            {checklistItems.map(renderChecklistItem)}
+            {userDevices.length > 0 ? (
+              userDevices.map((device) => (
+                <CollapsibleDeviceSection
+                  key={device.id}
+                  device={device}
+                  actions={deviceActions[device.id] || []}
+                  defaultExpanded={device.autoDetected || userDevices.length === 1}
+                  onActionComplete={handleActionComplete}
+                  style={styles.deviceSection}
+                />
+              ))
+            ) : (
+              <View style={styles.noDevicesContainer}>
+                <Ionicons 
+                  name="phone-portrait" 
+                  size={Responsive.iconSizes.xxlarge} 
+                  color={Colors.textSecondary} 
+                />
+                <Text style={styles.noDevicesTitle}>No Devices Found</Text>
+                <Text style={styles.noDevicesText}>
+                  Add your devices in the Profile tab to get personalized security guidance.
+                </Text>
+                <TouchableOpacity
+                  style={styles.addDevicesButton}
+                  onPress={() => navigation.navigate('Profile')}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.addDevicesButtonText}>Add Devices</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
-          {/* Tips Section */}
+          {/* Security Best Practices */}
           <View style={styles.tipsSection}>
-            <Text style={styles.tipsTitle}>💡 Security Tips</Text>
+            <Text style={styles.tipsTitle}>🔐 Screen Lock Best Practices</Text>
             <View style={styles.tipItem}>
-              <Ionicons name="shield-checkmark" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Ionicons name="timer" size={Responsive.iconSizes.medium} color={Colors.accent} />
               <Text style={styles.tipText}>Set auto-lock to 30 seconds or 1 minute for maximum security</Text>
             </View>
             <View style={styles.tipItem}>
               <Ionicons name="key" size={Responsive.iconSizes.medium} color={Colors.accent} />
-              <Text style={styles.tipText}>Use a 6-digit PIN or longer passphrase instead of simple patterns</Text>
+              <Text style={styles.tipText}>Use at least a 6-digit PIN or strong password</Text>
             </View>
             <View style={styles.tipItem}>
               <Ionicons name="finger-print" size={Responsive.iconSizes.medium} color={Colors.accent} />
-              <Text style={styles.tipText}>Enable biometric authentication (fingerprint/face ID) for convenience</Text>
+              <Text style={styles.tipText}>Enable biometric unlock for convenience and security</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="eye-off" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Avoid simple patterns that can be easily observed</Text>
             </View>
           </View>
 
           {/* Completion Status */}
           {isCompleted && (
             <View style={styles.completionCard}>
-              <Ionicons name="checkmark-circle" size={Responsive.iconSizes.xxlarge} color={Colors.accent} />
-              <Text style={styles.completionTitle}>Check Complete!</Text>
+              <Ionicons name="shield-checkmark" size={Responsive.iconSizes.xxlarge} color={Colors.success} />
+              <Text style={styles.completionTitle}>Screen Locks Configured!</Text>
               <Text style={styles.completionText}>
-                You've successfully secured your device with proper screen lock settings. This is the foundation of device security!
+                Excellent work! Your devices are now protected with secure screen locks. This significantly reduces the risk of unauthorized access.
               </Text>
               
               <TouchableOpacity
                 style={styles.continueButton}
-                onPress={() => {
-                  navigation.navigate('Check1_2_2_RemoteLockScreen');
-                }}
+                onPress={() => navigation.navigate('Check1_3_PasswordManagersScreen')}
                 activeOpacity={0.8}
               >
-                <Text style={styles.continueButtonText}>Continue to Next Check</Text>
+                <Text style={styles.continueButtonText}>Continue to Password Managers</Text>
                 <Ionicons name="arrow-forward" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
               </TouchableOpacity>
             </View>
@@ -432,6 +619,42 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
     lineHeight: Typography.sizes.md * 1.5,
+    marginBottom: Responsive.spacing.lg,
+  },
+  securitySection: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+  },
+  securityHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Responsive.spacing.md,
+  },
+  securityTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    marginLeft: Responsive.spacing.sm,
+  },
+  progressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Responsive.spacing.md,
+  },
+  progressBar: {
+    flex: 1,
+    height: 8,
+    backgroundColor: Colors.overlayLight,
+    borderRadius: 4,
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  progressText: {
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
   },
   learnMoreButton: {
     flexDirection: 'row',
@@ -462,75 +685,55 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     lineHeight: Typography.sizes.sm * 1.4,
   },
-  checklistSection: {
+  devicesSection: {
     marginBottom: Responsive.spacing.lg,
   },
-  checklistTitle: {
+  devicesSectionTitle: {
     fontSize: Typography.sizes.xl,
     fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
     marginBottom: Responsive.spacing.sm,
   },
-  checklistSubtitle: {
+  devicesSectionSubtitle: {
     fontSize: Typography.sizes.sm,
     color: Colors.textSecondary,
+    marginBottom: Responsive.spacing.lg,
+    lineHeight: Typography.sizes.sm * 1.4,
+  },
+  deviceSection: {
     marginBottom: Responsive.spacing.md,
   },
-  checklistItem: {
+  noDevicesContainer: {
     backgroundColor: Colors.surface,
     borderRadius: Responsive.borderRadius.large,
-    padding: Responsive.padding.card,
-    marginBottom: Responsive.spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  checklistItemCompleted: {
-    borderColor: Colors.accent,
-    backgroundColor: Colors.accentSoft,
-  },
-  checklistRow: {
-    flexDirection: 'row',
+    padding: Responsive.padding.modal,
     alignItems: 'center',
   },
-  checkbox: {
-    width: Responsive.iconSizes.large,
-    height: Responsive.iconSizes.large,
-    borderRadius: Responsive.iconSizes.large / 2,
-    borderWidth: 2,
-    borderColor: Colors.accent,
-    marginRight: Responsive.spacing.sm,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxCompleted: {
-    backgroundColor: Colors.accent,
-  },
-  checklistText: {
-    fontSize: Typography.sizes.md,
-    color: Colors.textPrimary,
-    flex: 1,
-    lineHeight: Typography.sizes.md * 1.4,
-  },
-  checklistTextCompleted: {
-    textDecorationLine: 'line-through',
-    color: Colors.textSecondary,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.accent,
-    borderRadius: Responsive.borderRadius.medium,
-    paddingVertical: Responsive.spacing.sm,
-    paddingHorizontal: Responsive.spacing.md,
-    marginTop: Responsive.spacing.sm,
-    minHeight: Responsive.buttonHeight.medium,
-  },
-  actionButtonText: {
-    fontSize: Typography.sizes.sm,
+  noDevicesTitle: {
+    fontSize: Typography.sizes.lg,
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
-    marginRight: Responsive.spacing.sm,
+    marginTop: Responsive.spacing.md,
+    marginBottom: Responsive.spacing.sm,
+  },
+  noDevicesText: {
+    fontSize: Typography.sizes.md,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: Typography.sizes.md * 1.4,
+    marginBottom: Responsive.spacing.lg,
+  },
+  addDevicesButton: {
+    backgroundColor: Colors.accent,
+    borderRadius: Responsive.borderRadius.medium,
+    paddingVertical: Responsive.padding.button,
+    paddingHorizontal: Responsive.spacing.lg,
+    minHeight: Responsive.buttonHeight.medium,
+  },
+  addDevicesButtonText: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
   },
   tipsSection: {
     backgroundColor: Colors.surface,
@@ -542,7 +745,7 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.lg,
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
-    marginBottom: Responsive.spacing.sm,
+    marginBottom: Responsive.spacing.md,
   },
   tipItem: {
     flexDirection: 'row',
@@ -557,12 +760,12 @@ const styles = StyleSheet.create({
     lineHeight: Typography.sizes.sm * 1.4,
   },
   completionCard: {
-    backgroundColor: Colors.accentSoft,
+    backgroundColor: Colors.successSoft,
     borderRadius: Responsive.borderRadius.xlarge,
     padding: Responsive.padding.modal,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.accent,
+    borderColor: Colors.success,
   },
   completionTitle: {
     fontSize: Typography.sizes.xl,
@@ -582,7 +785,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.accent,
+    backgroundColor: Colors.success,
     paddingVertical: Responsive.padding.button,
     paddingHorizontal: Responsive.spacing.lg,
     borderRadius: Responsive.borderRadius.medium,
@@ -594,10 +797,10 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
   },
-  // Modal Styles
+  // Modal styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: Colors.overlayDark,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -608,7 +811,7 @@ const styles = StyleSheet.create({
     marginHorizontal: Responsive.padding.screen,
     alignItems: 'center',
     position: 'relative',
-    minWidth: Responsive.spacing.xxl * 7,
+    minWidth: Responsive.modal.width,
   },
   modalCloseButton: {
     position: 'absolute',

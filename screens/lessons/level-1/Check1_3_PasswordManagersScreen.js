@@ -8,234 +8,309 @@ import {
   StatusBar,
   TouchableOpacity,
   ScrollView,
-  Linking,
   Alert,
-  Animated,
   Modal,
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
+import { DeviceCapabilities } from '../../../utils/deviceCapabilities';
+import CollapsibleDeviceSection from '../../../components/CollapsibleDeviceSection';
+import { SettingsGuide } from '../../../utils/settingsGuide';
+import * as Haptics from 'expo-haptics';
 
+/**
+ * Check1_3_PasswordManagersScreen - Pattern B Implementation
+ * 
+ * Enhanced password manager setup with device-specific recommendations
+ * and guided app installation flows. Applies Phase 1 lessons:
+ * - User-controlled advancement
+ * - Contextual actions based on device capabilities
+ * - Device-specific content delivery
+ * - Proper progress persistence
+ */
 const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
-
-  
-  const [checklistItems, setChecklistItems] = useState([
-    {
-      id: 1,
-      text: 'I installed a password manager',
-      completed: false,
-      helpText: 'Download a password manager from your device\'s app store (1Password, Bitwarden, LastPass, or Dashlane)',
-    },
-    {
-      id: 2,
-      text: 'I stored 3+ logins in it',
-      completed: false,
-      helpText: 'Add at least 3 important account logins to your password manager',
-    },
-    {
-      id: 3,
-      text: 'I enabled biometrics for access',
-      completed: false,
-      helpText: 'Enable fingerprint/face recognition in your password manager settings',
-    },
-  ]);
-  const [showLearnMore, setShowLearnMore] = useState(false);
+  // Core state
+  const [userDevices, setUserDevices] = useState([]);
+  const [deviceActions, setDeviceActions] = useState({});
   const [isCompleted, setIsCompleted] = useState(false);
-  const [scaleAnim] = useState(new Animated.Value(1));
   const [showExitModal, setShowExitModal] = useState(false);
-  
-  // Password manager selection state
-  const [selectedPasswordManager, setSelectedPasswordManager] = useState('');
-  const [showPasswordManagerModal, setShowPasswordManagerModal] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
+  const [showLearnMore, setShowLearnMore] = useState(false);
 
-  // Password manager options with OS-based recommendations
-  const passwordManagers = [
-    { label: 'Select a password manager...', value: '' },
-    { label: '1Password', value: '1password', recommended: Platform.OS === 'ios' || Platform.OS === 'macos' },
-    { label: 'Bitwarden', value: 'bitwarden', recommended: true }, // Cross-platform, free tier
-    { label: 'LastPass', value: 'lastpass', recommended: false },
-    { label: 'Dashlane', value: 'dashlane', recommended: Platform.OS === 'android' },
-    { label: 'NordPass', value: 'nordpass', recommended: false },
-    { label: 'Keeper', value: 'keeper', recommended: false },
-    { label: 'RoboForm', value: 'roboform', recommended: false },
-  ];
+  // Track completion per device
+  const [deviceCompletionStatus, setDeviceCompletionStatus] = useState({});
 
   useEffect(() => {
+    initializeDeviceContent();
     loadProgress();
   }, []);
 
-  // Add focus listener to refresh progress when returning to this screen
   useFocusEffect(
     React.useCallback(() => {
       loadProgress();
     }, [])
   );
 
+  const initializeDeviceContent = async () => {
+    try {
+      // Get user's registered devices
+      const devices = await DeviceCapabilities.getUserDevices();
+      const currentDevice = DeviceCapabilities.getCurrentDevice();
+      
+      // Add current device if not already in the list
+      let allDevices = [...devices];
+      const hasCurrentDevice = devices.some(d => 
+        d.platform === currentDevice.platform && d.type === currentDevice.type
+      );
+      
+      if (!hasCurrentDevice) {
+        allDevices.unshift({
+          id: 'current-device',
+          name: currentDevice.type,
+          type: currentDevice.platform === 'ios' || currentDevice.platform === 'android' ? 'mobile' : 'computer',
+          platform: currentDevice.platform,
+          tier2: currentDevice.platform,
+          autoDetected: true,
+          supportsDeepLinks: currentDevice.supportsDeepLinks,
+          icon: getDeviceIcon(currentDevice)
+        });
+      }
+
+      setUserDevices(allDevices);
+
+      // Create device-specific actions for password manager setup
+      const actions = {};
+      for (const device of allDevices) {
+        actions[device.id] = await createPasswordManagerActions(device);
+      }
+      setDeviceActions(actions);
+
+    } catch (error) {
+      console.error('Error initializing device content:', error);
+      // Fallback to current device only
+      const currentDevice = DeviceCapabilities.getCurrentDevice();
+      const fallbackDevice = {
+        id: 'current-device',
+        name: currentDevice.type,
+        platform: currentDevice.platform,
+        autoDetected: true,
+        supportsDeepLinks: currentDevice.supportsDeepLinks
+      };
+      setUserDevices([fallbackDevice]);
+      setDeviceActions({
+        'current-device': await createPasswordManagerActions(fallbackDevice)
+      });
+    }
+  };
+
+  const createPasswordManagerActions = async (device) => {
+    const platform = device.platform || device.tier2;
+    const settingsGuide = SettingsGuide.createGuidance('password-manager', device);
+    const recommendedApps = settingsGuide.getRecommendedApps('password-manager');
+
+    const actions = [
+      {
+        id: `${device.id}-install`,
+        title: 'Install Password Manager App',
+        description: 'Download a secure password manager from your device\'s app store',
+        completed: false,
+        steps: [
+          'Open your device\'s app store',
+          'Search for a password manager app',
+          'Install your chosen password manager',
+          'Create an account with the app'
+        ],
+        deepLink: recommendedApps.length > 0 ? recommendedApps[0].url : null,
+        verification: 'app_installed',
+        priority: 'high',
+        apps: recommendedApps
+      },
+      {
+        id: `${device.id}-setup`,
+        title: 'Complete Initial Setup',
+        description: 'Set up your master password and security settings',
+        completed: false,
+        steps: [
+          'Open your password manager app',
+          'Create a strong master password',
+          'Complete the security setup wizard',
+          'Import existing passwords if available'
+        ],
+        verification: 'manual',
+        priority: 'high'
+      },
+      {
+        id: `${device.id}-biometric`,
+        title: 'Enable Biometric Unlock',
+        description: 'Set up fingerprint or face recognition for quick access',
+        completed: false,
+        steps: platform === 'ios' ? [
+          'Open your password manager app',
+          'Go to Settings or Security',
+          'Enable Face ID or Touch ID',
+          'Test the biometric unlock'
+        ] : platform === 'android' ? [
+          'Open your password manager app',
+          'Go to Settings or Security',
+          'Enable Fingerprint or Face unlock',
+          'Test the biometric unlock'
+        ] : [
+          'Open your password manager app',
+          'Go to Settings or Security',
+          'Enable biometric unlock if available',
+          'Test the unlock method'
+        ],
+        verification: 'manual',
+        priority: 'medium'
+      }
+    ];
+
+    return actions;
+  };
+
+  const getDeviceIcon = (device) => {
+    const iconMap = {
+      'iPhone': 'phone-portrait',
+      'iPad': 'tablet-portrait',
+      'Android Phone': 'phone-portrait',
+      'Android Tablet': 'tablet-portrait',
+      'MacBook': 'laptop',
+      'iMac': 'desktop',
+      'Windows': 'laptop',
+      'Computer': 'desktop',
+    };
+    return iconMap[device.type] || 'phone-portrait';
+  };
+
   const loadProgress = async () => {
     try {
       const progressData = await AsyncStorage.getItem('check_1-1-3_progress');
       const completedData = await AsyncStorage.getItem('check_1-1-3_completed');
-      console.log('📥 Loading progress for Check 1.1.3:', { progressData: !!progressData, completedData });
       
       if (progressData) {
         const data = JSON.parse(progressData);
-        setChecklistItems(data.checklistItems || checklistItems);
         setIsCompleted(data.isCompleted || false);
-        setSelectedPasswordManager(data.selectedPasswordManager || '');
-        console.log('📊 Loaded progress data:', { isCompleted: data.isCompleted, checklistItems: data.checklistItems?.length });
+        setDeviceCompletionStatus(data.deviceCompletionStatus || {});
+        
+        // Restore action completion states
+        if (data.deviceActions) {
+          setDeviceActions(prev => {
+            const updated = { ...prev };
+            Object.keys(data.deviceActions).forEach(deviceId => {
+              if (updated[deviceId]) {
+                updated[deviceId] = updated[deviceId].map(action => {
+                  const savedAction = data.deviceActions[deviceId].find(a => a.id === action.id);
+                  return savedAction ? { ...action, completed: savedAction.completed } : action;
+                });
+              }
+            });
+            return updated;
+          });
+        }
       }
       
-      // Also check the completion status directly
       if (completedData === 'completed') {
-        console.log('✅ Check 1.1.3 is marked as completed in storage');
         setIsCompleted(true);
       }
     } catch (error) {
-      console.log('Error loading progress:', error);
+      console.error('Error loading progress:', error);
     }
   };
 
-  const saveProgress = async (customChecklistItems = null, customIsCompleted = null) => {
+  const saveProgress = async () => {
     try {
-      const itemsToSave = customChecklistItems || checklistItems;
-      const completionStatus = customIsCompleted !== null ? customIsCompleted : isCompleted;
-      
       const progressData = {
-        checklistItems: itemsToSave,
-        isCompleted: completionStatus,
-        selectedPasswordManager,
+        isCompleted,
+        deviceCompletionStatus,
+        deviceActions,
         completedAt: new Date().toISOString(),
       };
+      
       await AsyncStorage.setItem('check_1-1-3_progress', JSON.stringify(progressData));
       
-      if (completionStatus) {
+      if (isCompleted) {
         await AsyncStorage.setItem('check_1-1-3_completed', 'completed');
-        console.log('✅ Check 1.1.3 marked as completed');
       } else {
         await AsyncStorage.removeItem('check_1-1-3_completed');
-        console.log('❌ Check 1.1.3 completion removed');
       }
     } catch (error) {
-      console.log('Error saving progress:', error);
+      console.error('Error saving progress:', error);
     }
   };
 
-  const toggleChecklistItem = async (id) => {
-    const updatedItems = checklistItems.map(item =>
-      item.id === id ? { ...item, completed: !item.completed } : item
-    );
-    setChecklistItems(updatedItems);
+  const handleActionComplete = async (deviceId, actionId, completed) => {
+    // Update action completion status
+    const updatedDeviceActions = { ...deviceActions };
+    if (updatedDeviceActions[deviceId]) {
+      updatedDeviceActions[deviceId] = updatedDeviceActions[deviceId].map(action =>
+        action.id === actionId ? { ...action, completed } : action
+      );
+    }
+    setDeviceActions(updatedDeviceActions);
 
-    // Animate the checkbox
-    Animated.sequence([
-      Animated.timing(scaleAnim, {
-        toValue: 1.2,
-        duration: 100,
-        useNativeDriver: false,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: false,
-      }),
-    ]).start();
-
-    // Check if all items are completed
-    const allCompleted = updatedItems.every(item => item.completed);
-    console.log(`📋 All items completed: ${allCompleted}, current isCompleted: ${isCompleted}`);
+    // Check if all actions for this device are completed
+    const deviceCompleted = updatedDeviceActions[deviceId]?.every(action => action.completed) || false;
     
-    if (allCompleted && !isCompleted) {
-      console.log('🎯 Marking check as completed!');
-      // Update state and save progress with the new completion status
-      const newIsCompleted = true;
-      setIsCompleted(newIsCompleted);
+    // Update device completion status
+    const updatedDeviceCompletionStatus = {
+      ...deviceCompletionStatus,
+      [deviceId]: deviceCompleted
+    };
+    setDeviceCompletionStatus(updatedDeviceCompletionStatus);
+
+    // Check if all devices are completed
+    const allDevicesCompleted = userDevices.every(device => {
+      return updatedDeviceCompletionStatus[device.id] === true;
+    });
+
+    if (allDevicesCompleted && !isCompleted) {
+      setIsCompleted(true);
+      if (Haptics?.impactAsync) {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      }
       
-      // Save progress with the updated completion status
-      await saveProgress(updatedItems, newIsCompleted);
+      // Save progress immediately with the new completion status
+      setTimeout(async () => {
+        try {
+          const progressData = {
+            isCompleted: true,
+            deviceCompletionStatus: updatedDeviceCompletionStatus,
+            deviceActions: updatedDeviceActions,
+            completedAt: new Date().toISOString(),
+          };
+          
+          await AsyncStorage.setItem('check_1-1-3_progress', JSON.stringify(progressData));
+          await AsyncStorage.setItem('check_1-1-3_completed', 'completed');
+        } catch (error) {
+          console.error('Error saving completion progress:', error);
+        }
+      }, 50);
+      
       celebrateCompletion();
     } else {
-      console.log('💾 Saving partial progress');
       // Save progress for partial completion
-      await saveProgress(updatedItems, isCompleted);
+      setTimeout(saveProgress, 100);
     }
   };
 
-  const celebrateCompletion = async () => {
-    console.log('🎉 Celebrating completion of Check 1.1.3');
-    // Ensure completion is saved before showing alert
-    await saveProgress(checklistItems, true);
-    
+  const celebrateCompletion = () => {
     Alert.alert(
       '🎉 Password Manager Setup Complete!',
-      'Excellent! You\'ve set up a password manager. This will make managing your passwords much easier and more secure.',
+      'Excellent! You\'ve set up password managers on your devices. This significantly improves your security by enabling strong, unique passwords.',
       [
         {
           text: 'Continue to Next Check',
-          onPress: async () => {
-            console.log('🚀 Navigating to Check 1.4');
-            // Navigate to the next check (Check 1.4 - MFA Setup)
-            navigation.navigate('Check1_4_MFASetupScreen');
-          },
+          onPress: () => navigation.navigate('Check1_4_MFASetupScreen'),
         },
         {
           text: 'Go Back',
           style: 'cancel',
-          onPress: async () => {
-            console.log('🏠 Navigating back to Welcome');
-            // Force refresh of WelcomeScreen progress
-            navigation.navigate('Welcome');
-          },
+          onPress: () => navigation.navigate('Welcome'),
         },
       ]
     );
   };
-
-  const showHelp = (item) => {
-    console.log('Help button pressed for item:', item.id);
-    
-    // For web platform, we might need to handle alerts differently
-    if (Platform.OS === 'web') {
-      // Use window.alert for web or create a custom modal
-      window.alert(
-        'Password Manager Setup Guide\n\n' +
-        item.helpText + '\n\n' + 
-        'Step-by-step instructions:\n' +
-        '1. Follow the guidance above\n' +
-        '2. Complete the action in your password manager\n' +
-        '3. Verify the setup is working\n' +
-        '4. Tap the checkbox to mark this complete\n\n' +
-        'Once you\'ve completed this step, tap the checkbox to mark it complete.'
-      );
-    } else {
-      Alert.alert(
-        'Password Manager Setup Guide',
-        item.helpText + '\n\n' + 
-        'Step-by-step instructions:\n' +
-        '1. Follow the guidance above\n' +
-        '2. Complete the action in your password manager\n' +
-        '3. Verify the setup is working\n' +
-        '4. Tap the checkbox to mark this complete\n\n' +
-        'Once you\'ve completed this step, tap the checkbox to mark it complete.',
-        [
-          { text: 'Got it', style: 'default' },
-        ]
-      );
-    }
-  };
-
-  const handlePasswordManagerChange = async (value) => {
-    setSelectedPasswordManager(value);
-    await saveProgress();
-  };
-
-  const getRecommendedManagers = () => {
-    return passwordManagers.filter(pm => pm.recommended && pm.value !== '');
-  };
-
-
 
   const handleExit = () => {
     setShowExitModal(true);
@@ -250,47 +325,11 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
     navigation.navigate('Welcome');
   };
 
-  const renderChecklistItem = (item) => (
-    <Animated.View
-      key={item.id}
-      style={[
-        styles.checklistItem,
-        item.completed && styles.checklistItemCompleted,
-        { transform: [{ scale: scaleAnim }] }
-      ]}
-    >
-      <View style={styles.checklistRow}>
-        <TouchableOpacity
-          style={styles.checkboxContainer}
-          onPress={() => toggleChecklistItem(item.id)}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.checkbox, item.completed && styles.checkboxCompleted]}>
-            {item.completed && (
-              <Ionicons name="checkmark" size={Responsive.iconSizes.small} color={Colors.textPrimary} />
-            )}
-          </View>
-        </TouchableOpacity>
-        <Text style={[styles.checklistText, item.completed && styles.checklistTextCompleted]}>
-          {item.text}
-        </Text>
-      </View>
-      
-      {!item.completed && (
-        <TouchableOpacity
-          style={styles.helpButton}
-          onPress={() => {
-            console.log('Help button pressed for item:', item.id);
-            showHelp(item);
-          }}
-          activeOpacity={0.6}
-        >
-                      <Ionicons name="help-circle-outline" size={Responsive.iconSizes.small} color={Colors.accent} />
-          <Text style={styles.helpButtonText}>Learn how to check</Text>
-        </TouchableOpacity>
-      )}
-    </Animated.View>
-  );
+  const getOverallProgress = () => {
+    const totalActions = Object.values(deviceActions).flat().length;
+    const completedActions = Object.values(deviceActions).flat().filter(action => action.completed).length;
+    return totalActions > 0 ? (completedActions / totalActions) * 100 : 0;
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -318,7 +357,6 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            {/* Close Button */}
             <TouchableOpacity
               style={styles.modalCloseButton}
               onPress={() => setShowExitModal(false)}
@@ -326,20 +364,15 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
               <Ionicons name="close" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
             </TouchableOpacity>
 
-            {/* Sad Character */}
             <View style={styles.modalCharacter}>
               <Text style={styles.characterText}>😢</Text>
             </View>
 
-            {/* Title */}
             <Text style={styles.modalTitle}>Wait, don't go!</Text>
-
-            {/* Message */}
             <Text style={styles.modalMessage}>
-              You're doing well! If you quit now, you'll lose your progress for this lesson.
+              You're making great progress on securing your passwords. Don't lose momentum now!
             </Text>
 
-            {/* Action Buttons */}
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={styles.keepLearningButton}
@@ -365,64 +398,26 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
         <View style={styles.content}>
           {/* Title and Description */}
           <View style={styles.titleSection}>
-            <Text style={styles.title}>Set Up a Password Manager</Text>
+            <Text style={styles.title}>Set Up Password Managers</Text>
             <Text style={styles.description}>
-              Password managers are the best way to create, store, and use strong, unique passwords for all your accounts.
-            </Text>
-          </View>
-
-          {/* Password Manager Selection Section */}
-          <View style={styles.passwordManagerSection}>
-            <Text style={styles.passwordManagerTitle}>Choose Your Password Manager</Text>
-            <Text style={styles.passwordManagerSubtitle}>
-              Select the password manager you're using or plan to use
+              Configure secure password managers on all your devices. This creates strong, unique passwords and makes login easier and safer.
             </Text>
             
-            {/* OS-based recommendations */}
-            <View style={styles.recommendationsSection}>
-              <Text style={styles.recommendationsTitle}>💡 Recommended for your device:</Text>
-              <View style={styles.recommendationsList}>
-                {getRecommendedManagers().map((pm, index) => (
-                  <View key={index} style={styles.recommendationItem}>
-                    <Ionicons name="star" size={Responsive.iconSizes.small} color={Colors.accent} />
-                    <Text style={styles.recommendationText}>{pm.label}</Text>
-                  </View>
-                ))}
+            {/* Progress Indicator */}
+            <View style={styles.progressSection}>
+              <View style={styles.progressHeader}>
+                <Text style={styles.progressTitle}>Setup Progress</Text>
+                <Text style={styles.progressPercentage}>{Math.round(getOverallProgress())}%</Text>
               </View>
-            </View>
-
-            {/* Password Manager Dropdown */}
-            <View style={styles.dropdownContainer}>
-              <TouchableOpacity
-                style={styles.dropdownButton}
-                onPress={() => setShowDropdown(!showDropdown)}
-                activeOpacity={0.8}
-              >
-                <Text style={[
-                  styles.dropdownButtonText,
-                  !selectedPasswordManager && styles.dropdownButtonTextPlaceholder
-                ]}>
-                  {selectedPasswordManager 
-                    ? passwordManagers.find(pm => pm.value === selectedPasswordManager)?.label 
-                    : 'Select a password manager...'
-                  }
-                </Text>
-                <Ionicons 
-                  name={showDropdown ? 'chevron-up' : 'chevron-down'} 
-                  size={Responsive.iconSizes.medium} 
-                  color={Colors.textSecondary} 
+              <View style={styles.progressBar}>
+                <View 
+                  style={[
+                    styles.progressFill, 
+                    { width: `${getOverallProgress()}%` }
+                  ]} 
                 />
-              </TouchableOpacity>
-            </View>
-
-            {selectedPasswordManager && (
-              <View style={styles.selectedManagerInfo}>
-                <Ionicons name="checkmark-circle" size={Responsive.iconSizes.medium} color={Colors.accent} />
-                <Text style={styles.selectedManagerText}>
-                  Great choice! {passwordManagers.find(pm => pm.value === selectedPasswordManager)?.label} is a solid password manager.
-                </Text>
               </View>
-            )}
+            </View>
           </View>
 
           {/* Learn More Section */}
@@ -431,7 +426,7 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
             onPress={() => setShowLearnMore(!showLearnMore)}
             activeOpacity={0.8}
           >
-            <Text style={styles.learnMoreText}>Why use a password manager?</Text>
+            <Text style={styles.learnMoreText}>Why use password managers?</Text>
             <Ionicons
               name={showLearnMore ? 'chevron-up' : 'chevron-down'}
               size={Responsive.iconSizes.medium}
@@ -447,105 +442,94 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
                 • Store all passwords securely in one place{'\n'}
                 • Auto-fill passwords on websites and apps{'\n'}
                 • Sync across all your devices{'\n'}
-                • Protect against password reuse attacks
+                • Protect against password reuse attacks{'\n'}
+                • Alert you to compromised passwords
               </Text>
             </View>
           )}
 
-          {/* Checklist Section */}
-          <View style={styles.checklistSection}>
-            <Text style={styles.checklistTitle}>Password Manager Setup</Text>
-            <Text style={styles.checklistSubtitle}>
-              Follow these steps to set up your password manager
+          {/* Device-Specific Sections */}
+          <View style={styles.devicesSection}>
+            <Text style={styles.devicesSectionTitle}>Password Manager Setup by Device</Text>
+            <Text style={styles.devicesSectionSubtitle}>
+              Configure password managers on each of your devices for complete protection
             </Text>
-            
-            {checklistItems.map(renderChecklistItem)}
+
+            {userDevices.length > 0 ? (
+              userDevices.map((device) => (
+                <CollapsibleDeviceSection
+                  key={device.id}
+                  device={device}
+                  actions={deviceActions[device.id] || []}
+                  defaultExpanded={device.autoDetected || userDevices.length === 1}
+                  onActionComplete={handleActionComplete}
+                  style={styles.deviceSection}
+                />
+              ))
+            ) : (
+              <View style={styles.noDevicesContainer}>
+                <Ionicons 
+                  name="phone-portrait" 
+                  size={Responsive.iconSizes.xxlarge} 
+                  color={Colors.textSecondary} 
+                />
+                <Text style={styles.noDevicesTitle}>No Devices Found</Text>
+                <Text style={styles.noDevicesText}>
+                  Add your devices in the Profile tab to get personalized security recommendations.
+                </Text>
+                <TouchableOpacity
+                  style={styles.addDevicesButton}
+                  onPress={() => navigation.navigate('Profile')}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.addDevicesButtonText}>Add Devices</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
-          {/* Tips Section */}
+          {/* Security Tips */}
           <View style={styles.tipsSection}>
-            <Text style={styles.tipsTitle}>💡 Security Tips</Text>
+            <Text style={styles.tipsTitle}>🔐 Security Best Practices</Text>
             <View style={styles.tipItem}>
               <Ionicons name="shield-checkmark" size={Responsive.iconSizes.medium} color={Colors.accent} />
               <Text style={styles.tipText}>Choose a password manager with zero-knowledge encryption</Text>
             </View>
             <View style={styles.tipItem}>
               <Ionicons name="key" size={Responsive.iconSizes.medium} color={Colors.accent} />
-              <Text style={styles.tipText}>Use a strong master password you can remember</Text>
+              <Text style={styles.tipText}>Use a strong, memorable master password</Text>
             </View>
             <View style={styles.tipItem}>
-              <Ionicons name="cloud" size={Responsive.iconSizes.medium} color={Colors.accent} />
-              <Text style={styles.tipText}>Enable cloud sync to access passwords on all devices</Text>
+              <Ionicons name="sync" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Enable sync to access passwords on all devices</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="finger-print" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Enable biometric unlock where available</Text>
             </View>
           </View>
 
           {/* Completion Status */}
           {isCompleted && (
             <View style={styles.completionCard}>
-              <Ionicons name="checkmark-circle" size={Responsive.iconSizes.xxlarge} color={Colors.accent} />
-              <Text style={styles.completionTitle}>Check Complete!</Text>
+              <Ionicons name="checkmark-circle" size={Responsive.iconSizes.xxlarge} color={Colors.success} />
+              <Text style={styles.completionTitle}>Password Managers Configured!</Text>
               <Text style={styles.completionText}>
-                You've successfully set up your password manager. This will make managing passwords much easier!
+                Excellent work! You've set up password managers across your devices. Your accounts are now much more secure with strong, unique passwords.
               </Text>
               
               <TouchableOpacity
                 style={styles.continueButton}
-                onPress={async () => {
-                  console.log('🔘 Continue button pressed in completion card');
-                  // Ensure completion is saved before navigating
-                  await saveProgress(checklistItems, true);
-                  navigation.navigate('Check1_4_MFASetupScreen');
-                }}
+                onPress={() => navigation.navigate('Check1_4_MFASetupScreen')}
                 activeOpacity={0.8}
               >
-                <Text style={styles.continueButtonText}>Continue to Next Check</Text>
+                <Text style={styles.continueButtonText}>Continue to Multi-Factor Authentication</Text>
                 <Ionicons name="arrow-forward" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
               </TouchableOpacity>
             </View>
           )}
         </View>
       </ScrollView>
-
-      {/* Password Manager Selection Modal */}
-      <Modal
-        visible={showDropdown}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowDropdown(false)}
-      >
-        <TouchableOpacity
-          style={styles.dropdownModalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowDropdown(false)}
-        >
-          <View style={styles.dropdownModalContent}>
-            {passwordManagers.map((pm, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.dropdownModalOption,
-                  selectedPasswordManager === pm.value && styles.dropdownModalOptionSelected
-                ]}
-                onPress={() => {
-                  handlePasswordManagerChange(pm.value);
-                  setShowDropdown(false);
-                }}
-                activeOpacity={0.7}
-              >
-                <Text style={[
-                  styles.dropdownModalOptionText,
-                  selectedPasswordManager === pm.value && styles.dropdownModalOptionTextSelected
-                ]}>
-                  {pm.label}
-                </Text>
-                {selectedPasswordManager === pm.value && (
-                  <Ionicons name="checkmark" size={20} color={Colors.accent} />
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-        </TouchableOpacity>
-      </Modal>
     </SafeAreaView>
   );
 };
@@ -600,6 +584,38 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
     lineHeight: Typography.sizes.md * 1.5,
+    marginBottom: Responsive.spacing.lg,
+  },
+  progressSection: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Responsive.spacing.sm,
+  },
+  progressTitle: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+  },
+  progressPercentage: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.bold,
+    color: Colors.accent,
+  },
+  progressBar: {
+    height: 6,
+    backgroundColor: Colors.overlayLight,
+    borderRadius: 3,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: Colors.accent,
+    borderRadius: 3,
   },
   learnMoreButton: {
     flexDirection: 'row',
@@ -630,80 +646,55 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     lineHeight: Typography.sizes.sm * 1.4,
   },
-  checklistSection: {
+  devicesSection: {
     marginBottom: Responsive.spacing.lg,
   },
-  checklistTitle: {
+  devicesSectionTitle: {
     fontSize: Typography.sizes.xl,
     fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
     marginBottom: Responsive.spacing.sm,
   },
-  checklistSubtitle: {
+  devicesSectionSubtitle: {
     fontSize: Typography.sizes.sm,
     color: Colors.textSecondary,
+    marginBottom: Responsive.spacing.lg,
+    lineHeight: Typography.sizes.sm * 1.4,
+  },
+  deviceSection: {
     marginBottom: Responsive.spacing.md,
   },
-  checklistItem: {
+  noDevicesContainer: {
     backgroundColor: Colors.surface,
     borderRadius: Responsive.borderRadius.large,
-    padding: Responsive.padding.card,
-    marginBottom: Responsive.spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  checklistItemCompleted: {
-    borderColor: Colors.accent,
-    backgroundColor: Colors.accentSoft,
-  },
-  checklistRow: {
-    flexDirection: 'row',
+    padding: Responsive.padding.modal,
     alignItems: 'center',
   },
-  checkboxContainer: {
-    marginRight: Responsive.spacing.sm,
-    padding: Responsive.spacing.xs, // Increase touch target
-  },
-  checkbox: {
-    width: Responsive.iconSizes.large,
-    height: Responsive.iconSizes.large,
-    borderRadius: Responsive.iconSizes.large / 2,
-    borderWidth: 2,
-    borderColor: Colors.accent,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxCompleted: {
-    backgroundColor: Colors.accent,
-  },
-  checklistText: {
-    fontSize: Typography.sizes.md,
+  noDevicesTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
-    flex: 1,
-    lineHeight: Typography.sizes.md * 1.4,
+    marginTop: Responsive.spacing.md,
+    marginBottom: Responsive.spacing.sm,
   },
-  checklistTextCompleted: {
-    textDecorationLine: 'line-through',
+  noDevicesText: {
+    fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: Typography.sizes.md * 1.4,
+    marginBottom: Responsive.spacing.lg,
   },
-  helpButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.surface,
+  addDevicesButton: {
+    backgroundColor: Colors.accent,
     borderRadius: Responsive.borderRadius.medium,
-    paddingVertical: Responsive.spacing.sm,
-    paddingHorizontal: Responsive.spacing.sm,
-    marginTop: Responsive.spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.accent,
-    minHeight: Responsive.buttonHeight.medium, // Ensure minimum touch target size
+    paddingVertical: Responsive.padding.button,
+    paddingHorizontal: Responsive.spacing.lg,
+    minHeight: Responsive.buttonHeight.medium,
   },
-  helpButtonText: {
-    fontSize: Typography.sizes.sm,
-    fontWeight: Typography.weights.medium,
-    color: Colors.accent,
-    marginLeft: Responsive.spacing.xs,
+  addDevicesButtonText: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
   },
   tipsSection: {
     backgroundColor: Colors.surface,
@@ -715,7 +706,7 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.lg,
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
-    marginBottom: Responsive.spacing.sm,
+    marginBottom: Responsive.spacing.md,
   },
   tipItem: {
     flexDirection: 'row',
@@ -730,12 +721,12 @@ const styles = StyleSheet.create({
     lineHeight: Typography.sizes.sm * 1.4,
   },
   completionCard: {
-    backgroundColor: Colors.accentSoft,
+    backgroundColor: Colors.successSoft,
     borderRadius: Responsive.borderRadius.xlarge,
     padding: Responsive.padding.modal,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: Colors.accent,
+    borderColor: Colors.success,
   },
   completionTitle: {
     fontSize: Typography.sizes.xl,
@@ -755,7 +746,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.accent,
+    backgroundColor: Colors.success,
     paddingVertical: Responsive.padding.button,
     paddingHorizontal: Responsive.spacing.lg,
     borderRadius: Responsive.borderRadius.medium,
@@ -767,10 +758,10 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
   },
-  // Modal Styles
+  // Modal styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: Colors.overlayDark,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -781,7 +772,7 @@ const styles = StyleSheet.create({
     marginHorizontal: Responsive.padding.screen,
     alignItems: 'center',
     position: 'relative',
-    minWidth: Responsive.spacing.xxl * 7,
+    minWidth: Responsive.modal.width,
   },
   modalCloseButton: {
     position: 'absolute',
@@ -845,123 +836,6 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
     fontWeight: Typography.weights.semibold,
     color: Colors.accent,
-  },
-  // Password Manager Selection Styles
-  passwordManagerSection: {
-    backgroundColor: Colors.surface,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
-  },
-  passwordManagerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    marginBottom: 8,
-  },
-  passwordManagerSubtitle: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    marginBottom: 16,
-  },
-  recommendationsSection: {
-    marginBottom: 16,
-  },
-  recommendationsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-    marginBottom: 8,
-  },
-  recommendationsList: {
-    gap: 8,
-  },
-  recommendationItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  recommendationText: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-  },
-  dropdownContainer: {
-    marginBottom: 12,
-  },
-  dropdownButton: {
-    backgroundColor: Colors.background,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  dropdownButtonText: {
-    fontSize: 16,
-    color: Colors.textPrimary,
-    flex: 1,
-  },
-  dropdownButtonTextPlaceholder: {
-    color: Colors.textSecondary,
-  },
-  dropdownModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  dropdownModalContent: {
-    backgroundColor: Colors.dropdownBackground,
-    borderRadius: 12,
-    padding: 8,
-    marginHorizontal: 40,
-    maxWidth: 300,
-    width: '100%',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
-  },
-  dropdownModalOption: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderRadius: 8,
-    marginVertical: 2,
-  },
-  dropdownModalOptionSelected: {
-    backgroundColor: Colors.accentSoft,
-  },
-  dropdownModalOptionText: {
-    fontSize: 16,
-    color: Colors.textPrimary,
-    flex: 1,
-  },
-  dropdownModalOptionTextSelected: {
-    color: Colors.accent,
-    fontWeight: '600',
-  },
-  selectedManagerInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.accentSoft,
-    borderRadius: 8,
-    padding: 12,
-    gap: 8,
-  },
-  selectedManagerText: {
-    fontSize: 14,
-    color: Colors.textPrimary,
-    flex: 1,
   },
 });
 
