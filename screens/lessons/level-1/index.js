@@ -6,4 +6,5 @@ export { default as Check1_4_MFASetupScreen } from './Check1_4_MFASetupScreen';
 export { default as Check1_4_1_ScamRecognitionScreen } from './Check1_4_1_ScamRecognitionScreen';
 export { default as Check1_5_BreachCheckScreen } from './Check1_5_BreachCheckScreen';
 export { default as Check1_2_1_ScreenLockScreen } from './Check1_2_1_ScreenLockScreen';
+export { default as Check1_3_1_CloudBackupScreen } from './Check1_3_1_CloudBackupScreen';
 export { default as PhishingPracticeScreen } from './PhishingPracticeScreen';

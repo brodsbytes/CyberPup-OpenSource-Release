@@ -21,16 +21,17 @@ import { SettingsGuide } from '../../../utils/settingsGuide';
 import * as Haptics from 'expo-haptics';
 
 /**
- * Check1_4_MFASetupScreen - Pattern B Implementation
+ * Check1_3_1_CloudBackupScreen - Pattern B Implementation
  * 
- * Multi-Factor Authentication setup with both authenticator apps
- * and platform biometrics. Applies proven Pattern B architecture:
+ * Cloud backup setup with mobile verification workflows and desktop recommendations.
+ * Applies proven Pattern B architecture:
  * - User-controlled advancement
  * - Device-specific content delivery
- * - Both discrete authenticator apps AND platform biometrics
+ * - Mobile verification workflows to check backup status
+ * - Native services + reputable third-party options
  * - Proper progress persistence
  */
-const Check1_4_MFASetupScreen = ({ navigation, route }) => {
+const Check1_3_1_CloudBackupScreen = ({ navigation, route }) => {
   // Core state
   const [userDevices, setUserDevices] = useState([]);
   const [deviceActions, setDeviceActions] = useState({});
@@ -79,10 +80,10 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
 
       setUserDevices(allDevices);
 
-      // Create device-specific actions for MFA setup
+      // Create device-specific actions for cloud backup setup
       const actions = {};
       for (const device of allDevices) {
-        actions[device.id] = await createMFAActions(device);
+        actions[device.id] = await createCloudBackupActions(device);
       }
       setDeviceActions(actions);
 
@@ -99,86 +100,230 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
       };
       setUserDevices([fallbackDevice]);
       setDeviceActions({
-        'current-device': await createMFAActions(fallbackDevice)
+        'current-device': await createCloudBackupActions(fallbackDevice)
       });
     }
   };
 
-  const createMFAActions = async (device) => {
+  const createCloudBackupActions = async (device) => {
     const platform = device.platform || device.tier2;
-    const settingsGuide = SettingsGuide.createGuidance('security', device);
-    const authenticatorApps = SettingsGuide.getRecommendedApps('authenticator', platform);
+    const isMobile = device.type === 'mobile' || platform === 'ios' || platform === 'android';
+    const settingsGuide = SettingsGuide.createGuidance('backup', device);
 
-    const actions = [
-      {
-        id: `${device.id}-authenticator`,
-        title: 'Install Authenticator App',
-        description: 'Download a secure authenticator app for 2FA codes',
-        completed: false,
-        steps: [
-          'Open your device\'s app store',
-          'Search for an authenticator app',
-          'Install your chosen authenticator app',
-          'Open the app and complete setup'
-        ],
-        deepLink: authenticatorApps.length > 0 ? authenticatorApps[0].url : null,
-        verification: 'app_installed',
-        priority: 'high',
-        apps: authenticatorApps
-      },
-      {
-        id: `${device.id}-biometric`,
-        title: `Set Up ${platform === 'ios' ? 'Face ID/Touch ID' : platform === 'android' ? 'Biometric Unlock' : 'Windows Hello/Biometric'}`,
-        description: 'Enable biometric authentication for quick and secure access',
-        completed: false,
-        steps: platform === 'ios' ? [
-          'Open Settings',
-          'Tap "Face ID & Passcode" (or "Touch ID & Passcode")',
-          'Enter your passcode',
-          'Set up Face ID or Touch ID if not already done',
-          'Enable Face ID/Touch ID for apps that support it'
-        ] : platform === 'android' ? [
-          'Open Settings',
-          'Tap "Security" or "Biometrics"',
-          'Tap "Fingerprint" or "Face unlock"',
-          'Follow setup instructions',
-          'Enable biometric unlock for apps'
-        ] : platform === 'windows' ? [
-          'Press Windows key + I to open Settings',
-          'Click "Accounts"',
-          'Click "Sign-in options"',
-          'Set up Windows Hello (Face, Fingerprint, or PIN)',
-          'Test the biometric authentication'
-        ] : [
-          'Open System Preferences/Settings',
-          'Navigate to Security settings',
-          'Look for biometric authentication options',
-          'Set up available biometric methods',
-          'Test the authentication'
-        ],
-        deepLink: platform === 'ios' ? 'App-Prefs:PASSCODE' : 
-                 platform === 'android' ? 'android.settings.FINGERPRINT_ENROLL' : null,
-        verification: 'manual',
-        priority: 'high'
-      },
-      {
-        id: `${device.id}-enable-mfa`,
-        title: 'Enable MFA on Important Accounts',
-        description: 'Turn on 2FA for your banking, email, and social media accounts',
-        completed: false,
-        steps: [
-          'Open your banking app or website',
-          'Go to Security or Account settings',
-          'Look for "Two-Factor Authentication" or "2FA"',
-          'Choose authenticator app or biometric method',
-          'Repeat for email, social media, and other important accounts'
-        ],
-        verification: 'manual',
-        priority: 'high'
+    const actions = [];
+
+    if (isMobile) {
+      // Mobile devices get verification workflows
+      if (platform === 'ios') {
+        actions.push({
+          id: `${device.id}-icloud-check`,
+          title: 'Check iCloud Backup Status',
+          description: 'Verify that iCloud backup is enabled and working',
+          completed: false,
+          steps: [
+            'Open Settings',
+            'Tap your name at the top',
+            'Tap "iCloud"',
+            'Tap "iCloud Backup"',
+            'Check that "iCloud Backup" is turned on',
+            'Check the "Last Backup" date is recent'
+          ],
+          deepLink: 'App-Prefs:CASTLE',
+          verification: 'verification_workflow',
+          priority: 'high'
+        });
+        
+        actions.push({
+          id: `${device.id}-icloud-enable`,
+          title: 'Enable iCloud Backup',
+          description: 'Turn on automatic iCloud backup if not enabled',
+          completed: false,
+          steps: [
+            'In iCloud Backup settings',
+            'Turn on "iCloud Backup" if disabled',
+            'Tap "Back Up Now" to start initial backup',
+            'Ensure you have enough iCloud storage',
+            'Consider upgrading iCloud storage if needed'
+          ],
+          deepLink: 'App-Prefs:CASTLE',
+          verification: 'manual',
+          priority: 'high'
+        });
+      } else if (platform === 'android') {
+        actions.push({
+          id: `${device.id}-google-check`,
+          title: 'Check Google Backup Status',
+          description: 'Verify that Google backup is enabled and working',
+          completed: false,
+          steps: [
+            'Open Settings',
+            'Tap "Google" or search for "Backup"',
+            'Tap "Backup"',
+            'Check that "Back up to Google Drive" is on',
+            'Review what data is being backed up',
+            'Check the last backup date'
+          ],
+          deepLink: 'android.settings.SYNC_SETTINGS',
+          verification: 'verification_workflow',
+          priority: 'high'
+        });
+        
+        actions.push({
+          id: `${device.id}-google-enable`,
+          title: 'Enable Google Backup',
+          description: 'Turn on automatic Google Drive backup if not enabled',
+          completed: false,
+          steps: [
+            'In Google Backup settings',
+            'Turn on "Back up to Google Drive" if disabled',
+            'Select data to back up (Apps, Call history, etc.)',
+            'Tap "Back up now" to start initial backup',
+            'Ensure you have enough Google Drive storage'
+          ],
+          deepLink: 'android.settings.SYNC_SETTINGS',
+          verification: 'manual',
+          priority: 'high'
+        });
       }
-    ];
+      
+      // Third-party option for mobile
+      actions.push({
+        id: `${device.id}-third-party`,
+        title: 'Consider Additional Backup Service',
+        description: 'Set up a reputable third-party backup service for extra protection',
+        completed: false,
+        steps: [
+          'Research reputable backup services (Dropbox, OneDrive, pCloud)',
+          'Install your chosen backup app',
+          'Sign up for an account',
+          'Configure automatic photo and document backup',
+          'Verify backup is working correctly'
+        ],
+        verification: 'manual',
+        priority: 'medium',
+        thirdPartyOptions: getThirdPartyBackupOptions(platform)
+      });
+      
+    } else {
+      // Desktop devices get recommendations only
+      if (platform === 'windows') {
+        actions.push({
+          id: `${device.id}-onedrive`,
+          title: 'Set Up OneDrive Sync',
+          description: 'Enable OneDrive for automatic cloud backup of documents',
+          completed: false,
+          steps: [
+            'Press Windows key + I to open Settings',
+            'Click "Accounts" then "Backup"',
+            'Sign in to your Microsoft account',
+            'Turn on "Sync settings" and "Folder backup"',
+            'Choose folders to sync (Desktop, Documents, Pictures)',
+            'Verify sync is working'
+          ],
+          verification: 'manual',
+          priority: 'high'
+        });
+        
+        actions.push({
+          id: `${device.id}-file-history`,
+          title: 'Enable File History',
+          description: 'Set up Windows File History for local backup',
+          completed: false,
+          steps: [
+            'Connect an external drive',
+            'Open File History in Control Panel',
+            'Click "Turn on" File History',
+            'Select backup location (external drive)',
+            'Configure backup frequency',
+            'Run first backup'
+          ],
+          verification: 'manual',
+          priority: 'medium'
+        });
+      } else if (platform === 'macos') {
+        actions.push({
+          id: `${device.id}-time-machine`,
+          title: 'Set Up Time Machine',
+          description: 'Enable macOS Time Machine for complete system backup',
+          completed: false,
+          steps: [
+            'Connect an external drive or network storage',
+            'Open System Preferences > Time Machine',
+            'Click "Select Backup Disk"',
+            'Choose your backup destination',
+            'Turn on Time Machine',
+            'Wait for initial backup to complete'
+          ],
+          verification: 'manual',
+          priority: 'high'
+        });
+        
+        actions.push({
+          id: `${device.id}-icloud-drive`,
+          title: 'Enable iCloud Drive',
+          description: 'Turn on iCloud Drive for document and desktop sync',
+          completed: false,
+          steps: [
+            'Open System Preferences > Apple ID',
+            'Click "iCloud" in the sidebar',
+            'Check "iCloud Drive"',
+            'Click "Options" next to iCloud Drive',
+            'Enable "Desktop & Documents Folders"',
+            'Monitor sync status'
+          ],
+          verification: 'manual',
+          priority: 'high'
+        });
+      }
+      
+      // Third-party option for desktop
+      actions.push({
+        id: `${device.id}-third-party`,
+        title: 'Consider Professional Backup Solution',
+        description: 'Set up a comprehensive backup service for complete protection',
+        completed: false,
+        steps: [
+          'Research professional backup services (Backblaze, Carbonite, Acronis)',
+          'Choose a service that meets your needs',
+          'Download and install the backup software',
+          'Configure backup settings and schedules',
+          'Perform initial backup',
+          'Test restore functionality'
+        ],
+        verification: 'manual',
+        priority: 'medium',
+        thirdPartyOptions: getThirdPartyBackupOptions(platform)
+      });
+    }
 
     return actions;
+  };
+
+  const getThirdPartyBackupOptions = (platform) => {
+    const options = {
+      ios: [
+        { name: 'Dropbox', description: 'Popular cloud storage with automatic photo backup' },
+        { name: 'Google Drive', description: 'Additional Google storage beyond device backup' },
+        { name: 'OneDrive', description: 'Microsoft cloud storage with Office integration' }
+      ],
+      android: [
+        { name: 'Dropbox', description: 'Popular cloud storage with automatic photo backup' },
+        { name: 'OneDrive', description: 'Microsoft cloud storage with Office integration' },
+        { name: 'pCloud', description: 'Secure European cloud storage provider' }
+      ],
+      windows: [
+        { name: 'Backblaze', description: 'Unlimited computer backup for $6/month' },
+        { name: 'Carbonite', description: 'Personal and business backup solutions' },
+        { name: 'Acronis True Image', description: 'Complete cyber protection with backup' }
+      ],
+      macos: [
+        { name: 'Backblaze', description: 'Unlimited Mac backup for $6/month' },
+        { name: 'Arq', description: 'Encrypted backup to your own cloud storage' },
+        { name: 'Super Duper!', description: 'Disk cloning and backup for Mac' }
+      ]
+    };
+    
+    return options[platform] || [];
   };
 
   const getDeviceIcon = (device) => {
@@ -197,8 +342,8 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
 
   const loadProgress = async () => {
     try {
-      const progressData = await AsyncStorage.getItem('check_1-1-4_progress');
-      const completedData = await AsyncStorage.getItem('check_1-1-4_completed');
+      const progressData = await AsyncStorage.getItem('check_1-3-1_progress');
+      const completedData = await AsyncStorage.getItem('check_1-3-1_completed');
       
       if (progressData) {
         const data = JSON.parse(progressData);
@@ -239,12 +384,12 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
         completedAt: new Date().toISOString(),
       };
       
-      await AsyncStorage.setItem('check_1-1-4_progress', JSON.stringify(progressData));
+      await AsyncStorage.setItem('check_1-3-1_progress', JSON.stringify(progressData));
       
       if (isCompleted) {
-        await AsyncStorage.setItem('check_1-1-4_completed', 'completed');
+        await AsyncStorage.setItem('check_1-3-1_completed', 'completed');
       } else {
-        await AsyncStorage.removeItem('check_1-1-4_completed');
+        await AsyncStorage.removeItem('check_1-3-1_completed');
       }
     } catch (error) {
       console.error('Error saving progress:', error);
@@ -292,8 +437,8 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
             completedAt: new Date().toISOString(),
           };
           
-          await AsyncStorage.setItem('check_1-1-4_progress', JSON.stringify(progressData));
-          await AsyncStorage.setItem('check_1-1-4_completed', 'completed');
+          await AsyncStorage.setItem('check_1-3-1_progress', JSON.stringify(progressData));
+          await AsyncStorage.setItem('check_1-3-1_completed', 'completed');
         } catch (error) {
           console.error('Error saving completion progress:', error);
         }
@@ -308,12 +453,12 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
 
   const celebrateCompletion = () => {
     Alert.alert(
-      '🎉 Multi-Factor Authentication Setup Complete!',
-      'Outstanding! You\'ve enabled MFA across your devices. This dramatically increases your account security by requiring multiple forms of verification.',
+      '🎉 Cloud Backup Setup Complete!',
+      'Perfect! You\'ve secured your data with comprehensive backup solutions. Your important files and memories are now protected against device loss, theft, or damage.',
       [
         {
           text: 'Continue to Next Check',
-          onPress: () => navigation.navigate('Check1_3_1_CloudBackupScreen'),
+          onPress: () => navigation.navigate('Welcome'), // Will be updated when next check is available
         },
         {
           text: 'Go Back',
@@ -356,7 +501,7 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
         >
           <Ionicons name="menu" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Check 1.4</Text>
+        <Text style={styles.headerTitle}>Check 1.3.1</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -377,12 +522,12 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
             </TouchableOpacity>
 
             <View style={styles.modalCharacter}>
-              <Text style={styles.characterText}>🔐</Text>
+              <Text style={styles.characterText}>☁️</Text>
             </View>
 
             <Text style={styles.modalTitle}>Wait, don't go!</Text>
             <Text style={styles.modalMessage}>
-              You're about to supercharge your account security with multi-factor authentication. Don't miss this critical protection!
+              You're about to protect your precious data and memories with cloud backup. Don't let a device failure erase years of photos and documents!
             </Text>
 
             <View style={styles.modalButtons}>
@@ -410,9 +555,9 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
         <View style={styles.content}>
           {/* Title and Description */}
           <View style={styles.titleSection}>
-            <Text style={styles.title}>Set Up Multi-Factor Authentication</Text>
+            <Text style={styles.title}>Set Up Cloud Backup</Text>
             <Text style={styles.description}>
-              Add an extra layer of security to your accounts with both authenticator apps and biometric verification. This makes your accounts nearly impossible to hack.
+              Protect your important data, photos, and documents with reliable cloud backup solutions. Never lose your digital life to device failure or theft.
             </Text>
             
             {/* Progress Indicator */}
@@ -438,7 +583,7 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
             onPress={() => setShowLearnMore(!showLearnMore)}
             activeOpacity={0.8}
           >
-            <Text style={styles.learnMoreText}>Why use multi-factor authentication?</Text>
+            <Text style={styles.learnMoreText}>Why is cloud backup important?</Text>
             <Ionicons
               name={showLearnMore ? 'chevron-up' : 'chevron-down'}
               size={Responsive.iconSizes.medium}
@@ -448,23 +593,24 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
 
           {showLearnMore && (
             <View style={styles.learnMoreContent}>
-              <Text style={styles.learnMoreTitle}>Multi-Factor Authentication Benefits</Text>
+              <Text style={styles.learnMoreTitle}>Cloud Backup Benefits</Text>
               <Text style={styles.learnMoreBody}>
-                • Blocks 99.9% of automated attacks{'\n'}
-                • Protects even if passwords are compromised{'\n'}
-                • Works with banking, email, and social media{'\n'}
-                • Quick access with biometric verification{'\n'}
-                • Peace of mind knowing accounts are secure{'\n'}
-                • Required by many security frameworks
+                • Protects against device loss, theft, or damage{'\n'}
+                • Automatic backup keeps data current{'\n'}
+                • Access files from any device, anywhere{'\n'}
+                • Ransomware protection with version history{'\n'}
+                • Free up local storage space{'\n'}
+                • Peace of mind for irreplaceable memories{'\n'}
+                • Professional-grade data centers for security
               </Text>
             </View>
           )}
 
           {/* Device-Specific Sections */}
           <View style={styles.devicesSection}>
-            <Text style={styles.devicesSectionTitle}>MFA Setup by Device</Text>
+            <Text style={styles.devicesSectionTitle}>Cloud Backup Setup by Device</Text>
             <Text style={styles.devicesSectionSubtitle}>
-              Set up both authenticator apps and biometric authentication on each device for complete protection
+              Configure automatic cloud backup on each device. Mobile devices support verification workflows, desktop devices get comprehensive recommendations.
             </Text>
 
             {userDevices.length > 0 ? (
@@ -481,13 +627,13 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
             ) : (
               <View style={styles.noDevicesContainer}>
                 <Ionicons 
-                  name="shield-checkmark" 
+                  name="cloud-upload" 
                   size={Responsive.iconSizes.xxlarge} 
                   color={Colors.textSecondary} 
                 />
                 <Text style={styles.noDevicesTitle}>No Devices Found</Text>
                 <Text style={styles.noDevicesText}>
-                  Add your devices in the Profile tab to get personalized MFA setup recommendations.
+                  Add your devices in the Profile tab to get personalized backup setup recommendations.
                 </Text>
                 <TouchableOpacity
                   style={styles.addDevicesButton}
@@ -502,41 +648,41 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
 
           {/* Security Tips */}
           <View style={styles.tipsSection}>
-            <Text style={styles.tipsTitle}>🔐 MFA Best Practices</Text>
+            <Text style={styles.tipsTitle}>☁️ Backup Best Practices</Text>
             <View style={styles.tipItem}>
-              <Ionicons name="apps" size={Responsive.iconSizes.medium} color={Colors.accent} />
-              <Text style={styles.tipText}>Use authenticator apps instead of SMS when possible</Text>
+              <Ionicons name="repeat" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Follow the 3-2-1 rule: 3 copies, 2 different media, 1 offsite</Text>
             </View>
             <View style={styles.tipItem}>
-              <Ionicons name="finger-print" size={Responsive.iconSizes.medium} color={Colors.accent} />
-              <Text style={styles.tipText}>Enable biometric unlock for quick daily access</Text>
+              <Ionicons name="time" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Enable automatic backup to keep data current</Text>
             </View>
             <View style={styles.tipItem}>
-              <Ionicons name="shield-checkmark" size={Responsive.iconSizes.medium} color={Colors.accent} />
-              <Text style={styles.tipText}>Enable MFA on all important accounts (banking, email, social)</Text>
+              <Ionicons name="checkmark-circle" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Test restore functionality periodically</Text>
             </View>
             <View style={styles.tipItem}>
-              <Ionicons name="copy" size={Responsive.iconSizes.medium} color={Colors.accent} />
-              <Text style={styles.tipText}>Save backup codes in a secure location</Text>
+              <Ionicons name="lock-closed" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Choose services with strong encryption</Text>
             </View>
           </View>
 
           {/* Completion Status */}
           {isCompleted && (
             <View style={styles.completionCard}>
-              <Ionicons name="shield-checkmark" size={Responsive.iconSizes.xxlarge} color={Colors.success} />
-              <Text style={styles.completionTitle}>Multi-Factor Authentication Enabled!</Text>
+              <Ionicons name="cloud-done" size={Responsive.iconSizes.xxlarge} color={Colors.success} />
+              <Text style={styles.completionTitle}>Cloud Backup Configured!</Text>
               <Text style={styles.completionText}>
-                Fantastic! You've set up MFA across your devices. Your accounts now have enterprise-level security protection against cyber threats.
+                Excellent! Your data is now protected with comprehensive backup solutions. You can rest easy knowing your important files and memories are safe.
               </Text>
               
               <TouchableOpacity
                 style={styles.continueButton}
-                onPress={() => navigation.navigate('Check1_3_1_CloudBackupScreen')}
+                onPress={() => navigation.navigate('Welcome')}
                 activeOpacity={0.8}
               >
-                <Text style={styles.continueButtonText}>Continue to Cloud Backup Setup</Text>
-                <Ionicons name="arrow-forward" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
+                <Text style={styles.continueButtonText}>Return to Dashboard</Text>
+                <Ionicons name="home" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
               </TouchableOpacity>
             </View>
           )}
@@ -851,4 +997,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Check1_4_MFASetupScreen;
+export default Check1_3_1_CloudBackupScreen;

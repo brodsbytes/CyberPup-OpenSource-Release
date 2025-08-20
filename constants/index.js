@@ -44,6 +44,7 @@ export const SCREEN_NAMES = {
   CHECK_1_4_1_SCAM_RECOGNITION: 'Check1_4_1_ScamRecognitionScreen',
   CHECK_1_5_BREACH_CHECK: 'Check1_5_BreachCheckScreen',
   CHECK_1_2_1_SCREEN_LOCK: 'Check1_2_1_ScreenLockScreen',
+  CHECK_1_3_1_CLOUD_BACKUP: 'Check1_3_1_CloudBackupScreen',
   PHISHING_PRACTICE: 'PhishingPracticeScreen',
   // Insights detail screens
   GUIDE_DETAIL: 'GuideDetailScreen',

@@ -21,6 +21,7 @@ import {
   Check1_4_1_ScamRecognitionScreen,
   Check1_5_BreachCheckScreen,
   Check1_2_1_ScreenLockScreen,
+  Check1_3_1_CloudBackupScreen,
   // Reusable components
   PhishingPracticeScreen,
 } from './screens/lessons';
@@ -103,6 +104,7 @@ export default function App() {
         <Stack.Screen name={SCREEN_NAMES.CHECK_1_4_1_SCAM_RECOGNITION} component={Check1_4_1_ScamRecognitionScreen} />
         <Stack.Screen name={SCREEN_NAMES.CHECK_1_5_BREACH_CHECK} component={Check1_5_BreachCheckScreen} />
         <Stack.Screen name={SCREEN_NAMES.CHECK_1_2_1_SCREEN_LOCK} component={Check1_2_1_ScreenLockScreen} />
+        <Stack.Screen name={SCREEN_NAMES.CHECK_1_3_1_CLOUD_BACKUP} component={Check1_3_1_CloudBackupScreen} />
         <Stack.Screen name={SCREEN_NAMES.PHISHING_PRACTICE} component={PhishingPracticeScreen} />
         
         <Stack.Screen name={SCREEN_NAMES.PROFILE} component={ProfileScreen} />
