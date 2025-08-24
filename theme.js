@@ -256,4 +256,36 @@ export const CommonStyles = {
   },
 };
 
+// 🎯 Phase 4 Check Variants Theme System
+export const CheckVariants = {
+  wizard: {
+    accent: Colors.green,
+    background: Colors.surface,
+    progressStyle: 'circular',
+    layout: 'fullscreen-flow',
+    headerStyle: 'wizard-header',
+    navigationStyle: 'wizard-nav'
+  },
+  timeline: {
+    accent: Colors.purple,
+    background: Colors.surfaceAlt,
+    progressStyle: 'timeline',
+    layout: 'dashboard-drilldown',
+    headerStyle: 'timeline-header',
+    navigationStyle: 'timeline-nav',
+    milestoneStyle: 'timeline-milestone',
+    deviceCardStyle: 'timeline-device-card'
+  },
+  checklist: {
+    accent: Colors.orange,
+    background: Colors.surface,
+    progressStyle: 'animated-bars',
+    layout: 'card-list',
+    headerStyle: 'checklist-header',
+    navigationStyle: 'checklist-nav',
+    itemStyle: 'checklist-item',
+    categoryStyle: 'checklist-category'
+  }
+};
+
 

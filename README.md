@@ -1,6 +1,6 @@
 # CyberPup
 
-A React Native mobile application built with Expo for comprehensive cybersecurity health assessments and education.
+A React Native mobile application built with Expo for comprehensive cybersecurity remediations and sometimes education.
 
 ## Mission
 

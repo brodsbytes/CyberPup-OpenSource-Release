@@ -243,22 +243,6 @@ const ProgressiveActionCard = ({
                 <Text style={styles.stepText}>{step}</Text>
               </View>
             ))}
-            
-            {/* Verification Request */}
-            <TouchableOpacity 
-              style={[styles.verificationButton, styles.completionButtonGreen]}
-              onPress={handleVerificationComplete}
-              activeOpacity={0.8}
-            >
-              <Ionicons 
-                name="checkmark-circle" 
-                size={Responsive.iconSizes.medium} 
-                color={Colors.textPrimary} 
-              />
-              <Text style={[styles.verificationButtonText, styles.completionButtonText]}>
-                I've completed these steps
-              </Text>
-            </TouchableOpacity>
           </View>
         )}
 

@@ -3,8 +3,6 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import WelcomeScreen from './screens/WelcomeScreen';
-import CategoryScreen from './screens/CategoryScreen';
-import ModuleListScreen from './screens/ModuleListScreen';
 import InsightsScreen from './screens/InsightsScreen';
 import LoadingScreen from './components/LoadingScreen';
 import { GuideDetailScreen, ToolDetailScreen, AlertDetailScreen } from './screens/Insights';
@@ -24,6 +22,22 @@ import {
   Check1_3_1_CloudBackupScreen,
   // Reusable components
   PhishingPracticeScreen,
+  
+  // 🎯 Phase 4 Wizard Variant Screens
+  Check1_2_2_RemoteLockScreen,
+  Check1_2_3_DeviceUpdatesScreen,
+  Check1_2_4_BluetoothWifiScreen,
+  
+  // 🎯 Phase 4 Timeline Variant Screens
+  Check1_5_2_PrivacySettingsScreen,
+  
+  // 🎯 Phase 4 Checklist Variant Screens
+  Check1_3_2_LocalBackupScreen,
+  Check1_4_2_ScamReportingScreen,
+  
+  // 🎯 Phase 4 Pattern A Enhanced Screens
+  Check1_2_5_PublicChargingScreen,
+  Check1_5_1_SharingAwarenessScreen,
 } from './screens/lessons';
 
 import InitialWelcomeScreen from './screens/InitialWelcomeScreen';
@@ -45,12 +59,20 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    // Register background fetch for security alerts
-    BackgroundAlertsService.registerBackgroundFetch();
+    // Register background fetch for security alerts (only on native platforms)
+    try {
+      BackgroundAlertsService.registerBackgroundFetch();
+    } catch (error) {
+      console.log('Background fetch not available on this platform:', error.message);
+    }
     
     return () => {
       // Cleanup on app unmount
-      BackgroundAlertsService.unregisterBackgroundFetch();
+      try {
+        BackgroundAlertsService.unregisterBackgroundFetch();
+      } catch (error) {
+        console.log('Background fetch cleanup not available on this platform:', error.message);
+      }
     };
   }, []);
 
@@ -87,8 +109,6 @@ export default function App() {
         <Stack.Screen name={SCREEN_NAMES.INITIAL_WELCOME} component={InitialWelcomeScreen} />
         <Stack.Screen name={SCREEN_NAMES.DEVICE_AUDIT} component={DeviceAuditScreen} />
         <Stack.Screen name={SCREEN_NAMES.WELCOME} component={WelcomeScreen} />
-        <Stack.Screen name={SCREEN_NAMES.CATEGORY} component={CategoryScreen} />
-        <Stack.Screen name={SCREEN_NAMES.MODULE_LIST} component={ModuleListScreen} />
         <Stack.Screen name={SCREEN_NAMES.INSIGHTS} component={InsightsScreen} />
         
         {/* Insights detail screens */}
@@ -106,6 +126,22 @@ export default function App() {
         <Stack.Screen name={SCREEN_NAMES.CHECK_1_2_1_SCREEN_LOCK} component={Check1_2_1_ScreenLockScreen} />
         <Stack.Screen name={SCREEN_NAMES.CHECK_1_3_1_CLOUD_BACKUP} component={Check1_3_1_CloudBackupScreen} />
         <Stack.Screen name={SCREEN_NAMES.PHISHING_PRACTICE} component={PhishingPracticeScreen} />
+        
+        {/* 🎯 Phase 4 Wizard Variant Screens */}
+        <Stack.Screen name={SCREEN_NAMES.CHECK_1_2_2_REMOTE_LOCK} component={Check1_2_2_RemoteLockScreen} />
+        <Stack.Screen name={SCREEN_NAMES.CHECK_1_2_3_DEVICE_UPDATES} component={Check1_2_3_DeviceUpdatesScreen} />
+        <Stack.Screen name={SCREEN_NAMES.CHECK_1_2_4_BLUETOOTH_WIFI} component={Check1_2_4_BluetoothWifiScreen} />
+        
+        {/* 🎯 Phase 4 Timeline Variant Screens */}
+        <Stack.Screen name={SCREEN_NAMES.CHECK_1_5_2_PRIVACY_SETTINGS} component={Check1_5_2_PrivacySettingsScreen} />
+        
+        {/* 🎯 Phase 4 Checklist Variant Screens */}
+        <Stack.Screen name={SCREEN_NAMES.CHECK_1_3_2_LOCAL_BACKUP} component={Check1_3_2_LocalBackupScreen} />
+        <Stack.Screen name={SCREEN_NAMES.CHECK_1_4_2_SCAM_REPORTING} component={Check1_4_2_ScamReportingScreen} />
+        
+        {/* 🎯 Phase 4 Pattern A Enhanced Screens */}
+        <Stack.Screen name={SCREEN_NAMES.CHECK_1_2_5_PUBLIC_CHARGING} component={Check1_2_5_PublicChargingScreen} />
+        <Stack.Screen name={SCREEN_NAMES.CHECK_1_5_1_SHARING_AWARENESS} component={Check1_5_1_SharingAwarenessScreen} />
         
         <Stack.Screen name={SCREEN_NAMES.PROFILE} component={ProfileScreen} />
       </Stack.Navigator>

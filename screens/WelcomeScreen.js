@@ -344,15 +344,8 @@ const WelcomeScreen = ({ navigation }) => {
     <TouchableOpacity
       style={styles.progressCard}
       onPress={() => {
-        const levelInfo = getLevelInfo(levelId);
-        navigation.navigate('ModuleListScreen', {
-          category: {
-            id: levelId,
-            title: levelInfo.title,
-            icon: levelInfo.icon,
-            color: levelInfo.color,
-          }
-        });
+        // Open catalogue modal instead of navigating to deprecated ModuleListScreen
+        setShowCatalogue(true);
       }}
       activeOpacity={0.8}
     >
@@ -512,13 +505,30 @@ const WelcomeScreen = ({ navigation }) => {
       // Map check id to its screen
       const checkRoutes = {
         '1-0-1': SCREEN_NAMES.INITIAL_WELCOME,
-        '1-1-1': SCREEN_NAMES.CHECK_1_1_STRONG_PASSWORDS,
-        '1-1-2': SCREEN_NAMES.CHECK_1_2_HIGH_VALUE_ACCOUNTS,
         '1-1-3': SCREEN_NAMES.CHECK_1_3_PASSWORD_MANAGERS,
         '1-1-4': SCREEN_NAMES.CHECK_1_4_MFA_SETUP,
         '1-1-5': SCREEN_NAMES.CHECK_1_5_BREACH_CHECK,
         '1-2-1': SCREEN_NAMES.CHECK_1_2_1_SCREEN_LOCK,
-        // TODO: Add more check screens as they are created
+        '1-3-1': SCREEN_NAMES.CHECK_1_3_1_CLOUD_BACKUP,
+        '1-4-1': SCREEN_NAMES.CHECK_1_4_1_SCAM_RECOGNITION,
+        
+        // 🎯 Phase 4 Wizard Variant Routes
+        '1-2-2': SCREEN_NAMES.CHECK_1_2_2_REMOTE_LOCK,
+        '1-2-3': SCREEN_NAMES.CHECK_1_2_3_DEVICE_UPDATES,
+        '1-2-4': SCREEN_NAMES.CHECK_1_2_4_BLUETOOTH_WIFI,
+        
+        // 🎯 Phase 4 Timeline Variant Routes
+        '1-1-2': SCREEN_NAMES.CHECK_1_1_2_HIGH_VALUE_ACCOUNTS,
+        '1-5-2': SCREEN_NAMES.CHECK_1_5_2_PRIVACY_SETTINGS,
+        
+        // 🎯 Phase 4 Checklist Variant Routes
+        '1-3-2': SCREEN_NAMES.CHECK_1_3_2_LOCAL_BACKUP,
+        '1-4-2': SCREEN_NAMES.CHECK_1_4_2_SCAM_REPORTING,
+        
+        // 🎯 Phase 4 Pattern A Enhanced Routes
+        '1-1-1': SCREEN_NAMES.CHECK_1_1_1_STRONG_PASSWORDS_ENHANCED,
+        '1-2-5': SCREEN_NAMES.CHECK_1_2_5_PUBLIC_CHARGING,
+        '1-5-1': SCREEN_NAMES.CHECK_1_5_1_SHARING_AWARENESS,
       };
       
       const routeName = checkRoutes[checkId] || SCREEN_NAMES.WELCOME;
@@ -912,9 +922,7 @@ const WelcomeScreen = ({ navigation }) => {
         activeTab="home"
         onTabPress={(screen) => {
           console.log('WelcomeScreen - Tab pressed:', screen);
-          if (screen === 'CategoryScreen') {
-            navigation.navigate(SCREEN_NAMES.CATEGORY);
-          } else if (screen === 'InsightsScreen') {
+          if (screen === 'InsightsScreen') {
             navigation.navigate(SCREEN_NAMES.INSIGHTS);
           } else if (screen === 'ProfileScreen') {
             navigation.navigate(SCREEN_NAMES.PROFILE);
