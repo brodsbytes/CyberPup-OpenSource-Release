@@ -20,6 +20,8 @@ import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
 import { BreachCheckService } from '../../../utils/breachCheckService';
 import InteractiveValidationFlow from '../../../components/InteractiveValidationFlow';
 import BreachCheckStep from '../../../components/validation-steps/BreachCheckStep';
+import CompletionPopup from '../../../components/CompletionPopup';
+import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 
 const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
 
@@ -40,6 +42,7 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
   ]);
   const [showLearnMore, setShowLearnMore] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [scaleAnim] = useState(new Animated.Value(1));
   const [showExitModal, setShowExitModal] = useState(false);
   
@@ -87,6 +90,7 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
         console.log('✅ Check 1.1.5 is marked as completed in storage');
         setIsCompleted(true);
         setFlowCompleted(true);
+        setShowCompletionPopup(true);
       }
       
 
@@ -605,29 +609,15 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
           )}
           
           {/* Completion Status */}
-          {isCompleted && (
-            <View style={styles.completionCard}>
-              <Ionicons name="checkmark-circle" size={Responsive.iconSizes.xxlarge} color={Colors.accent} />
-              <Text style={styles.completionTitle}>Check Complete!</Text>
-              <Text style={styles.completionText}>
-                You completed the interactive breach check! Great job protecting your digital identity.
-              </Text>
-              
-              <TouchableOpacity
-                style={styles.continueButton}
-                onPress={async () => {
-                  console.log('🔘 Continue button pressed in completion card');
-                  // Ensure completion is saved before navigating
-                  await saveProgress(checklistItems, true);
-                  navigation.navigate('Check1_2_1_ScreenLockScreen');
-                }}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.continueButtonText}>Continue to Next Area</Text>
-                <Ionicons name="arrow-forward" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
-              </TouchableOpacity>
-            </View>
-          )}
+          <CompletionPopup
+            isVisible={showCompletionPopup}
+            title={getCompletionMessage('1-1-5').title}
+            description={getCompletionMessage('1-1-5').description}
+            nextScreenName={getNextScreenName('1-1-5')}
+            navigation={navigation}
+            onClose={() => setShowCompletionPopup(false)}
+            variant="modal"
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

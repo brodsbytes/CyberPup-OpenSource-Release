@@ -75,7 +75,7 @@ const InitialWelcomeScreen = ({ navigation }) => {
       <View style={styles.keyPointsContainer}>
         <View style={styles.keyPoint}>
           <Ionicons name="shield-checkmark" size={Responsive.iconSizes.medium} color={Colors.accent} />
-          <Text style={styles.keyPointText}>Unbiased expert advice that remains passionately vendor-agnostic, no upsells</Text>
+          <Text style={styles.keyPointText}>Unbiased expert advice that is passionately independent, no upsells</Text>
         </View>
         <View style={styles.keyPoint}>
           <Ionicons name="flash" size={Responsive.iconSizes.medium} color={Colors.accent} />

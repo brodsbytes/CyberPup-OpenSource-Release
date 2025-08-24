@@ -215,20 +215,38 @@ const ProgressiveActionCard = ({
 
         {/* Primary Action Button */}
         {status === 'pending' && (
-          <TouchableOpacity 
-            style={styles.primaryButton} 
-            onPress={handlePrimaryAction}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.primaryButtonText}>
-              {getActionButtonText()}
-            </Text>
-            <Ionicons 
-              name="arrow-forward" 
-              size={Responsive.iconSizes.small} 
-              color={Colors.textPrimary} 
-            />
-          </TouchableOpacity>
+          <View>
+            <TouchableOpacity 
+              style={styles.primaryButton} 
+              onPress={handlePrimaryAction}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.primaryButtonText}>
+                {getActionButtonText()}
+              </Text>
+              <Ionicons 
+                name="arrow-forward" 
+                size={Responsive.iconSizes.small} 
+                color={Colors.textPrimary} 
+              />
+            </TouchableOpacity>
+            
+            {/* Complete Task Button */}
+            <TouchableOpacity 
+              style={styles.completeTaskButton} 
+              onPress={handleVerificationComplete}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.completeTaskButtonText}>
+                Complete Task!
+              </Text>
+              <Ionicons 
+                name="checkmark-circle" 
+                size={Responsive.iconSizes.small} 
+                color={Colors.textPrimary} 
+              />
+            </TouchableOpacity>
+          </View>
         )}
 
         {/* Manual Steps (shown when deep link fails or not available) */}
@@ -243,6 +261,22 @@ const ProgressiveActionCard = ({
                 <Text style={styles.stepText}>{step}</Text>
               </View>
             ))}
+            
+            {/* Complete Task Button inside steps container */}
+            <TouchableOpacity 
+              style={styles.completeTaskButton} 
+              onPress={handleVerificationComplete}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.completeTaskButtonText}>
+                Complete Task!
+              </Text>
+              <Ionicons 
+                name="checkmark-circle" 
+                size={Responsive.iconSizes.small} 
+                color={Colors.textPrimary} 
+              />
+            </TouchableOpacity>
           </View>
         )}
 
@@ -412,6 +446,23 @@ const styles = StyleSheet.create({
     minHeight: Responsive.buttonHeight.medium,
   },
   primaryButtonText: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginRight: Responsive.spacing.sm,
+  },
+  completeTaskButton: {
+    backgroundColor: Colors.success,
+    borderRadius: Responsive.borderRadius.medium,
+    paddingVertical: Responsive.padding.button,
+    paddingHorizontal: Responsive.spacing.lg,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: Responsive.buttonHeight.medium,
+    marginTop: Responsive.spacing.sm,
+  },
+  completeTaskButtonText: {
     fontSize: Typography.sizes.md,
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,

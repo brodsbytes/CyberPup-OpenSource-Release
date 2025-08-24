@@ -211,7 +211,7 @@ const DeviceAuditScreen = ({ navigation, route }) => {
     
     if (isFirstTime) {
       // Continue to Level 1 checks
-      navigation.replace(SCREEN_NAMES.CHECK_1_1_STRONG_PASSWORDS);
+      navigation.replace(SCREEN_NAMES.CHECK_1_1_1_STRONG_PASSWORDS);
     } else {
       // Return to profile
       navigation.goBack();

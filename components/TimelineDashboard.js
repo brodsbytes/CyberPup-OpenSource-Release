@@ -128,17 +128,7 @@ const TimelineDashboard = ({
     }
   };
 
-  // Handle direct milestone completion (without going through ProgressiveActionCard)
-  const handleMilestoneComplete = async () => {
-    const currentMilestone = milestones[selectedMilestone];
-    if (currentMilestone) {
-      await handleTimelineActionComplete(
-        currentMilestone.device.id, 
-        currentMilestone.action.id, 
-        true
-      );
-    }
-  };
+
   
   // Handle milestone selection
   const handleMilestoneSelect = (milestoneIndex) => {
@@ -280,17 +270,7 @@ const TimelineDashboard = ({
             />
           </View>
 
-          {/* Mark Complete Button - only show if not already completed */}
-          {!milestones[selectedMilestone].completed && (
-            <TouchableOpacity
-              style={styles.markCompleteButton}
-              onPress={handleMilestoneComplete}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="checkmark-circle" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
-              <Text style={styles.markCompleteText}>Mark Complete</Text>
-            </TouchableOpacity>
-          )}
+
           
           {/* Milestone Tips */}
           {milestones[selectedMilestone].action.tips && (
@@ -473,24 +453,7 @@ const styles = {
     textAlign: 'center',
     lineHeight: Typography.sizes.md * 1.5,
   },
-  markCompleteButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.success,
-    borderRadius: Responsive.borderRadius.medium,
-    paddingVertical: Responsive.padding.button,
-    paddingHorizontal: Responsive.spacing.lg,
-    marginTop: Responsive.spacing.md,
-    marginBottom: Responsive.spacing.md,
-    minHeight: Responsive.buttonHeight.medium,
-  },
-  markCompleteText: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
-    marginLeft: Responsive.spacing.sm,
-  },
+
 };
 
 export default TimelineDashboard;

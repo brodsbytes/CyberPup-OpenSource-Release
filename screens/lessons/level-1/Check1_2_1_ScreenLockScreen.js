@@ -18,6 +18,8 @@ import { DeviceCapabilities } from '../../../utils/deviceCapabilities';
 import CollapsibleDeviceSection from '../../../components/CollapsibleDeviceSection';
 import { SettingsGuide } from '../../../utils/settingsGuide';
 import * as Haptics from 'expo-haptics';
+import CompletionPopup from '../../../components/CompletionPopup';
+import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 
 /**
  * Check1_2_1_ScreenLockScreen - Pattern B Implementation
@@ -34,6 +36,7 @@ const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
   const [userDevices, setUserDevices] = useState([]);
   const [deviceActions, setDeviceActions] = useState({});
   const [isCompleted, setIsCompleted] = useState(false);
+  const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showLearnMore, setShowLearnMore] = useState(false);
 
@@ -48,6 +51,10 @@ const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
   useFocusEffect(
     React.useCallback(() => {
       loadProgress();
+      // Reset completion state when screen comes into focus
+      // This ensures the completion popup doesn't stay visible after navigation
+      setIsCompleted(false);
+      setShowCompletionPopup(false);
     }, [])
   );
 
@@ -229,6 +236,7 @@ const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
       
       if (completedData === 'completed') {
         setIsCompleted(true);
+        setShowCompletionPopup(true);
       }
     } catch (error) {
       console.error('Error loading progress:', error);
@@ -283,6 +291,7 @@ const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
 
     if (allDevicesCompleted && !isCompleted) {
       setIsCompleted(true);
+        setShowCompletionPopup(true);
       if (Haptics?.impactAsync) {
         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       }
@@ -312,21 +321,8 @@ const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
   };
 
   const celebrateCompletion = () => {
-    Alert.alert(
-      '🔒 Screen Lock Setup Complete!',
-      'Excellent! You\'ve secured your devices with proper screen locks. This prevents unauthorized access if your device is lost or stolen.',
-      [
-        {
-          text: 'Continue to Next Check',
-          onPress: () => navigation.navigate('Check1_3_PasswordManagersScreen'),
-        },
-        {
-          text: 'Go Back',
-          style: 'cancel',
-          onPress: () => navigation.navigate('Welcome'),
-        },
-      ]
-    );
+    // The completion popup will be shown automatically when isCompleted is true
+    // No need to call it as a function
   };
 
   const handleExit = () => {
@@ -545,24 +541,19 @@ const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
           </View>
 
           {/* Completion Status */}
-          {isCompleted && (
-            <View style={styles.completionCard}>
-              <Ionicons name="shield-checkmark" size={Responsive.iconSizes.xxlarge} color={Colors.success} />
-              <Text style={styles.completionTitle}>Screen Locks Configured!</Text>
-              <Text style={styles.completionText}>
-                Excellent work! Your devices are now protected with secure screen locks. This significantly reduces the risk of unauthorized access.
-              </Text>
-              
-              <TouchableOpacity
-                style={styles.continueButton}
-                onPress={() => navigation.navigate('Check1_3_PasswordManagersScreen')}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.continueButtonText}>Continue to Password Managers</Text>
-                <Ionicons name="arrow-forward" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
-              </TouchableOpacity>
-            </View>
-          )}
+          <CompletionPopup
+          isVisible={showCompletionPopup}
+          title={getCompletionMessage('1-2-1').title}
+          description={getCompletionMessage('1-2-1').description}
+          nextScreenName={getNextScreenName('1-2-1')}
+          navigation={navigation}
+          onContinue={() => {
+            setIsCompleted(false);
+            navigation.navigate(getNextScreenName('1-2-1'));
+          }}
+          variant="modal"
+            onClose={() => setShowCompletionPopup(false)}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

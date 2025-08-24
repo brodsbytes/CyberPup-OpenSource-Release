@@ -8,7 +8,6 @@ import {
   StatusBar,
   TouchableOpacity,
   ScrollView,
-  Alert,
   Modal,
   Platform,
 } from 'react-native';
@@ -19,6 +18,8 @@ import { DeviceCapabilities } from '../../../utils/deviceCapabilities';
 import CollapsibleDeviceSection from '../../../components/CollapsibleDeviceSection';
 import { SettingsGuide } from '../../../utils/settingsGuide';
 import * as Haptics from 'expo-haptics';
+import CompletionPopup from '../../../components/CompletionPopup';
+import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 
 /**
  * Check1_4_MFASetupScreen - Pattern B Implementation
@@ -35,6 +36,7 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
   const [userDevices, setUserDevices] = useState([]);
   const [deviceActions, setDeviceActions] = useState({});
   const [isCompleted, setIsCompleted] = useState(false);
+  const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showLearnMore, setShowLearnMore] = useState(false);
 
@@ -49,6 +51,9 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
   useFocusEffect(
     React.useCallback(() => {
       loadProgress();
+      // Reset completion state when screen comes into focus
+      // This ensures the completion popup doesn't stay visible after navigation
+      setIsCompleted(false);
     }, [])
   );
 
@@ -224,6 +229,7 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
       
       if (completedData === 'completed') {
         setIsCompleted(true);
+        setShowCompletionPopup(true);
       }
     } catch (error) {
       console.error('Error loading progress:', error);
@@ -278,6 +284,7 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
 
     if (allDevicesCompleted && !isCompleted) {
       setIsCompleted(true);
+        setShowCompletionPopup(true);
       if (Haptics?.impactAsync) {
         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       }
@@ -307,21 +314,8 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
   };
 
   const celebrateCompletion = () => {
-    Alert.alert(
-      '🎉 Multi-Factor Authentication Setup Complete!',
-      'Outstanding! You\'ve enabled MFA across your devices. This dramatically increases your account security by requiring multiple forms of verification.',
-      [
-        {
-          text: 'Continue to Next Check',
-          onPress: () => navigation.navigate('Check1_3_1_CloudBackupScreen'),
-        },
-        {
-          text: 'Go Back',
-          style: 'cancel',
-          onPress: () => navigation.navigate('Welcome'),
-        },
-      ]
-    );
+    // The completion popup will be shown automatically when isCompleted is true
+    // No need to call it as a function
   };
 
   const handleExit = () => {
@@ -522,24 +516,19 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
           </View>
 
           {/* Completion Status */}
-          {isCompleted && (
-            <View style={styles.completionCard}>
-              <Ionicons name="shield-checkmark" size={Responsive.iconSizes.xxlarge} color={Colors.success} />
-              <Text style={styles.completionTitle}>Multi-Factor Authentication Enabled!</Text>
-              <Text style={styles.completionText}>
-                Fantastic! You've set up MFA across your devices. Your accounts now have enterprise-level security protection against cyber threats.
-              </Text>
-              
-              <TouchableOpacity
-                style={styles.continueButton}
-                onPress={() => navigation.navigate('Check1_3_1_CloudBackupScreen')}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.continueButtonText}>Continue to Cloud Backup Setup</Text>
-                <Ionicons name="arrow-forward" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
-              </TouchableOpacity>
-            </View>
-          )}
+          <CompletionPopup
+          isVisible={showCompletionPopup}
+          title={getCompletionMessage('1-1-4').title}
+          description={getCompletionMessage('1-1-4').description}
+          nextScreenName={getNextScreenName('1-1-4')}
+          navigation={navigation}
+                      onContinue={() => {
+              setIsCompleted(false);
+              navigation.navigate(getNextScreenName('1-1-4'));
+            }}
+          variant="modal"
+            onClose={() => setShowCompletionPopup(false)}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

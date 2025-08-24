@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  Alert,
   Modal,
   StatusBar,
   StyleSheet,
@@ -17,6 +16,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
 import { SCREEN_NAMES } from '../../../constants';
 import { AppStorage } from '../../../utils/storage';
+import CompletionPopup from '../../../components/CompletionPopup';
+import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 
 import InteractiveChecklist from '../../../components/InteractiveChecklist';
 
@@ -24,6 +25,7 @@ const Check1_5_1_SharingAwarenessScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Standard state management
   const [checklistItems, setChecklistItems] = useState([]);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -240,6 +242,10 @@ const Check1_5_1_SharingAwarenessScreen = ({ navigation, route }) => {
     React.useCallback(() => {
       loadProgress();
       initializeChecklistContent();
+      // Reset completion state when screen comes into focus
+      // This ensures the completion popup doesn't stay visible after navigation
+      setIsCompleted(false);
+      setShowCompletionPopup(false);
     }, [])
   );
 
@@ -252,6 +258,7 @@ const Check1_5_1_SharingAwarenessScreen = ({ navigation, route }) => {
       const allCompleted = checklistItems.every(item => item.completed);
       if (allCompleted && !isCompleted) {
         setIsCompleted(true);
+        setShowCompletionPopup(true);
         celebrateCompletion();
       }
     }
@@ -282,21 +289,8 @@ const Check1_5_1_SharingAwarenessScreen = ({ navigation, route }) => {
 
   // ✅ STANDARD: Completion celebration
   const celebrateCompletion = () => {
-    Alert.alert(
-      '🎉 Sharing Awareness Complete!',
-      'You\'ve developed smart sharing habits to protect your privacy. You can now share safely without putting yourself at risk!',
-      [
-        {
-          text: 'Continue to Next Check',
-          onPress: () => navigation.navigate(SCREEN_NAMES.CHECK_1_5_2_PRIVACY_SETTINGS),
-        },
-        {
-          text: 'Go Back',
-          style: 'cancel',
-          onPress: () => navigation.navigate(SCREEN_NAMES.WELCOME),
-        },
-      ]
-    );
+    // The completion popup will be shown automatically when isCompleted is true
+    // No need to call it as a function
   };
 
   return (
@@ -401,25 +395,19 @@ const Check1_5_1_SharingAwarenessScreen = ({ navigation, route }) => {
       </Modal>
       
       {/* ✅ STANDARD: Completion card */}
-      {isCompleted && (
-        <View style={styles.completionCard}>
-          <View style={styles.completionContent}>
-            <Ionicons name="checkmark-circle" size={Responsive.iconSizes.xxlarge} color={Colors.success} />
-            <Text style={styles.completionTitle}>Sharing Awareness Mastered!</Text>
-            <Text style={styles.completionDescription}>
-              You've developed smart sharing habits to protect your privacy. You can now share safely without putting yourself at risk.
-            </Text>
-            <TouchableOpacity
-              style={styles.continueButton}
-              onPress={() => navigation.navigate(SCREEN_NAMES.CHECK_1_5_2_PRIVACY_SETTINGS)}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.continueButtonText}>Continue to Privacy Settings</Text>
-              <Ionicons name="chevron-forward" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
+          <CompletionPopup
+          isVisible={showCompletionPopup}
+          title={getCompletionMessage('1-5-1').title}
+          description={getCompletionMessage('1-5-1').description}
+          nextScreenName={getNextScreenName('1-5-1')}
+          navigation={navigation}
+          onContinue={() => {
+            setIsCompleted(false);
+            navigation.navigate(getNextScreenName('1-5-1'));
+          }}
+          variant="modal"
+            onClose={() => setShowCompletionPopup(false)}
+          />
     </SafeAreaView>
   );
 };

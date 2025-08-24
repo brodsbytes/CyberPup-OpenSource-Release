@@ -8,7 +8,6 @@ import {
   StatusBar,
   TouchableOpacity,
   ScrollView,
-  Alert,
   Modal,
   Platform,
 } from 'react-native';
@@ -19,6 +18,8 @@ import { DeviceCapabilities } from '../../../utils/deviceCapabilities';
 import CollapsibleDeviceSection from '../../../components/CollapsibleDeviceSection';
 import { SettingsGuide } from '../../../utils/settingsGuide';
 import * as Haptics from 'expo-haptics';
+import CompletionPopup from '../../../components/CompletionPopup';
+import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 
 /**
  * Check1_3_1_CloudBackupScreen - Pattern B Implementation
@@ -36,6 +37,7 @@ const Check1_3_1_CloudBackupScreen = ({ navigation, route }) => {
   const [userDevices, setUserDevices] = useState([]);
   const [deviceActions, setDeviceActions] = useState({});
   const [isCompleted, setIsCompleted] = useState(false);
+  const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showLearnMore, setShowLearnMore] = useState(false);
 
@@ -50,6 +52,10 @@ const Check1_3_1_CloudBackupScreen = ({ navigation, route }) => {
   useFocusEffect(
     React.useCallback(() => {
       loadProgress();
+      // Reset completion state when screen comes into focus
+      // This ensures the completion popup doesn't stay visible after navigation
+      setIsCompleted(false);
+      setShowCompletionPopup(false);
     }, [])
   );
 
@@ -369,6 +375,7 @@ const Check1_3_1_CloudBackupScreen = ({ navigation, route }) => {
       
       if (completedData === 'completed') {
         setIsCompleted(true);
+        setShowCompletionPopup(true);
       }
     } catch (error) {
       console.error('Error loading progress:', error);
@@ -423,6 +430,7 @@ const Check1_3_1_CloudBackupScreen = ({ navigation, route }) => {
 
     if (allDevicesCompleted && !isCompleted) {
       setIsCompleted(true);
+        setShowCompletionPopup(true);
       if (Haptics?.impactAsync) {
         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       }
@@ -452,21 +460,8 @@ const Check1_3_1_CloudBackupScreen = ({ navigation, route }) => {
   };
 
   const celebrateCompletion = () => {
-    Alert.alert(
-      '🎉 Cloud Backup Setup Complete!',
-      'Perfect! You\'ve secured your data with comprehensive backup solutions. Your important files and memories are now protected against device loss, theft, or damage.',
-      [
-        {
-          text: 'Continue to Next Check',
-          onPress: () => navigation.navigate('Welcome'), // Will be updated when next check is available
-        },
-        {
-          text: 'Go Back',
-          style: 'cancel',
-          onPress: () => navigation.navigate('Welcome'),
-        },
-      ]
-    );
+    // The completion popup will be shown automatically when isCompleted is true
+    // No need to call it as a function
   };
 
   const handleExit = () => {
@@ -668,24 +663,19 @@ const Check1_3_1_CloudBackupScreen = ({ navigation, route }) => {
           </View>
 
           {/* Completion Status */}
-          {isCompleted && (
-            <View style={styles.completionCard}>
-              <Ionicons name="cloud-done" size={Responsive.iconSizes.xxlarge} color={Colors.success} />
-              <Text style={styles.completionTitle}>Cloud Backup Configured!</Text>
-              <Text style={styles.completionText}>
-                Excellent! Your data is now protected with comprehensive backup solutions. You can rest easy knowing your important files and memories are safe.
-              </Text>
-              
-              <TouchableOpacity
-                style={styles.continueButton}
-                onPress={() => navigation.navigate('Welcome')}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.continueButtonText}>Return to Dashboard</Text>
-                <Ionicons name="home" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
-              </TouchableOpacity>
-            </View>
-          )}
+          <CompletionPopup
+          isVisible={showCompletionPopup}
+          title={getCompletionMessage('1-3-1').title}
+          description={getCompletionMessage('1-3-1').description}
+          nextScreenName={getNextScreenName('1-3-1')}
+          navigation={navigation}
+          onContinue={() => {
+            setIsCompleted(false);
+            navigation.navigate(getNextScreenName('1-3-1'));
+          }}
+          variant="modal"
+            onClose={() => setShowCompletionPopup(false)}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

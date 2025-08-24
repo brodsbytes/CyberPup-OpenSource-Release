@@ -19,14 +19,17 @@ import { SCREEN_NAMES } from '../../../constants';
 import { DeviceCapabilities } from '../../../utils/deviceCapabilities';
 import { SettingsGuide } from '../../../utils/settingsGuide';
 import { AppStorage } from '../../../utils/storage';
+import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 
 import TimelineDashboard from '../../../components/TimelineDashboard';
+import CompletionPopup from '../../../components/CompletionPopup';
 
 const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Exact same state management as Check 1.4
   const [userDevices, setUserDevices] = useState([]);
   const [deviceActions, setDeviceActions] = useState({});
   const [isCompleted, setIsCompleted] = useState(false);
+  const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [deviceCompletionStatus, setDeviceCompletionStatus] = useState({});
   const [showExitModal, setShowExitModal] = useState(false);
 
@@ -101,6 +104,9 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
         setDeviceActions(progress.deviceActions || {});
         setDeviceCompletionStatus(progress.deviceCompletionStatus || {});
         setIsCompleted(progress.isCompleted || false);
+        if (progress.isCompleted) {
+          setShowCompletionPopup(true);
+        }
       }
     } catch (error) {
       console.error('Error loading progress:', error);
@@ -190,21 +196,8 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
 
   // ✅ PRESERVE: Completion celebration
   const celebrateCompletion = () => {
-    Alert.alert(
-      '🎉 High-Value Account Security Complete!',
-      'Your most important accounts are now secured with advanced protection. Don\'t leave your banking and email vulnerable!',
-      [
-        {
-          text: 'Continue to Next Check',
-          onPress: () => navigation.navigate(SCREEN_NAMES.CHECK_1_1_3_PASSWORD_MANAGERS),
-        },
-        {
-          text: 'Go Back',
-          style: 'cancel',
-          onPress: () => navigation.navigate('Welcome'),
-        },
-      ]
-    );
+    console.log('🎉 Check 1.1.2 High-Value Accounts completed!');
+    setShowCompletionPopup(true);
   };
 
   // Helper function to get device icon
@@ -429,28 +422,16 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
         </View>
       </ScrollView>
       
-      {/* ✅ PRESERVE: Exact same completion card */}
-      {isCompleted && (
-        <View style={styles.completionCard}>
-          <View style={styles.completionContent}>
-            <Ionicons 
-              name="checkmark-circle" 
-              size={Responsive.iconSizes.xxlarge} 
-              color={Colors.success} 
-            />
-            <Text style={styles.completionTitle}>Account Security Complete!</Text>
-            <Text style={styles.completionDescription}>
-              Your high-value accounts are now secured with advanced protection measures.
-            </Text>
-            <TouchableOpacity
-              style={styles.completionButton}
-              onPress={() => navigation.navigate(SCREEN_NAMES.CHECK_1_1_3_PASSWORD_MANAGERS)}
-            >
-              <Text style={styles.completionButtonText}>Continue to Next Check</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
+      {/* Completion Status */}
+      <CompletionPopup
+        isVisible={showCompletionPopup}
+        title={getCompletionMessage('1-1-2').title}
+        description={getCompletionMessage('1-1-2').description}
+        nextScreenName={getNextScreenName('1-1-2')}
+        navigation={navigation}
+        onClose={() => setShowCompletionPopup(false)}
+        variant="modal"
+      />
     </SafeAreaView>
   );
 };
@@ -605,45 +586,6 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
     fontWeight: Typography.weights.medium,
     color: Colors.textSecondary,
-  },
-  completionCard: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: Colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    padding: Responsive.padding.screen,
-  },
-  completionContent: {
-    alignItems: 'center',
-  },
-  completionTitle: {
-    fontSize: Typography.sizes.xl,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-    marginTop: Responsive.spacing.md,
-    marginBottom: Responsive.spacing.sm,
-    textAlign: 'center',
-  },
-  completionDescription: {
-    fontSize: Typography.sizes.md,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: Typography.sizes.md * 1.5,
-    marginBottom: Responsive.spacing.lg,
-  },
-  completionButton: {
-    backgroundColor: Colors.success,
-    paddingVertical: Responsive.padding.button,
-    paddingHorizontal: Responsive.spacing.lg,
-    borderRadius: Responsive.borderRadius.medium,
-  },
-  completionButtonText: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.medium,
-    color: Colors.textPrimary,
   },
 });
 

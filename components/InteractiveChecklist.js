@@ -102,16 +102,6 @@ const InteractiveChecklist = ({
   
   // Handle checklist item completion
   const handleChecklistItemComplete = async (itemId, completed) => {
-    // Find the item and update it
-    const updatedItems = checklistItems.map(item => 
-      item.id === itemId ? { ...item, completed } : item
-    );
-    
-    // Update progress
-    const newProgress = calculateProgress();
-    setChecklistProgress(newProgress);
-    setCompletedItems(updatedItems.filter(item => item.completed).length);
-    
     // Haptic feedback
     if (Haptics?.impactAsync) {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -119,9 +109,7 @@ const InteractiveChecklist = ({
     
     // Call parent handler if provided
     if (onActionComplete) {
-      // For checklist items, we might need to map to device actions
-      // This is a simplified version - you might need to adapt based on your data structure
-      await onActionComplete('checklist', itemId, completed);
+      await onActionComplete(itemId, completed);
     }
   };
   

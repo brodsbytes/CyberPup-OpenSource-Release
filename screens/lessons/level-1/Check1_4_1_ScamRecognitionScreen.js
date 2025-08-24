@@ -16,6 +16,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
 import InteractiveValidationFlow from '../../../components/InteractiveValidationFlow';
 import ScamRecognitionStep from '../../../components/validation-steps/ScamRecognitionStep';
+import CompletionPopup from '../../../components/CompletionPopup';
+import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 
 const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
   const [checklistItems, setChecklistItems] = useState([
@@ -34,6 +36,7 @@ const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
   ]);
   const [showLearnMore, setShowLearnMore] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   
   // Pattern C - Interactive flow state
@@ -71,6 +74,7 @@ const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
       if (completedData === 'completed') {
         console.log('✅ Check 1.4.1 is marked as completed in storage');
         setIsCompleted(true);
+        setShowCompletionPopup(true);
         setFlowCompleted(true);
       }
       
@@ -351,31 +355,15 @@ const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
           )}
           
           {/* Completion Status */}
-          {isCompleted && (
-            <View style={styles.completionCard}>
-              <Ionicons name="checkmark-circle" size={Responsive.iconSizes.xxlarge} color={Colors.accent} />
-              <Text style={styles.completionTitle}>Training Complete!</Text>
-              <Text style={styles.completionText}>
-                {useInteractiveFlow ? 
-                  `Excellent work! You scored ${flowScore}% on scam recognition training. You're now better equipped to identify and avoid phishing attempts.` :
-                  'You\'ve completed the scam recognition training. You\'re now better prepared to identify and avoid common scams.'
-                }
-              </Text>
-              
-              <TouchableOpacity
-                style={styles.continueButton}
-                onPress={async () => {
-                  console.log('🔘 Continue button pressed in completion card');
-                  await saveProgress(checklistItems, true);
-                  navigation.navigate('Check1_5_BreachCheckScreen');
-                }}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.continueButtonText}>Continue to Breach Check</Text>
-                <Ionicons name="arrow-forward" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
-              </TouchableOpacity>
-            </View>
-          )}
+          <CompletionPopup
+          isVisible={showCompletionPopup}
+          title={getCompletionMessage('1-4-1').title}
+          description={getCompletionMessage('1-4-1').description}
+          nextScreenName={getNextScreenName('1-4-1')}
+          navigation={navigation}
+          variant="modal"
+            onClose={() => setShowCompletionPopup(false)}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -19,6 +19,8 @@ import { SCREEN_NAMES } from '../../../constants';
 import { DeviceCapabilities } from '../../../utils/deviceCapabilities';
 import { SettingsGuide } from '../../../utils/settingsGuide';
 import { AppStorage } from '../../../utils/storage';
+import CompletionPopup from '../../../components/CompletionPopup';
+import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 
 import InteractiveChecklist from '../../../components/InteractiveChecklist';
 
@@ -27,6 +29,7 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
   const [userDevices, setUserDevices] = useState([]);
   const [deviceActions, setDeviceActions] = useState({});
   const [isCompleted, setIsCompleted] = useState(false);
+  const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [deviceCompletionStatus, setDeviceCompletionStatus] = useState({});
   const [showExitModal, setShowExitModal] = useState(false);
 
@@ -217,6 +220,10 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
     React.useCallback(() => {
       loadProgress();
       initializeDeviceContent();
+      // Reset completion state when screen comes into focus
+      // This ensures the completion popup doesn't stay visible after navigation
+      setIsCompleted(false);
+      setShowCompletionPopup(false);
     }, [])
   );
 
@@ -281,6 +288,7 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
 
       if (allDevicesCompleted && !isCompleted) {
         setIsCompleted(true);
+        setShowCompletionPopup(true);
         celebrateCompletion();
       }
     } catch (error) {
@@ -289,28 +297,18 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
   };
 
   // 🎨 NEW: Checklist-specific completion handler
-  const handleChecklistItemComplete = async (deviceId, actionId, completed) => {
+  const handleChecklistItemComplete = async (itemId, completed) => {
     try {
-      console.log('Debug: handleChecklistItemComplete called with:', deviceId, actionId, completed);
+      console.log('Debug: handleChecklistItemComplete called with:', itemId, completed);
       
-      // If the first parameter is 'checklist', then we're being called from InteractiveChecklist
-      if (deviceId === 'checklist') {
-        const itemId = actionId; // actionId is actually the itemId in this case
-        console.log('Debug: InteractiveChecklist call - itemId:', itemId, 'completed:', completed);
-        
-        // Find the item to get device and action IDs
-        const item = checklistItems.find(item => item.id === itemId);
-        console.log('Debug: Found item:', item);
-        if (item) {
-          console.log('Debug: Calling handleActionComplete with:', item.deviceId, item.actionId, completed);
-          await handleActionComplete(item.deviceId, item.actionId, completed);
-        } else {
-          console.error('Debug: Item not found for ID:', itemId);
-        }
+      // Find the item to get device and action IDs
+      const item = checklistItems.find(item => item.id === itemId);
+      console.log('Debug: Found item:', item);
+      if (item) {
+        console.log('Debug: Calling handleActionComplete with:', item.deviceId, item.actionId, completed);
+        await handleActionComplete(item.deviceId, item.actionId, completed);
       } else {
-        // Direct call with device and action IDs
-        console.log('Debug: Direct call - deviceId:', deviceId, 'actionId:', actionId, 'completed:', completed);
-        await handleActionComplete(deviceId, actionId, completed);
+        console.error('Debug: Item not found for ID:', itemId);
       }
     } catch (error) {
       console.error('Error handling checklist item completion:', error);
@@ -333,21 +331,8 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
 
   // ✅ PRESERVE: Completion celebration
   const celebrateCompletion = () => {
-    Alert.alert(
-      '🎉 Local Backup Setup Complete!',
-      'Your devices are now configured with local backup solutions. This protection will save your data from ransomware and device failure!',
-      [
-        {
-          text: 'Continue to Next Check',
-          onPress: () => navigation.navigate(SCREEN_NAMES.CHECK_1_4_1_SCAM_RECOGNITION),
-        },
-        {
-          text: 'Go Back',
-          style: 'cancel',
-          onPress: () => navigation.navigate('Welcome'),
-        },
-      ]
-    );
+    // The completion popup will be shown automatically when isCompleted is true
+    // No need to call it as a function
   };
 
   // Helper function to get device icon
@@ -853,27 +838,19 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
       </ScrollView>
       
       {/* ✅ PRESERVE: Exact same completion card */}
-      {isCompleted && (
-        <View style={styles.completionCard}>
-          <View style={styles.completionContent}>
-            <Ionicons 
-              name="checkmark-circle" 
-              size={Responsive.iconSizes.xxlarge} 
-              color={Colors.success} 
-            />
-            <Text style={styles.completionTitle}>Local Backup Complete!</Text>
-            <Text style={styles.completionDescription}>
-              Your devices are now configured with local backup solutions to protect your data.
-            </Text>
-            <TouchableOpacity
-              style={styles.completionButton}
-              onPress={() => navigation.navigate(SCREEN_NAMES.CHECK_1_4_1_SCAM_RECOGNITION)}
-            >
-              <Text style={styles.completionButtonText}>Continue to Next Check</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
+          <CompletionPopup
+          isVisible={showCompletionPopup}
+          title={getCompletionMessage('1-3-2').title}
+          description={getCompletionMessage('1-3-2').description}
+          nextScreenName={getNextScreenName('1-3-2')}
+          navigation={navigation}
+          onContinue={() => {
+            setIsCompleted(false);
+            navigation.navigate(getNextScreenName('1-3-2'));
+          }}
+          variant="modal"
+            onClose={() => setShowCompletionPopup(false)}
+          />
     </SafeAreaView>
   );
 };
@@ -1036,45 +1013,7 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.medium,
     color: Colors.textSecondary,
   },
-  completionCard: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: Colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    padding: Responsive.padding.screen,
-  },
-  completionContent: {
-    alignItems: 'center',
-  },
-  completionTitle: {
-    fontSize: Typography.sizes.xl,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-    marginTop: Responsive.spacing.md,
-    marginBottom: Responsive.spacing.sm,
-    textAlign: 'center',
-  },
-  completionDescription: {
-    fontSize: Typography.sizes.md,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: Typography.sizes.md * 1.5,
-    marginBottom: Responsive.spacing.lg,
-  },
-  completionButton: {
-    backgroundColor: Colors.success,
-    paddingVertical: Responsive.padding.button,
-    paddingHorizontal: Responsive.spacing.lg,
-    borderRadius: Responsive.borderRadius.medium,
-  },
-  completionButtonText: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.medium,
-    color: Colors.textPrimary,
-  },
+  
 });
 
 export default Check1_3_2_LocalBackupScreen;

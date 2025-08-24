@@ -19,6 +19,8 @@ import { DeviceCapabilities } from '../../../utils/deviceCapabilities';
 import CollapsibleDeviceSection from '../../../components/CollapsibleDeviceSection';
 import { SettingsGuide } from '../../../utils/settingsGuide';
 import * as Haptics from 'expo-haptics';
+import CompletionPopup from '../../../components/CompletionPopup';
+import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 
 /**
  * Check1_3_PasswordManagersScreen - Pattern B Implementation
@@ -35,6 +37,7 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
   const [userDevices, setUserDevices] = useState([]);
   const [deviceActions, setDeviceActions] = useState({});
   const [isCompleted, setIsCompleted] = useState(false);
+  const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [showLearnMore, setShowLearnMore] = useState(false);
 
@@ -49,6 +52,9 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
   useFocusEffect(
     React.useCallback(() => {
       loadProgress();
+      // Reset completion state when screen comes into focus
+      // This ensures the completion popup doesn't stay visible after navigation
+      setIsCompleted(false);
     }, [])
   );
 
@@ -212,6 +218,7 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
       
       if (completedData === 'completed') {
         setIsCompleted(true);
+        setShowCompletionPopup(true);
       }
     } catch (error) {
       console.error('Error loading progress:', error);
@@ -266,6 +273,7 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
 
     if (allDevicesCompleted && !isCompleted) {
       setIsCompleted(true);
+        setShowCompletionPopup(true);
       if (Haptics?.impactAsync) {
         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       }
@@ -295,21 +303,8 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
   };
 
   const celebrateCompletion = () => {
-    Alert.alert(
-      '🎉 Password Manager Setup Complete!',
-      'Excellent! You\'ve set up password managers on your devices. This significantly improves your security by enabling strong, unique passwords.',
-      [
-        {
-          text: 'Continue to Next Check',
-          onPress: () => navigation.navigate('Check1_4_MFASetupScreen'),
-        },
-        {
-          text: 'Go Back',
-          style: 'cancel',
-          onPress: () => navigation.navigate('Welcome'),
-        },
-      ]
-    );
+    // The completion popup will be shown automatically when isCompleted is true
+    // No need to call it as a function
   };
 
   const handleExit = () => {
@@ -510,24 +505,19 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
           </View>
 
           {/* Completion Status */}
-          {isCompleted && (
-            <View style={styles.completionCard}>
-              <Ionicons name="checkmark-circle" size={Responsive.iconSizes.xxlarge} color={Colors.success} />
-              <Text style={styles.completionTitle}>Password Managers Configured!</Text>
-              <Text style={styles.completionText}>
-                Excellent work! You've set up password managers across your devices. Your accounts are now much more secure with strong, unique passwords.
-              </Text>
-              
-              <TouchableOpacity
-                style={styles.continueButton}
-                onPress={() => navigation.navigate('Check1_4_MFASetupScreen')}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.continueButtonText}>Continue to Multi-Factor Authentication</Text>
-                <Ionicons name="arrow-forward" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
-              </TouchableOpacity>
-            </View>
-          )}
+          <CompletionPopup
+          isVisible={showCompletionPopup}
+          title={getCompletionMessage('1-1-3').title}
+          description={getCompletionMessage('1-1-3').description}
+          nextScreenName={getNextScreenName('1-1-3')}
+          navigation={navigation}
+                      onContinue={() => {
+              setIsCompleted(false);
+              navigation.navigate(getNextScreenName('1-1-3'));
+            }}
+          variant="modal"
+            onClose={() => setShowCompletionPopup(false)}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

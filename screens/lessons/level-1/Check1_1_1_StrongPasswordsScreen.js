@@ -17,13 +17,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
 import { SCREEN_NAMES } from '../../../constants';
 import { AppStorage } from '../../../utils/storage';
+import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 
 import InteractiveChecklist from '../../../components/InteractiveChecklist';
+import CompletionPopup from '../../../components/CompletionPopup';
 
 const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Standard state management
   const [checklistItems, setChecklistItems] = useState([]);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -169,6 +172,9 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
         const progress = JSON.parse(progressData);
         setChecklistItems(progress.checklistItems || []);
         setIsCompleted(progress.isCompleted || false);
+        if (progress.isCompleted) {
+          setShowCompletionPopup(true);
+        }
       }
     } catch (error) {
       console.error('Error loading progress:', error);
@@ -237,21 +243,8 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
 
   // ✅ STANDARD: Completion celebration
   const celebrateCompletion = () => {
-    Alert.alert(
-      '🎉 Strong Passwords Enhanced Complete!',
-      'You\'ve mastered the art of creating and managing strong passwords. Your accounts are now much more secure!',
-      [
-        {
-          text: 'Continue to Next Check',
-          onPress: () => navigation.navigate(SCREEN_NAMES.CHECK_1_1_2_HIGH_VALUE_ACCOUNTS),
-        },
-        {
-          text: 'Go Back',
-          style: 'cancel',
-          onPress: () => navigation.navigate(SCREEN_NAMES.WELCOME),
-        },
-      ]
-    );
+    console.log('🎉 Check 1.1.1 Enhanced completed!');
+    setShowCompletionPopup(true);
   };
 
   return (
@@ -267,7 +260,7 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
         >
           <Ionicons name="menu" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Check 1.1.1 Enhanced</Text>
+        <Text style={styles.headerTitle}>Check 1.1.1</Text>
         <View style={styles.headerSpacer} />
       </View>
       
@@ -282,9 +275,9 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
                 color={Colors.accent} 
               />
             </View>
-            <Text style={styles.title}>Strong Passwords Enhanced</Text>
+            <Text style={styles.title}>Strong Passwords</Text>
             <Text style={styles.description}>
-              Master the art of creating and managing strong passwords. This enhanced checklist will help you build bulletproof password habits that protect all your accounts.
+              Master the art of creating and managing strong passwords. This checklist will help you build bulletproof password habits that protect all your accounts.
             </Text>
           </View>
           
@@ -355,26 +348,16 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
         </View>
       </Modal>
       
-      {/* ✅ STANDARD: Completion card */}
-      {isCompleted && (
-        <View style={styles.completionCard}>
-          <View style={styles.completionContent}>
-            <Ionicons name="checkmark-circle" size={Responsive.iconSizes.xxlarge} color={Colors.success} />
-            <Text style={styles.completionTitle}>Strong Passwords Mastered!</Text>
-            <Text style={styles.completionDescription}>
-              You've completed all password security best practices. Your accounts are now protected with strong, unique passwords.
-            </Text>
-            <TouchableOpacity
-              style={styles.continueButton}
-              onPress={() => navigation.navigate(SCREEN_NAMES.CHECK_1_1_2_HIGH_VALUE_ACCOUNTS)}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.continueButtonText}>Continue to High-Value Accounts</Text>
-              <Ionicons name="chevron-forward" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
+      {/* Completion Status */}
+      <CompletionPopup
+        isVisible={showCompletionPopup}
+        title={getCompletionMessage('1-1-1').title}
+        description={getCompletionMessage('1-1-1').description}
+        nextScreenName={getNextScreenName('1-1-1')}
+        navigation={navigation}
+        onClose={() => setShowCompletionPopup(false)}
+        variant="modal"
+      />
     </SafeAreaView>
   );
 };
@@ -544,49 +527,6 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
     fontWeight: Typography.weights.semibold,
     color: Colors.textSecondary,
-  },
-  completionCard: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: Colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    padding: Responsive.padding.screen,
-  },
-  completionContent: {
-    alignItems: 'center',
-  },
-  completionTitle: {
-    fontSize: Typography.sizes.lg,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-    marginTop: Responsive.spacing.sm,
-    marginBottom: Responsive.spacing.sm,
-    textAlign: 'center',
-  },
-  completionDescription: {
-    fontSize: Typography.sizes.md,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: Typography.sizes.md * 1.5,
-    marginBottom: Responsive.spacing.lg,
-  },
-  continueButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.success,
-    paddingVertical: Responsive.padding.button,
-    paddingHorizontal: Responsive.spacing.lg,
-    borderRadius: Responsive.borderRadius.medium,
-    minHeight: Responsive.buttonHeight.medium,
-  },
-  continueButtonText: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
-    marginRight: Responsive.spacing.sm,
   },
 });
 

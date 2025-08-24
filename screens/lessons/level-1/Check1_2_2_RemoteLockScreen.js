@@ -20,12 +20,15 @@ import { SettingsGuide } from '../../../utils/settingsGuide';
 import { AppStorage } from '../../../utils/storage';
 
 import WizardFlow from '../../../components/WizardFlow';
+import CompletionPopup from '../../../components/CompletionPopup';
+import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 
 const Check1_2_2_RemoteLockScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Exact same state management as Check 1.4
   const [userDevices, setUserDevices] = useState([]);
   const [deviceActions, setDeviceActions] = useState({});
   const [isCompleted, setIsCompleted] = useState(false);
+  const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [deviceCompletionStatus, setDeviceCompletionStatus] = useState({});
   const [showExitModal, setShowExitModal] = useState(false);
 
@@ -148,6 +151,7 @@ const Check1_2_2_RemoteLockScreen = ({ navigation, route }) => {
 
       if (allDevicesCompleted && !isCompleted) {
         setIsCompleted(true);
+        setShowCompletionPopup(true);
         celebrateCompletion();
       }
 
@@ -159,34 +163,21 @@ const Check1_2_2_RemoteLockScreen = ({ navigation, route }) => {
   };
 
   const celebrateCompletion = () => {
-    Alert.alert(
-      '🎉 Remote Lock & Wipe Setup Complete!',
-      'Your devices are now protected with remote security features.',
-      [
-        {
-          text: 'Continue to Next Check',
-          onPress: () => navigation.navigate('Check1_2_3_DeviceUpdatesScreen'),
-        },
-        {
-          text: 'Go Back',
-          style: 'cancel',
-          onPress: () => navigation.navigate('Welcome'),
-        },
-      ]
-    );
+    // The completion popup will be shown automatically when isCompleted is true
+    // No need to call it as a function
   };
 
   const handleExit = () => {
     setShowExitModal(true);
   };
 
-  const handleConfirmExit = () => {
+  const handleKeepLearning = () => {
     setShowExitModal(false);
-    navigation.navigate(SCREEN_NAMES.CATEGORY);
   };
 
-  const handleCancelExit = () => {
+  const handleExitLesson = () => {
     setShowExitModal(false);
+    navigation.navigate('Welcome');
   };
 
   // ✅ PRESERVE: Exact same useFocusEffect pattern
@@ -194,6 +185,10 @@ const Check1_2_2_RemoteLockScreen = ({ navigation, route }) => {
     React.useCallback(() => {
       loadProgress();
       initializeDeviceContent();
+      // Reset completion state when screen comes into focus
+      // This ensures the completion popup doesn't stay visible after navigation
+      setIsCompleted(false);
+      setShowCompletionPopup(false);
     }, [])
   );
 
@@ -273,53 +268,60 @@ const Check1_2_2_RemoteLockScreen = ({ navigation, route }) => {
       </ScrollView>
       
       {/* ✅ PRESERVE: Exact same completion card */}
-      {isCompleted && (
-        <View style={styles.completionCard}>
-          <View style={styles.completionContent}>
-            <Ionicons 
-              name="checkmark-circle" 
-              size={Responsive.iconSizes.xxlarge} 
-              color={Colors.success} 
-            />
-            <Text style={styles.completionTitle}>Setup Complete! 🎉</Text>
-            <Text style={styles.completionText}>
-              Your devices are now protected with remote security features.
-            </Text>
-            <TouchableOpacity
-              style={styles.continueButton}
-              onPress={() => navigation.navigate('Welcome')}
-            >
-              <Text style={styles.continueButtonText}>Continue to Next Check</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
+          <CompletionPopup
+          isVisible={showCompletionPopup}
+          title={getCompletionMessage('1-2-2').title}
+          description={getCompletionMessage('1-2-2').description}
+          nextScreenName={getNextScreenName('1-2-2')}
+          navigation={navigation}
+          onContinue={() => {
+            setIsCompleted(false);
+            navigation.navigate(getNextScreenName('1-2-2'));
+          }}
+          variant="modal"
+            onClose={() => setShowCompletionPopup(false)}
+          />
 
       {/* Exit Modal */}
       <Modal
         visible={showExitModal}
         transparent={true}
         animationType="fade"
-        onRequestClose={handleCancelExit}
+        onRequestClose={() => setShowExitModal(false)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Exit Setup?</Text>
-            <Text style={styles.modalText}>
-              Your progress will be saved. You can continue later from where you left off.
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowExitModal(false)}
+            >
+              <Ionicons name="close" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
+            </TouchableOpacity>
+
+            <View style={styles.modalCharacter}>
+              <Text style={styles.characterText}>🔒</Text>
+            </View>
+
+            <Text style={styles.modalTitle}>Secure your devices!</Text>
+            <Text style={styles.modalMessage}>
+              Remote security features are essential for protecting your data if your device is lost or stolen!
             </Text>
+
             <View style={styles.modalButtons}>
               <TouchableOpacity
-                style={styles.modalButtonSecondary}
-                onPress={handleCancelExit}
+                style={styles.keepLearningButton}
+                onPress={handleKeepLearning}
+                activeOpacity={0.8}
               >
-                <Text style={styles.modalButtonSecondaryText}>Cancel</Text>
+                <Text style={styles.keepLearningButtonText}>Continue setup</Text>
               </TouchableOpacity>
+
               <TouchableOpacity
-                style={styles.modalButtonPrimary}
-                onPress={handleConfirmExit}
+                style={styles.exitLessonButton}
+                onPress={handleExitLesson}
+                activeOpacity={0.8}
               >
-                <Text style={styles.modalButtonPrimaryText}>Exit</Text>
+                <Text style={styles.exitLessonButtonText}>Exit lesson</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -503,59 +505,75 @@ const styles = {
   },
   modalContent: {
     backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.xlarge,
+    borderRadius: Responsive.borderRadius.xxlarge,
     padding: Responsive.padding.modal,
     marginHorizontal: Responsive.padding.screen,
-    maxWidth: 400,
+    alignItems: 'center',
+    position: 'relative',
+    minWidth: Responsive.modal.width,
+  },
+  modalCloseButton: {
+    position: 'absolute',
+    top: Responsive.padding.button,
+    right: Responsive.padding.button,
+    width: Responsive.iconSizes.xlarge,
+    height: Responsive.iconSizes.xlarge,
+    borderRadius: Responsive.iconSizes.xlarge / 2,
+    backgroundColor: Colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCharacter: {
+    marginBottom: Responsive.spacing.md,
+  },
+  characterText: {
+    fontSize: Responsive.iconSizes.xxlarge,
   },
   modalTitle: {
-    fontSize: Typography.sizes.lg,
+    fontSize: Typography.sizes.xxl,
     fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
+    textAlign: 'center',
     marginBottom: Responsive.spacing.sm,
   },
-  modalText: {
+  modalMessage: {
     fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
-    lineHeight: Typography.sizes.md * 1.5,
+    textAlign: 'center',
+    lineHeight: Typography.sizes.md * 1.4,
     marginBottom: Responsive.spacing.lg,
   },
   modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    width: '100%',
     gap: Responsive.spacing.sm,
   },
-  modalButtonSecondary: {
-    flex: 1,
-    paddingVertical: Responsive.padding.button,
-    paddingHorizontal: Responsive.spacing.md,
-    borderRadius: Responsive.borderRadius.medium,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: 'transparent',
-    minHeight: Responsive.buttonHeight.medium,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalButtonSecondaryText: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.medium,
-    color: Colors.textPrimary,
-  },
-  modalButtonPrimary: {
-    flex: 1,
-    paddingVertical: Responsive.padding.button,
-    paddingHorizontal: Responsive.spacing.md,
-    borderRadius: Responsive.borderRadius.medium,
+  keepLearningButton: {
     backgroundColor: Colors.accent,
-    minHeight: Responsive.buttonHeight.medium,
+    borderRadius: Responsive.borderRadius.large,
+    paddingVertical: Responsive.padding.button,
+    paddingHorizontal: Responsive.spacing.lg,
     alignItems: 'center',
-    justifyContent: 'center',
+    minHeight: Responsive.buttonHeight.medium,
   },
-  modalButtonPrimaryText: {
+  keepLearningButtonText: {
     fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.medium,
+    fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
+  },
+  exitLessonButton: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    paddingVertical: Responsive.padding.button,
+    paddingHorizontal: Responsive.spacing.lg,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.accent,
+    minHeight: Responsive.buttonHeight.medium,
+  },
+  exitLessonButtonText: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.accent,
   },
   noDevicesContainer: {
     backgroundColor: Colors.surface,

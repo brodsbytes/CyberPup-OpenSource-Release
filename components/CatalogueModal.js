@@ -88,9 +88,9 @@ const CatalogueModal = ({ visible, onClose, navigation, activeLevel = null }) =>
     // Map check id to its screen
     const checkRoutes = {
       '1-0-1': SCREEN_NAMES.INITIAL_WELCOME,
-      '1-1-3': SCREEN_NAMES.CHECK_1_3_PASSWORD_MANAGERS,
-      '1-1-4': SCREEN_NAMES.CHECK_1_4_MFA_SETUP,
-      '1-1-5': SCREEN_NAMES.CHECK_1_5_BREACH_CHECK,
+      '1-1-3': SCREEN_NAMES.CHECK_1_1_3_PASSWORD_MANAGERS,
+          '1-1-4': SCREEN_NAMES.CHECK_1_1_4_MFA_SETUP,
+    '1-1-5': SCREEN_NAMES.CHECK_1_1_5_BREACH_CHECK,
       '1-2-1': SCREEN_NAMES.CHECK_1_2_1_SCREEN_LOCK,
       '1-3-1': SCREEN_NAMES.CHECK_1_3_1_CLOUD_BACKUP,
       '1-4-1': SCREEN_NAMES.CHECK_1_4_1_SCAM_RECOGNITION,
@@ -109,7 +109,7 @@ const CatalogueModal = ({ visible, onClose, navigation, activeLevel = null }) =>
       '1-4-2': SCREEN_NAMES.CHECK_1_4_2_SCAM_REPORTING,
       
       // 🎯 Phase 4 Pattern A Enhanced Routes
-      '1-1-1': SCREEN_NAMES.CHECK_1_1_STRONG_PASSWORDS,
+      '1-1-1': SCREEN_NAMES.CHECK_1_1_1_STRONG_PASSWORDS,
       '1-2-5': SCREEN_NAMES.CHECK_1_2_5_PUBLIC_CHARGING,
       '1-5-1': SCREEN_NAMES.CHECK_1_5_1_SHARING_AWARENESS,
     };

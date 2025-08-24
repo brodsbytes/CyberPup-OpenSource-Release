@@ -19,11 +19,14 @@ import { SCREEN_NAMES } from '../../../constants';
 import { AppStorage } from '../../../utils/storage';
 
 import InteractiveChecklist from '../../../components/InteractiveChecklist';
+import CompletionPopup from '../../../components/CompletionPopup';
+import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 
 const Check1_2_5_PublicChargingScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Standard state management
   const [checklistItems, setChecklistItems] = useState([]);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -240,6 +243,10 @@ const Check1_2_5_PublicChargingScreen = ({ navigation, route }) => {
     React.useCallback(() => {
       loadProgress();
       initializeChecklistContent();
+      // Reset completion state when screen comes into focus
+      // This ensures the completion popup doesn't stay visible after navigation
+      setIsCompleted(false);
+      setShowCompletionPopup(false);
     }, [])
   );
 
@@ -252,6 +259,7 @@ const Check1_2_5_PublicChargingScreen = ({ navigation, route }) => {
       const allCompleted = checklistItems.every(item => item.completed);
       if (allCompleted && !isCompleted) {
         setIsCompleted(true);
+        setShowCompletionPopup(true);
         celebrateCompletion();
       }
     }
@@ -282,21 +290,8 @@ const Check1_2_5_PublicChargingScreen = ({ navigation, route }) => {
 
   // ✅ STANDARD: Completion celebration
   const celebrateCompletion = () => {
-    Alert.alert(
-      '🎉 Public Charging Safety Complete!',
-      'You\'ve learned to protect yourself from juice jacking attacks. You can now charge safely in public places!',
-      [
-        {
-          text: 'Continue to Next Check',
-          onPress: () => navigation.navigate(SCREEN_NAMES.CHECK_1_5_1_SHARING_AWARENESS),
-        },
-        {
-          text: 'Go Back',
-          style: 'cancel',
-          onPress: () => navigation.navigate(SCREEN_NAMES.WELCOME),
-        },
-      ]
-    );
+    // The completion popup will be shown automatically when isCompleted is true
+    // No need to call it as a function
   };
 
   return (
@@ -401,25 +396,19 @@ const Check1_2_5_PublicChargingScreen = ({ navigation, route }) => {
       </Modal>
       
       {/* ✅ STANDARD: Completion card */}
-      {isCompleted && (
-        <View style={styles.completionCard}>
-          <View style={styles.completionContent}>
-            <Ionicons name="checkmark-circle" size={Responsive.iconSizes.xxlarge} color={Colors.success} />
-            <Text style={styles.completionTitle}>Public Charging Safety Mastered!</Text>
-            <Text style={styles.completionDescription}>
-              You've learned to protect yourself from juice jacking attacks. You can now charge safely in public places without risking your data.
-            </Text>
-            <TouchableOpacity
-              style={styles.continueButton}
-              onPress={() => navigation.navigate(SCREEN_NAMES.CHECK_1_5_1_SHARING_AWARENESS)}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.continueButtonText}>Continue to Sharing Awareness</Text>
-              <Ionicons name="chevron-forward" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
+          <CompletionPopup
+          isVisible={showCompletionPopup}
+          title={getCompletionMessage('1-2-5').title}
+          description={getCompletionMessage('1-2-5').description}
+          nextScreenName={getNextScreenName('1-2-5')}
+          navigation={navigation}
+          onContinue={() => {
+            setIsCompleted(false);
+            navigation.navigate(getNextScreenName('1-2-5'));
+          }}
+          variant="modal"
+            onClose={() => setShowCompletionPopup(false)}
+          />
     </SafeAreaView>
   );
 };

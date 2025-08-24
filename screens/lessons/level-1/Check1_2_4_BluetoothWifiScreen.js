@@ -22,12 +22,15 @@ import { SettingsGuide } from '../../../utils/settingsGuide';
 import { AppStorage } from '../../../utils/storage';
 
 import WizardFlow from '../../../components/WizardFlow';
+import CompletionPopup from '../../../components/CompletionPopup';
+import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 
 const Check1_2_4_BluetoothWifiScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Exact same state management as Check 1.4
   const [userDevices, setUserDevices] = useState([]);
   const [deviceActions, setDeviceActions] = useState({});
   const [isCompleted, setIsCompleted] = useState(false);
+  const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [deviceCompletionStatus, setDeviceCompletionStatus] = useState({});
   const [showExitModal, setShowExitModal] = useState(false);
 
@@ -147,6 +150,10 @@ const Check1_2_4_BluetoothWifiScreen = ({ navigation, route }) => {
     React.useCallback(() => {
       loadProgress();
       initializeDeviceContent();
+      // Reset completion state when screen comes into focus
+      // This ensures the completion popup doesn't stay visible after navigation
+      setIsCompleted(false);
+      setShowCompletionPopup(false);
     }, [])
   );
 
@@ -185,6 +192,7 @@ const Check1_2_4_BluetoothWifiScreen = ({ navigation, route }) => {
 
         if (allDevicesCompleted && !isCompleted) {
           setIsCompleted(true);
+        setShowCompletionPopup(true);
           celebrateCompletion();
         }
         
@@ -211,10 +219,8 @@ const Check1_2_4_BluetoothWifiScreen = ({ navigation, route }) => {
 
   // ✅ PRESERVE: Completion celebration
   const celebrateCompletion = () => {
-    // Haptic feedback for completion
-    if (Haptics?.impactAsync) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    }
+    // The completion popup will be shown automatically when isCompleted is true
+    // No need to call it as a function
   };
 
   // Helper function to get device icon
@@ -646,24 +652,19 @@ const Check1_2_4_BluetoothWifiScreen = ({ navigation, route }) => {
           )}
 
           {/* Completion Status */}
-          {isCompleted && (
-            <View style={styles.completionCard}>
-              <Ionicons name="checkmark-circle" size={Responsive.iconSizes.xxlarge} color={Colors.success} />
-              <Text style={styles.completionTitle}>Wireless Security Configured!</Text>
-              <Text style={styles.completionText}>
-                Excellent work! You've secured your wireless connections across your devices. This will protect you from network attacks and unauthorized connections.
-              </Text>
-              
-              <TouchableOpacity
-                style={styles.continueButton}
-                onPress={() => navigation.navigate(SCREEN_NAMES.CHECK_1_2_5_PUBLIC_CHARGING)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.continueButtonText}>Continue to Public Charging Security</Text>
-                <Ionicons name="arrow-forward" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
-              </TouchableOpacity>
-            </View>
-          )}
+          <CompletionPopup
+          isVisible={showCompletionPopup}
+          title={getCompletionMessage('1-2-4').title}
+          description={getCompletionMessage('1-2-4').description}
+          nextScreenName={getNextScreenName('1-2-4')}
+          navigation={navigation}
+          onContinue={() => {
+            setIsCompleted(false);
+            navigation.navigate(getNextScreenName('1-2-4'));
+          }}
+          variant="modal"
+            onClose={() => setShowCompletionPopup(false)}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

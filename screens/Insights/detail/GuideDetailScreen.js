@@ -52,9 +52,9 @@ const GuideDetailScreen = ({ navigation, route }) => {
 
     const checkRoutes = {
       '1-1-1': 'Check1_1_1_StrongPasswordsEnhancedScreen',
-      '1-1-3': 'Check1_3_PasswordManagersScreen',
-      '1-1-4': 'Check1_4_MFASetupScreen',
-      '1-1-5': 'Check1_5_BreachCheckScreen',
+      '1-1-3': 'Check1_1_3_PasswordManagersScreen',
+          '1-1-4': 'Check1_1_4_MFASetupScreen',
+    '1-1-5': 'Check1_1_5_BreachCheckScreen',
     };
 
     const routeName = checkRoutes[guide.relatedCheckId];
