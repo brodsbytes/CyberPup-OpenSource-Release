@@ -162,79 +162,123 @@ const InteractiveChecklist = ({
         </View>
       </View>
       
-      {/* Category Filter */}
-      <View style={[styles.categoryFilter, styles[variant]]}>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoryScroll}
-        >
-          {categories.map((category) => (
-            <CategoryChip
-              key={category.id}
-              category={category}
-              isSelected={selectedCategory === category.id}
-              onPress={() => setSelectedCategory(category.id)}
-              variant={variant}
-            />
-          ))}
-        </ScrollView>
-      </View>
+      {/* Category Filter - Only show for non-enhanced variants */}
+      {variant !== 'enhanced' && (
+        <View style={[styles.categoryFilter, styles[variant]]}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoryScroll}
+          >
+            {categories.map((category) => (
+              <CategoryChip
+                key={category.id}
+                category={category}
+                isSelected={selectedCategory === category.id}
+                onPress={() => setSelectedCategory(category.id)}
+                variant={variant}
+              />
+            ))}
+          </ScrollView>
+        </View>
+      )}
       
-      {/* Search & Sort */}
-      <View style={[styles.searchAndSort, styles[variant]]}>
-        {/* Search Bar */}
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color={Colors.textSecondary} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search checklist items..."
-            placeholderTextColor={Colors.textSecondary}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Ionicons name="close-circle" size={20} color={Colors.textSecondary} />
-            </TouchableOpacity>
-          )}
-        </View>
-        
-        {/* Sort and Filter Options */}
-        <View style={styles.sortOptions}>
-          <TouchableOpacity
-            style={[styles.sortButton, sortBy === 'priority' && styles.sortButtonActive]}
-            onPress={() => setSortBy('priority')}
-          >
-            <Text style={styles.sortButtonText}>Priority</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={[styles.sortButton, sortBy === 'device' && styles.sortButtonActive]}
-            onPress={() => setSortBy('device')}
-          >
-            <Text style={styles.sortButtonText}>Device</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={[styles.sortButton, sortBy === 'status' && styles.sortButtonActive]}
-            onPress={() => setSortBy('status')}
-          >
-            <Text style={styles.sortButtonText}>Status</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={[styles.toggleButton, showCompleted && styles.toggleButtonActive]}
-            onPress={() => setShowCompleted(!showCompleted)}
-          >
-            <Ionicons 
-              name={showCompleted ? "eye" : "eye-off"} 
-              size={16} 
-              color={showCompleted ? CheckVariants.checklist.accent : Colors.textSecondary} 
+      {/* Search & Sort - Only show for non-enhanced variants */}
+      {variant !== 'enhanced' && (
+        <View style={[styles.searchAndSort, styles[variant]]}>
+          {/* Search Bar */}
+          <View style={styles.searchBar}>
+            <Ionicons name="search" size={20} color={Colors.textSecondary} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search checklist items..."
+              placeholderTextColor={Colors.textSecondary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
             />
-          </TouchableOpacity>
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Ionicons name="close-circle" size={20} color={Colors.textSecondary} />
+              </TouchableOpacity>
+            )}
+          </View>
+          
+          {/* Sort and Filter Options */}
+          <View style={styles.sortOptions}>
+            <TouchableOpacity
+              style={[styles.sortButton, sortBy === 'priority' && styles.sortButtonActive]}
+              onPress={() => setSortBy('priority')}
+            >
+              <Text style={styles.sortButtonText}>Priority</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.sortButton, sortBy === 'device' && styles.sortButtonActive]}
+              onPress={() => setSortBy('device')}
+            >
+              <Text style={styles.sortButtonText}>Device</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.sortButton, sortBy === 'status' && styles.sortButtonActive]}
+              onPress={() => setSortBy('status')}
+            >
+              <Text style={styles.sortButtonText}>Status</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.toggleButton, showCompleted && styles.toggleButtonActive]}
+              onPress={() => setShowCompleted(!showCompleted)}
+            >
+              <Ionicons 
+                name={showCompleted ? "eye" : "eye-off"} 
+                size={16} 
+                color={showCompleted ? CheckVariants.checklist.accent : Colors.textSecondary} 
+              />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      )}
+      
+      {/* Enhanced variant: Show only sort options with padding */}
+      {variant === 'enhanced' && (
+        <View style={[styles.searchAndSort, styles[variant]]}>
+          {/* Sort and Filter Options */}
+          <View style={styles.sortOptions}>
+            <TouchableOpacity
+              style={[styles.sortButton, sortBy === 'priority' && styles.sortButtonActive]}
+              onPress={() => setSortBy('priority')}
+            >
+              <Text style={styles.sortButtonText}>Priority</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.sortButton, sortBy === 'device' && styles.sortButtonActive]}
+              onPress={() => setSortBy('device')}
+            >
+              <Text style={styles.sortButtonText}>Device</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.sortButton, sortBy === 'status' && styles.sortButtonActive]}
+              onPress={() => setSortBy('status')}
+            >
+              <Text style={styles.sortButtonText}>Status</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.toggleButton, showCompleted && styles.toggleButtonActive]}
+              onPress={() => setShowCompleted(!showCompleted)}
+            >
+              <Ionicons 
+                name={showCompleted ? "eye" : "eye-off"} 
+                size={16} 
+                color={showCompleted ? CheckVariants.checklist.accent : Colors.textSecondary} 
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
       
       {/* Checklist Items */}
       <ScrollView style={styles.checklistItems} showsVerticalScrollIndicator={false}>
@@ -256,15 +300,7 @@ const InteractiveChecklist = ({
         )}
       </ScrollView>
       
-      {/* Progress Celebration */}
-      {checklistProgress === 100 && (
-        <ProgressCelebration
-          progress={checklistProgress}
-          completedItems={completedItems}
-          totalItems={totalItems}
-          variant={variant}
-        />
-      )}
+      {/* Progress Celebration - Removed duplicate modal */}
     </View>
   );
 };
@@ -439,31 +475,7 @@ const PriorityBadge = ({ priority, variant }) => {
   );
 };
 
-// Progress Celebration Component
-const ProgressCelebration = ({ progress, completedItems, totalItems, variant }) => {
-  const [showCelebration, setShowCelebration] = useState(true);
-  
-  if (!showCelebration) return null;
-  
-  return (
-    <Animated.View style={[styles.celebration, styles[variant]]}>
-      <View style={styles.celebrationContent}>
-        <Ionicons name="trophy" size={48} color={CheckVariants.checklist.accent} />
-        <Text style={styles.celebrationTitle}>Checklist Complete! 🎉</Text>
-        <Text style={styles.celebrationText}>
-          You've completed all {totalItems} security items. Your devices are now better protected!
-        </Text>
-        
-        <TouchableOpacity
-          style={styles.celebrationButton}
-          onPress={() => setShowCelebration(false)}
-        >
-          <Text style={styles.celebrationButtonText}>Continue</Text>
-        </TouchableOpacity>
-      </View>
-    </Animated.View>
-  );
-};
+// Progress Celebration Component - Removed duplicate modal
 
 // Empty State Component
 const EmptyState = ({ searchQuery, selectedCategory, variant }) => {
@@ -753,51 +765,7 @@ const styles = {
     lineHeight: Typography.sizes.sm * 1.4,
     marginBottom: Responsive.spacing.xs,
   },
-  celebration: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: Colors.overlayDark,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  celebrationContent: {
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.xlarge,
-    padding: Responsive.padding.modal,
-    marginHorizontal: Responsive.padding.screen,
-    alignItems: 'center',
-    maxWidth: 400,
-  },
-  celebrationTitle: {
-    fontSize: Typography.sizes.xl,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-    marginTop: Responsive.spacing.md,
-    marginBottom: Responsive.spacing.sm,
-  },
-  celebrationText: {
-    fontSize: Typography.sizes.md,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: Typography.sizes.md * 1.5,
-    marginBottom: Responsive.spacing.lg,
-  },
-  celebrationButton: {
-    backgroundColor: CheckVariants.checklist.accent,
-    paddingVertical: Responsive.padding.button,
-    paddingHorizontal: Responsive.spacing.lg,
-    borderRadius: Responsive.borderRadius.medium,
-    minHeight: Responsive.buttonHeight.medium,
-  },
-  celebrationButtonText: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.medium,
-    color: Colors.textPrimary,
-  },
+  // Celebration styles removed - duplicate modal eliminated
   emptyState: {
     flex: 1,
     justifyContent: 'center',

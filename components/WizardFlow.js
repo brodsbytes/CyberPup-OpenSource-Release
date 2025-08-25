@@ -219,6 +219,7 @@ const WizardFlow = ({
                   {/* Action Card */}
                   <View style={styles.actionCard}>
                     <ProgressiveActionCard
+                      key={`${device.id}-${currentAction.id}-${currentStep}`} // Force re-render when step changes
                       action={currentAction}
                       device={device}
                       onComplete={(actionId, completed) => 
@@ -247,8 +248,17 @@ const WizardFlow = ({
                       </TouchableOpacity>
                     )}
                     
-                    {/* Next Button or Complete Task Button */}
-                    {currentStep < deviceActions.length - 1 ? (
+                    {/* Next Button or Device Complete Status */}
+                    {deviceProgress === 100 ? (
+                      <View style={styles.deviceCompleteButton}>
+                        <Ionicons 
+                          name="checkmark-circle" 
+                          size={Responsive.iconSizes.medium} 
+                          color={Colors.textPrimary} 
+                        />
+                        <Text style={styles.deviceCompleteButtonText}>Device Complete!</Text>
+                      </View>
+                    ) : (
                       <TouchableOpacity 
                         style={styles.nextButton}
                         onPress={() => handleNextStep(deviceIndex)}
@@ -260,34 +270,8 @@ const WizardFlow = ({
                           color={Colors.textPrimary} 
                         />
                       </TouchableOpacity>
-                    ) : (
-                      <TouchableOpacity 
-                        style={[styles.nextButton, styles.completeTaskButton]}
-                        onPress={() => handleNextStep(deviceIndex)}
-                      >
-                        <Text style={styles.nextButtonText}>Complete Task!</Text>
-                        <Ionicons 
-                          name="checkmark-circle" 
-                          size={Responsive.iconSizes.medium} 
-                          color={Colors.textPrimary} 
-                        />
-                      </TouchableOpacity>
                     )}
-                    
-
                   </View>
-                  
-                  {/* Device Complete Status (shown after all tasks completed) */}
-                  {deviceProgress === 100 && (
-                    <View style={styles.deviceCompleteStatus}>
-                      <Ionicons 
-                        name="checkmark-circle" 
-                        size={Responsive.iconSizes.medium} 
-                        color={Colors.success} 
-                      />
-                      <Text style={styles.deviceCompleteText}>Device Complete!</Text>
-                    </View>
-                  )}
                 </View>
               )}
             </View>
@@ -464,7 +448,7 @@ const styles = {
     paddingVertical: Responsive.padding.button,
     paddingHorizontal: Responsive.spacing.md,
     borderRadius: Responsive.borderRadius.medium,
-    backgroundColor: CheckVariants.wizard.accent,
+    backgroundColor: Colors.success,
     minHeight: Responsive.buttonHeight.medium,
   },
   completeButton: {
@@ -544,8 +528,8 @@ const styles = {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: Responsive.spacing.lg,
-    paddingTop: Responsive.spacing.md,
+    marginTop: Responsive.spacing.md,
+    paddingTop: Responsive.spacing.sm,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
   },
@@ -555,24 +539,21 @@ const styles = {
     color: Colors.textPrimary,
     marginRight: Responsive.spacing.xs,
   },
-  completeTaskButton: {
-    backgroundColor: Colors.success,
-  },
-  deviceCompleteStatus: {
+
+  deviceCompleteButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: Responsive.padding.button,
     paddingHorizontal: Responsive.spacing.md,
-    backgroundColor: Colors.success + '20', // 20% opacity
+    backgroundColor: Colors.success,
     borderRadius: Responsive.borderRadius.medium,
-    borderWidth: 1,
-    borderColor: Colors.success,
+    minHeight: Responsive.buttonHeight.medium,
   },
-  deviceCompleteText: {
+  deviceCompleteButtonText: {
     fontSize: Typography.sizes.md,
     fontWeight: Typography.weights.medium,
-    color: Colors.success,
+    color: Colors.textPrimary,
     marginLeft: Responsive.spacing.xs,
   },
 };

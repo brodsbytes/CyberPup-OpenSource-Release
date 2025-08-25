@@ -8,7 +8,26 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "cleanup": "./scripts/cleanup-dev-servers.sh",
-    "kill-servers": "./scripts/cleanup-dev-servers.sh"
+    "kill-servers": "./scripts/cleanup-dev-servers.sh",
+    "test:e2e": "detox test",
+    "test:e2e:build": "detox build",
+    "test:e2e:ios": "detox test --configuration ios.sim.debug",
+    "test:e2e:android": "detox test --configuration android.emu.debug",
+    "test:e2e:single-device": "detox test --grep 'Single Device'",
+    "test:e2e:multi-device": "detox test --grep 'Multi-Device'",
+    "test:e2e:device-audit": "detox test --grep 'Device Audit'",
+    "test:e2e:level1-flow": "detox test --grep 'Level 1 Complete Flow'",
+    "test:e2e:custom": "node scripts/run-e2e-test.js",
+    "test:e2e:interactive": "node scripts/run-interactive-test.js",
+    "test:e2e:level1": "node scripts/run-level1-test.js",
+    "test:e2e:level1:iphone": "node scripts/run-level1-test.js iphone",
+    "test:e2e:level1:android": "node scripts/run-level1-test.js android",
+    "test:e2e:level1:tablet": "node scripts/run-level1-test.js tablet",
+    "test:e2e:level1:small": "node scripts/run-level1-test.js small",
+    "test:e2e:interactive:iphone": "node scripts/run-interactive-test.js iphone",
+    "test:e2e:interactive:android": "node scripts/run-interactive-test.js android",
+    "test:e2e:interactive:tablet": "node scripts/run-interactive-test.js tablet",
+    "test:e2e:interactive:small": "node scripts/run-interactive-test.js small"
   },
   "dependencies": {
     "@expo/metro-runtime": "~5.0.4",
@@ -17,10 +36,13 @@
     "@react-navigation/native": "^7.1.17",
     "@react-navigation/native-stack": "^7.3.24",
     "expo": "~53.0.20",
+    "expo-background-fetch": "~13.1.6",
     "expo-blur": "^14.1.5",
     "expo-haptics": "^14.1.4",
     "expo-linear-gradient": "^14.1.5",
+    "expo-localization": "~16.1.6",
     "expo-status-bar": "~2.2.3",
+    "expo-task-manager": "~13.1.6",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.5",
@@ -30,13 +52,13 @@
     "react-native-screens": "^4.11.1",
     "react-native-svg": "15.11.2",
     "react-native-vector-icons": "^10.3.0",
-    "react-native-web": "^0.20.0",
-    "expo-background-fetch": "~13.1.6",
-    "expo-task-manager": "~13.1.6",
-    "expo-localization": "~16.1.6"
+    "react-native-web": "^0.20.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "detox": "^20.40.2",
+    "jest": "^30.0.5",
+    "puppeteer": "^24.17.0"
   },
   "private": true
 }

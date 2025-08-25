@@ -321,53 +321,61 @@ const DeviceAuditScreen = ({ navigation, route }) => {
             <Text style={styles.tierTitle}>
               {selectedTier1 === 'mobile' ? 'Model (Optional)' : 'Version/Model (Optional)'}
             </Text>
-            <View style={styles.tierOptionsList}>
-              {(() => {
-                const tier2Data = DEVICE_HIERARCHY[selectedTier1][selectedTier2];
-                let options = [];
-                
-                if (selectedTier1 === 'mobile') {
-                  options = tier2Data.models;
-                } else if (selectedTier1 === 'computer') {
-                  if (selectedTier2 === 'macos') {
-                    // For macOS, show device types first
-                    options = Object.keys(tier2Data.types).map(type => 
-                      type === 'mac-mini' ? 'Mac mini' : 
-                      type === 'macbook' ? 'MacBook' : 
-                      type === 'imac' ? 'iMac' : type
-                    );
-                  } else if (selectedTier2 === 'windows') {
-                    // For Windows, show versions
-                    options = Object.keys(tier2Data.versions).map(version => 
-                      version === 'windows-11' ? 'Windows 11' :
-                      version === 'windows-10' ? 'Windows 10' : version
-                    );
-                  }
-                }
-                
-                return options.map((option, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={[
-                      styles.listOption,
-                      selectedTier3 === option && styles.listOptionActive,
-                    ]}
-                    onPress={() => setSelectedTier3(option)}
-                  >
-                    <Text style={[
-                      styles.listOptionText,
-                      selectedTier3 === option && styles.listOptionTextActive,
-                    ]}>
-                      {option}
-                    </Text>
-                    <Ionicons 
-                      name={selectedTier3 === option ? "checkmark-circle" : "radio-button-off"} 
-                      size={Responsive.iconSizes.medium} 
-                      color={selectedTier3 === option ? Colors.accent : Colors.textSecondary} 
-                    />
-                  </TouchableOpacity>
-                ));
-              })()}
+            <View style={styles.modelScrollContainer}>
+              <ScrollView 
+                style={styles.modelScrollView}
+                showsVerticalScrollIndicator={true}
+                nestedScrollEnabled={true}
+              >
+                <View style={styles.tierOptionsList}>
+                  {(() => {
+                    const tier2Data = DEVICE_HIERARCHY[selectedTier1][selectedTier2];
+                    let options = [];
+                    
+                    if (selectedTier1 === 'mobile') {
+                      options = tier2Data.models;
+                    } else if (selectedTier1 === 'computer') {
+                      if (selectedTier2 === 'macos') {
+                        // For macOS, show device types first
+                        options = Object.keys(tier2Data.types).map(type => 
+                          type === 'mac-mini' ? 'Mac mini' : 
+                          type === 'macbook' ? 'MacBook' : 
+                          type === 'imac' ? 'iMac' : type
+                        );
+                      } else if (selectedTier2 === 'windows') {
+                        // For Windows, show versions
+                        options = Object.keys(tier2Data.versions).map(version => 
+                          version === 'windows-11' ? 'Windows 11' :
+                          version === 'windows-10' ? 'Windows 10' : version
+                        );
+                      }
+                    }
+                    
+                    return options.map((option, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={[
+                          styles.listOption,
+                          selectedTier3 === option && styles.listOptionActive,
+                        ]}
+                        onPress={() => setSelectedTier3(option)}
+                      >
+                        <Text style={[
+                          styles.listOptionText,
+                          selectedTier3 === option && styles.listOptionTextActive,
+                        ]}>
+                          {option}
+                        </Text>
+                        <Ionicons 
+                          name={selectedTier3 === option ? "checkmark-circle" : "radio-button-off"} 
+                          size={Responsive.iconSizes.medium} 
+                          color={selectedTier3 === option ? Colors.accent : Colors.textSecondary} 
+                        />
+                      </TouchableOpacity>
+                    ));
+                  })()}
+                </View>
+              </ScrollView>
             </View>
           </View>
         )}
@@ -531,9 +539,9 @@ const DeviceAuditScreen = ({ navigation, route }) => {
                   </TouchableOpacity>
                   
                   <TouchableOpacity
-                    style={[styles.saveButton, !selectedTier1 && styles.saveButtonDisabled]}
+                    style={[styles.saveButton, !selectedTier2 && styles.saveButtonDisabled]}
                     onPress={addDevice}
-                    disabled={!selectedTier1}
+                    disabled={!selectedTier2}
                   >
                     <Text style={styles.saveButtonText}>Add Device</Text>
                   </TouchableOpacity>
@@ -862,6 +870,16 @@ const styles = StyleSheet.create({
   listOptionTextActive: {
     color: Colors.accent,
     fontWeight: Typography.weights.medium,
+  },
+  modelScrollContainer: {
+    maxHeight: 210, // Height for approximately 3.5 model options
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Responsive.borderRadius.medium,
+    backgroundColor: Colors.surfaceAlt,
+  },
+  modelScrollView: {
+    flex: 1,
   },
   customInput: {
     backgroundColor: Colors.surfaceAlt,

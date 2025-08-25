@@ -23,6 +23,7 @@ import { getCompletionMessage, getNextScreenName } from '../../../utils/completi
 
 import TimelineDashboard from '../../../components/TimelineDashboard';
 import CompletionPopup from '../../../components/CompletionPopup';
+import HeaderWithProgress from '../../../components/HeaderWithProgress';
 
 const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Exact same state management as Check 1.4
@@ -104,9 +105,8 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
         setDeviceActions(progress.deviceActions || {});
         setDeviceCompletionStatus(progress.deviceCompletionStatus || {});
         setIsCompleted(progress.isCompleted || false);
-        if (progress.isCompleted) {
-          setShowCompletionPopup(true);
-        }
+        // Don't automatically show completion popup when loading progress
+        // Only show it when the user actually completes the check
       }
     } catch (error) {
       console.error('Error loading progress:', error);
@@ -178,6 +178,13 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
     } catch (error) {
       console.error('Error handling action completion:', error);
     }
+  };
+
+  // Calculate progress for the header
+  const getProgress = () => {
+    const totalActions = Object.values(deviceActions).flat().length;
+    const completedActions = Object.values(deviceActions).flat().filter(action => action.completed).length;
+    return totalActions > 0 ? (completedActions / totalActions) * 100 : 0;
   };
 
   // ✅ PRESERVE: Dynamic exit handler matching Check 1.4 pattern
@@ -321,22 +328,14 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
       
-      {/* ✅ FIXED: Consistent header matching Check 1.2.1 */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.menuButton}
-          onPress={handleExit}
-          activeOpacity={0.8}
-        >
-          <Ionicons 
-            name="menu" 
-            size={Responsive.iconSizes.large} 
-            color={Colors.textPrimary} 
-          />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Check 1.1.2</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      {/* ✅ UPDATED: Header with progress bar */}
+      <HeaderWithProgress
+        checkId="1-1-2"
+        onExit={handleExit}
+        isCompleted={isCompleted}
+        progress={getProgress()}
+        navigation={navigation}
+      />
       
       {/* ✅ PRESERVE: Dynamic Exit Modal matching Check 1.4 pattern */}
       <Modal
@@ -369,7 +368,7 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
                 onPress={handleKeepLearning}
                 activeOpacity={0.8}
               >
-                <Text style={styles.keepLearningButtonText}>Keep learning</Text>
+                <Text style={styles.keepLearningButtonText}>Keep going</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -377,7 +376,7 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
                 onPress={handleExitLesson}
                 activeOpacity={0.8}
               >
-                <Text style={styles.exitLessonButtonText}>Exit lesson</Text>
+                <Text style={styles.exitLessonButtonText}>Exit</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -431,6 +430,7 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
         navigation={navigation}
         onClose={() => setShowCompletionPopup(false)}
         variant="modal"
+        checkId="1-1-2"
       />
     </SafeAreaView>
   );

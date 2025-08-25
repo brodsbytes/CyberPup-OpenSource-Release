@@ -24,6 +24,7 @@ import { AppStorage } from '../../../utils/storage';
 import WizardFlow from '../../../components/WizardFlow';
 import CompletionPopup from '../../../components/CompletionPopup';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
+import HeaderWithProgress from '../../../components/HeaderWithProgress';
 
 const Check1_2_4_BluetoothWifiScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Exact same state management as Check 1.4
@@ -145,15 +146,40 @@ const Check1_2_4_BluetoothWifiScreen = ({ navigation, route }) => {
     }
   };
 
-  // ✅ PRESERVE: Standard focus effect
+  // ✅ FIXED: Reset completion state properly when screen loads
   useFocusEffect(
     React.useCallback(() => {
-      loadProgress();
-      initializeDeviceContent();
-      // Reset completion state when screen comes into focus
-      // This ensures the completion popup doesn't stay visible after navigation
-      setIsCompleted(false);
-      setShowCompletionPopup(false);
+      const initializeScreen = async () => {
+        // First initialize device content
+        await initializeDeviceContent();
+        
+        // Then load progress but reset completion state
+        try {
+          const progressKey = `check_1-2-4_progress`;
+          const progressData = await AsyncStorage.getItem(progressKey);
+          
+          if (progressData) {
+            const progress = JSON.parse(progressData);
+            // Reset all actions to not completed
+            const resetActions = {};
+            Object.keys(progress.deviceActions || {}).forEach(deviceId => {
+              resetActions[deviceId] = (progress.deviceActions[deviceId] || []).map(action => ({
+                ...action,
+                completed: false
+              }));
+            });
+            
+            setDeviceActions(resetActions);
+            setDeviceCompletionStatus({}); // Reset completion status
+            setIsCompleted(false); // Reset completion state
+            setShowCompletionPopup(false); // Reset popup
+          }
+        } catch (error) {
+          console.error('Error loading progress:', error);
+        }
+      };
+      
+      initializeScreen();
     }, [])
   );
 
@@ -204,6 +230,13 @@ const Check1_2_4_BluetoothWifiScreen = ({ navigation, route }) => {
   };
 
   // ✅ PRESERVE: Dynamic exit handler matching Check 1.4 pattern
+  // Calculate progress for the header
+  const getProgress = () => {
+    const totalActions = Object.values(deviceActions).flat().length;
+    const completedActions = Object.values(deviceActions).flat().filter(action => action.completed).length;
+    return totalActions > 0 ? (completedActions / totalActions) * 100 : 0;
+  };
+
   const handleExit = () => {
     setShowExitModal(true);
   };
@@ -552,22 +585,14 @@ const Check1_2_4_BluetoothWifiScreen = ({ navigation, route }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
       
-      {/* ✅ FIXED: Consistent header matching Check 1.2.1 */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.menuButton}
-          onPress={handleExit}
-          activeOpacity={0.8}
-        >
-          <Ionicons 
-            name="menu" 
-            size={Responsive.iconSizes.large} 
-            color={Colors.textPrimary} 
-          />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Check 1.2.4</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      {/* ✅ UPDATED: Header with progress bar */}
+      <HeaderWithProgress
+        checkId="1-2-4"
+        onExit={handleExit}
+        isCompleted={isCompleted}
+        progress={getProgress()}
+        navigation={navigation}
+      />
       
       {/* ✅ PRESERVE: Dynamic Exit Modal matching Check 1.4 pattern */}
       <Modal
@@ -600,7 +625,7 @@ const Check1_2_4_BluetoothWifiScreen = ({ navigation, route }) => {
                 onPress={handleKeepLearning}
                 activeOpacity={0.8}
               >
-                <Text style={styles.keepLearningButtonText}>Keep learning</Text>
+                <Text style={styles.keepLearningButtonText}>Keep going</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -608,7 +633,7 @@ const Check1_2_4_BluetoothWifiScreen = ({ navigation, route }) => {
                 onPress={handleExitLesson}
                 activeOpacity={0.8}
               >
-                <Text style={styles.exitLessonButtonText}>Exit lesson</Text>
+                <Text style={styles.exitLessonButtonText}>Exit</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -664,6 +689,7 @@ const Check1_2_4_BluetoothWifiScreen = ({ navigation, route }) => {
           }}
           variant="modal"
             onClose={() => setShowCompletionPopup(false)}
+            checkId="1-2-4"
           />
         </View>
       </ScrollView>

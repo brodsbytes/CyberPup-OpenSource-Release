@@ -17,6 +17,7 @@ import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
 import InteractiveValidationFlow from '../../../components/InteractiveValidationFlow';
 import ScamRecognitionStep from '../../../components/validation-steps/ScamRecognitionStep';
 import CompletionPopup from '../../../components/CompletionPopup';
+import HeaderWithProgress from '../../../components/HeaderWithProgress';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 
 const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
@@ -74,7 +75,8 @@ const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
       if (completedData === 'completed') {
         console.log('✅ Check 1.4.1 is marked as completed in storage');
         setIsCompleted(true);
-        setShowCompletionPopup(true);
+        // Don't automatically show completion popup when loading progress
+        // Only show it when the user actually completes the check
         setFlowCompleted(true);
       }
       
@@ -191,22 +193,25 @@ const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
     console.log('📋 Step completed:', stepId, validationResult);
   };
 
+  // Calculate progress for the header
+  const getProgress = () => {
+    if (checklistItems.length === 0) return 0;
+    const completedItems = checklistItems.filter(item => item.completed).length;
+    return (completedItems / checklistItems.length) * 100;
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
       
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.menuButton}
-          onPress={handleExit}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="menu" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Check 1.4.1</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      {/* ✅ UPDATED: Header with progress bar */}
+      <HeaderWithProgress
+        checkId="1-4-1"
+        onExit={handleExit}
+        isCompleted={isCompleted}
+        progress={getProgress()}
+        navigation={navigation}
+      />
 
       {/* Exit Modal */}
       <Modal
@@ -240,7 +245,7 @@ const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
                 onPress={handleKeepLearning}
                 activeOpacity={0.8}
               >
-                <Text style={styles.keepLearningButtonText}>Keep learning</Text>
+                <Text style={styles.keepLearningButtonText}>Keep going</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -248,7 +253,7 @@ const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
                 onPress={handleExitLesson}
                 activeOpacity={0.8}
               >
-                <Text style={styles.exitLessonButtonText}>Exit lesson</Text>
+                <Text style={styles.exitLessonButtonText}>Exit</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -355,14 +360,15 @@ const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
           )}
           
           {/* Completion Status */}
-          <CompletionPopup
+                    <CompletionPopup
           isVisible={showCompletionPopup}
           title={getCompletionMessage('1-4-1').title}
           description={getCompletionMessage('1-4-1').description}
           nextScreenName={getNextScreenName('1-4-1')}
           navigation={navigation}
           variant="modal"
-            onClose={() => setShowCompletionPopup(false)}
+          onClose={() => setShowCompletionPopup(false)}
+          checkId="1-4-1"
           />
         </View>
       </ScrollView>

@@ -18,6 +18,7 @@ import { SCREEN_NAMES } from '../../../constants';
 import { AppStorage } from '../../../utils/storage';
 import CompletionPopup from '../../../components/CompletionPopup';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
+import HeaderWithProgress from '../../../components/HeaderWithProgress';
 
 import InteractiveChecklist from '../../../components/InteractiveChecklist';
 
@@ -293,22 +294,25 @@ const Check1_5_1_SharingAwarenessScreen = ({ navigation, route }) => {
     // No need to call it as a function
   };
 
+  // Calculate progress for the header
+  const getProgress = () => {
+    if (checklistItems.length === 0) return 0;
+    const completedItems = checklistItems.filter(item => item.completed).length;
+    return (completedItems / checklistItems.length) * 100;
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
       
-      {/* ✅ STANDARD: Dynamic exit modal header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.menuButton}
-          onPress={handleExit}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="menu" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Check 1.5.1</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      {/* ✅ UPDATED: Header with progress bar */}
+      <HeaderWithProgress
+        checkId="1-5-1"
+        onExit={handleExit}
+        isCompleted={isCompleted}
+        progress={getProgress()}
+        navigation={navigation}
+      />
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
@@ -379,7 +383,7 @@ const Check1_5_1_SharingAwarenessScreen = ({ navigation, route }) => {
                 onPress={handleKeepLearning}
                 activeOpacity={0.8}
               >
-                <Text style={styles.keepLearningButtonText}>Keep learning</Text>
+                <Text style={styles.keepLearningButtonText}>Keep going</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -387,7 +391,7 @@ const Check1_5_1_SharingAwarenessScreen = ({ navigation, route }) => {
                 onPress={handleExitLesson}
                 activeOpacity={0.8}
               >
-                <Text style={styles.exitLessonButtonText}>Exit lesson</Text>
+                <Text style={styles.exitLessonButtonText}>Exit</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -407,6 +411,7 @@ const Check1_5_1_SharingAwarenessScreen = ({ navigation, route }) => {
           }}
           variant="modal"
             onClose={() => setShowCompletionPopup(false)}
+            checkId="1-5-1"
           />
     </SafeAreaView>
   );

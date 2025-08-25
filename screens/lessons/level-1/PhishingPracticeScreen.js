@@ -105,7 +105,7 @@ const PhishingPracticeScreen = ({ navigation, route }) => {
                 onPress={handleKeepLearning}
                 activeOpacity={0.8}
               >
-                <Text style={styles.keepLearningButtonText}>Keep learning</Text>
+                <Text style={styles.keepLearningButtonText}>Keep going</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -113,7 +113,7 @@ const PhishingPracticeScreen = ({ navigation, route }) => {
                 onPress={handleExitLesson}
                 activeOpacity={0.8}
               >
-                <Text style={styles.exitLessonButtonText}>Exit lesson</Text>
+                <Text style={styles.exitLessonButtonText}>Exit</Text>
               </TouchableOpacity>
             </View>
           </View>

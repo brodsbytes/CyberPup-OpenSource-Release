@@ -7,6 +7,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Typography, Responsive } from '../theme';
 
 const CompletionPopup = ({
@@ -17,11 +18,28 @@ const CompletionPopup = ({
   navigation,
   onContinue,
   onClose,
-  variant = 'modal'
+  variant = 'modal',
+  checkId = null
 }) => {
   if (!isVisible) return null;
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
+    // Mark the check as complete in AsyncStorage if checkId is provided
+    if (checkId) {
+      try {
+        await AsyncStorage.setItem(`check_${checkId}_completed`, 'completed');
+        console.log(`✅ Marked check ${checkId} as completed`);
+      } catch (error) {
+        console.error('Error marking check as completed:', error);
+      }
+    }
+    
+    // Always close the modal first
+    if (onClose) {
+      onClose();
+    }
+    
+    // Then handle navigation
     if (onContinue) {
       onContinue();
     } else if (nextScreenName && navigation) {

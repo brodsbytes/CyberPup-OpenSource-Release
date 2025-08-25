@@ -231,21 +231,7 @@ const ProgressiveActionCard = ({
               />
             </TouchableOpacity>
             
-            {/* Complete Task Button */}
-            <TouchableOpacity 
-              style={styles.completeTaskButton} 
-              onPress={handleVerificationComplete}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.completeTaskButtonText}>
-                Complete Task!
-              </Text>
-              <Ionicons 
-                name="checkmark-circle" 
-                size={Responsive.iconSizes.small} 
-                color={Colors.textPrimary} 
-              />
-            </TouchableOpacity>
+
           </View>
         )}
 
@@ -262,21 +248,7 @@ const ProgressiveActionCard = ({
               </View>
             ))}
             
-            {/* Complete Task Button inside steps container */}
-            <TouchableOpacity 
-              style={styles.completeTaskButton} 
-              onPress={handleVerificationComplete}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.completeTaskButtonText}>
-                Complete Task!
-              </Text>
-              <Ionicons 
-                name="checkmark-circle" 
-                size={Responsive.iconSizes.small} 
-                color={Colors.textPrimary} 
-              />
-            </TouchableOpacity>
+
           </View>
         )}
 
@@ -451,23 +423,7 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     marginRight: Responsive.spacing.sm,
   },
-  completeTaskButton: {
-    backgroundColor: Colors.success,
-    borderRadius: Responsive.borderRadius.medium,
-    paddingVertical: Responsive.padding.button,
-    paddingHorizontal: Responsive.spacing.lg,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: Responsive.buttonHeight.medium,
-    marginTop: Responsive.spacing.sm,
-  },
-  completeTaskButtonText: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
-    marginRight: Responsive.spacing.sm,
-  },
+
   stepsContainer: {
     marginTop: Responsive.spacing.md,
     padding: Responsive.padding.card,

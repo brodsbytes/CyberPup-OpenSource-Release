@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   ScrollView,
   Dimensions,
   Image,
+  Animated,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +21,28 @@ const { width } = Dimensions.get('window');
 const InitialWelcomeScreen = ({ navigation }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const scrollViewRef = useRef(null);
+  const pulseAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const pulseAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: false,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 0,
+          duration: 3000,
+          useNativeDriver: false,
+        }),
+      ])
+    );
+    
+    pulseAnimation.start();
+    
+    return () => pulseAnimation.stop();
+  }, [pulseAnim]);
 
   const handleNext = () => {
     if (currentStep < 3) {
@@ -133,17 +156,18 @@ const InitialWelcomeScreen = ({ navigation }) => {
     <View style={styles.sectionContainer}>
       <Text style={styles.sectionTitle}>Why CyberPup Does More Than Individual Tools</Text>
       
-      {/* Problem Section */}
+      {/* Problem Section Header */}
+      <View style={styles.sectionHeader}>
+        <Ionicons name="close-circle" size={Responsive.iconSizes.medium} color={Colors.error} />
+        <Text style={styles.sectionHeaderText}>Why Paid Tools Alone Aren't Enough</Text>
+      </View>
+
+      <Text style={styles.sectionDescription}>
+        Many apps claim to "keep you safe" but only cover a small slice of the problem.
+      </Text>
+
+      {/* Problem Section Card */}
       <View style={styles.problemSection}>
-        <View style={styles.sectionHeader}>
-          <Ionicons name="close-circle" size={Responsive.iconSizes.medium} color={Colors.error} />
-          <Text style={styles.sectionHeaderText}>Why Paid Tools Alone Aren't Enough</Text>
-        </View>
-
-        <Text style={styles.sectionDescription}>
-          Many apps claim to "keep you safe" but only cover a small slice of the problem.
-        </Text>
-
         <View style={styles.toolsList}>
           <View style={styles.toolItem}>
             <Text style={styles.toolTitle}>VPN</Text>
@@ -166,7 +190,7 @@ const InitialWelcomeScreen = ({ navigation }) => {
             <View style={styles.toolPoint}>
               <Ionicons name="close-circle" size={Responsive.iconSizes.small} color={Colors.error} />
               <Text style={styles.toolPointText}>Won't stop phishing, weak passwords, or unsafe settings</Text>
-        </View>
+            </View>
           </View>
 
           <View style={styles.toolItem}>
@@ -178,38 +202,39 @@ const InitialWelcomeScreen = ({ navigation }) => {
             <View style={styles.toolPoint}>
               <Ionicons name="close-circle" size={Responsive.iconSizes.small} color={Colors.error} />
               <Text style={styles.toolPointText}>No real impact on security</Text>
-        </View>
+            </View>
           </View>
         </View>
       </View>
 
-      {/* Solution Section */}
-      <View style={styles.solutionSection}>
-        <View style={styles.sectionHeader}>
-          <Ionicons name="checkmark-circle" size={Responsive.iconSizes.medium} color={Colors.success} />
-          <Text style={styles.sectionHeaderText}>Why CyberPup Is Different</Text>
-        </View>
-        
-        <Text style={styles.sectionDescription}>
-          CyberPup helps you protect ALL areas of your digital life:
-        </Text>
+      {/* Solution Section Header */}
+      <View style={styles.sectionHeader}>
+        <Ionicons name="checkmark-circle" size={Responsive.iconSizes.medium} color={Colors.success} />
+        <Text style={styles.sectionHeaderText}>Why CyberPup Is Different</Text>
+      </View>
+      
+      <Text style={styles.sectionDescription}>
+        CyberPup helps you protect ALL areas of your digital life:
+      </Text>
 
+      {/* Solution Section Card */}
+      <View style={styles.solutionSection}>
         <View style={styles.toolsList}>
           <View style={styles.toolItem}>
             <Text style={styles.toolTitle}>Accounts</Text>
             <View style={styles.toolPoint}>
               <Ionicons name="checkmark-circle" size={Responsive.iconSizes.small} color={Colors.success} />
               <Text style={styles.toolPointText}>Passwords, MFA, breaches</Text>
-        </View>
-      </View>
+            </View>
+          </View>
 
           <View style={styles.toolItem}>
             <Text style={styles.toolTitle}>Devices & Wi-Fi</Text>
             <View style={styles.toolPoint}>
               <Ionicons name="checkmark-circle" size={Responsive.iconSizes.small} color={Colors.success} />
               <Text style={styles.toolPointText}>Updates, backups, router security</Text>
-    </View>
-        </View>
+            </View>
+          </View>
 
           <View style={styles.toolItem}>
             <Text style={styles.toolTitle}>Privacy & Scams</Text>
@@ -217,14 +242,14 @@ const InitialWelcomeScreen = ({ navigation }) => {
               <Ionicons name="checkmark-circle" size={Responsive.iconSizes.small} color={Colors.success} />
               <Text style={styles.toolPointText}>Phishing, social media, fraud</Text>
             </View>
+          </View>
         </View>
-        </View>
-
-        <Text style={styles.bottomLine}>
-          No misleading marketing or sales tactics. Just industry standard best pracitses that actually make you safer.
-        </Text>
       </View>
 
+      {/* Bottom Line Text */}
+      <Text style={styles.bottomLine}>
+        No misleading marketing or sales tactics. Just industry standard best pracitses that actually make you safer.
+      </Text>
 
     </View>
   );
@@ -234,6 +259,41 @@ const InitialWelcomeScreen = ({ navigation }) => {
       {/* CyberPup Mascot */}
       <View style={styles.finalMascotContainer}>
         <View style={styles.finalMascotWrapper}>
+          {/* Multi-layer Pulsing Glow Effect */}
+          <Animated.View
+            style={[
+              styles.pulseGlowOuter,
+              {
+                opacity: pulseAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.1, 0.4],
+                }),
+                transform: [{
+                  scale: pulseAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [1.1, 1.4],
+                  }),
+                }],
+              },
+            ]}
+          />
+          <Animated.View
+            style={[
+              styles.pulseGlowInner,
+              {
+                opacity: pulseAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.2, 0.6],
+                }),
+                transform: [{
+                  scale: pulseAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [1.05, 1.25],
+                  }),
+                }],
+              },
+            ]}
+          />
           <Image
             source={require('../assets/images/cyberpup-mascot.png')}
             style={styles.finalMascotImage}
@@ -245,7 +305,7 @@ const InitialWelcomeScreen = ({ navigation }) => {
         
         <Text style={styles.encouragingText}>
           Let's transform your digital security, one simple step at a time.
-      </Text>
+        </Text>
       </View>
     </View>
   );
@@ -538,6 +598,35 @@ const styles = StyleSheet.create({
     height: Responsive.isSmallScreen ? 300 : 400,
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
+  },
+  pulseGlowOuter: {
+    position: 'absolute',
+    width: Responsive.isSmallScreen ? 204 : 264,
+    height: Responsive.isSmallScreen ? 204 : 264,
+    borderRadius: Responsive.isSmallScreen ? 102 : 132,
+    backgroundColor: Colors.accent,
+    opacity: 0.1,
+    zIndex: -2,
+    shadowColor: Colors.accent,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  pulseGlowInner: {
+    position: 'absolute',
+    width: Responsive.isSmallScreen ? 198 : 258,
+    height: Responsive.isSmallScreen ? 198 : 258,
+    borderRadius: Responsive.isSmallScreen ? 99 : 129,
+    backgroundColor: Colors.accent,
+    opacity: 0.2,
+    zIndex: -1,
+    shadowColor: Colors.accent,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 8,
   },
   finalMascotImage: {
     width: '100%',

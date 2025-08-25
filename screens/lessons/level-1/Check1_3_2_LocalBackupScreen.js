@@ -21,6 +21,7 @@ import { SettingsGuide } from '../../../utils/settingsGuide';
 import { AppStorage } from '../../../utils/storage';
 import CompletionPopup from '../../../components/CompletionPopup';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
+import HeaderWithProgress from '../../../components/HeaderWithProgress';
 
 import InteractiveChecklist from '../../../components/InteractiveChecklist';
 
@@ -313,6 +314,13 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
     } catch (error) {
       console.error('Error handling checklist item completion:', error);
     }
+  };
+
+  // Calculate progress for the header
+  const getProgress = () => {
+    if (checklistItems.length === 0) return 0;
+    const completedItems = checklistItems.filter(item => item.completed).length;
+    return (completedItems / checklistItems.length) * 100;
   };
 
   // ✅ PRESERVE: Dynamic exit handler matching Check 1.4 pattern
@@ -725,22 +733,14 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
       
-      {/* ✅ FIXED: Consistent header matching Check 1.2.1 */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.menuButton}
-          onPress={handleExit}
-          activeOpacity={0.8}
-        >
-          <Ionicons 
-            name="menu" 
-            size={Responsive.iconSizes.large} 
-            color={Colors.textPrimary} 
-          />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Check 1.3.2</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      {/* ✅ UPDATED: Header with progress bar */}
+      <HeaderWithProgress
+        checkId="1-3-2"
+        onExit={handleExit}
+        isCompleted={isCompleted}
+        progress={getProgress()}
+        navigation={navigation}
+      />
       
       {/* ✅ PRESERVE: Dynamic Exit Modal matching Check 1.4 pattern */}
       <Modal
@@ -773,7 +773,7 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
                 onPress={handleKeepLearning}
                 activeOpacity={0.8}
               >
-                <Text style={styles.keepLearningButtonText}>Keep learning</Text>
+                <Text style={styles.keepLearningButtonText}>Keep going</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -781,7 +781,7 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
                 onPress={handleExitLesson}
                 activeOpacity={0.8}
               >
-                <Text style={styles.exitLessonButtonText}>Exit lesson</Text>
+                <Text style={styles.exitLessonButtonText}>Exit</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -850,6 +850,7 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
           }}
           variant="modal"
             onClose={() => setShowCompletionPopup(false)}
+            checkId="1-3-2"
           />
     </SafeAreaView>
   );

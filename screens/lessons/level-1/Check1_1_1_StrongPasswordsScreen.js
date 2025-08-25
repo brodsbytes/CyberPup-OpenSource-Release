@@ -21,6 +21,7 @@ import { getCompletionMessage, getNextScreenName } from '../../../utils/completi
 
 import InteractiveChecklist from '../../../components/InteractiveChecklist';
 import CompletionPopup from '../../../components/CompletionPopup';
+import HeaderWithProgress from '../../../components/HeaderWithProgress';
 
 const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Standard state management
@@ -172,9 +173,8 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
         const progress = JSON.parse(progressData);
         setChecklistItems(progress.checklistItems || []);
         setIsCompleted(progress.isCompleted || false);
-        if (progress.isCompleted) {
-          setShowCompletionPopup(true);
-        }
+        // Don't automatically show completion popup when loading progress
+        // Only show it when the user actually completes the check
       }
     } catch (error) {
       console.error('Error loading progress:', error);
@@ -247,22 +247,25 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
     setShowCompletionPopup(true);
   };
 
+  // Calculate progress for the header
+  const getProgress = () => {
+    if (checklistItems.length === 0) return 0;
+    const completedItems = checklistItems.filter(item => item.completed).length;
+    return (completedItems / checklistItems.length) * 100;
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
       
-      {/* ✅ STANDARD: Dynamic exit modal header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.menuButton}
-          onPress={handleExit}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="menu" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Check 1.1.1</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      {/* ✅ UPDATED: Header with progress bar */}
+      <HeaderWithProgress
+        checkId="1-1-1"
+        onExit={handleExit}
+        isCompleted={isCompleted}
+        progress={getProgress()}
+        navigation={navigation}
+      />
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
@@ -333,7 +336,7 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
                 onPress={handleKeepLearning}
                 activeOpacity={0.8}
               >
-                <Text style={styles.keepLearningButtonText}>Keep learning</Text>
+                <Text style={styles.keepLearningButtonText}>Keep going</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -341,7 +344,7 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
                 onPress={handleExitLesson}
                 activeOpacity={0.8}
               >
-                <Text style={styles.exitLessonButtonText}>Exit lesson</Text>
+                <Text style={styles.exitLessonButtonText}>Exit</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -357,6 +360,7 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
         navigation={navigation}
         onClose={() => setShowCompletionPopup(false)}
         variant="modal"
+        checkId="1-1-1"
       />
     </SafeAreaView>
   );
