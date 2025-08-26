@@ -622,6 +622,7 @@ const Check1_3_1_CloudBackupScreen = ({ navigation, route }) => {
                   defaultExpanded={device.autoDetected || userDevices.length === 1}
                   onActionComplete={handleActionComplete}
                   style={styles.deviceSection}
+                  variant="pattern-b"
                 />
               ))
             ) : (

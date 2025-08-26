@@ -475,6 +475,7 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
                   defaultExpanded={device.autoDetected || userDevices.length === 1}
                   onActionComplete={handleActionComplete}
                   style={styles.deviceSection}
+                  variant="pattern-b"
                 />
               ))
             ) : (

@@ -774,45 +774,6 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.medium,
     color: Colors.textSecondary,
   },
-  completionCard: {
-    backgroundColor: Colors.successSoft,
-    borderRadius: Responsive.borderRadius.xlarge,
-    padding: Responsive.padding.modal,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.success,
-    marginTop: Responsive.spacing.lg,
-  },
-  completionTitle: {
-    fontSize: Typography.sizes.xl,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-    marginTop: Responsive.spacing.sm,
-    marginBottom: Responsive.spacing.sm,
-  },
-  completionText: {
-    fontSize: Typography.sizes.md,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: Typography.sizes.md * 1.4,
-    marginBottom: Responsive.spacing.lg,
-  },
-  continueButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.success,
-    paddingVertical: Responsive.padding.button,
-    paddingHorizontal: Responsive.spacing.lg,
-    borderRadius: Responsive.borderRadius.medium,
-    gap: Responsive.spacing.sm,
-    minHeight: Responsive.buttonHeight.medium,
-  },
-  continueButtonText: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
-  },
 });
 
 export default Check1_2_3_DeviceUpdatesScreen;

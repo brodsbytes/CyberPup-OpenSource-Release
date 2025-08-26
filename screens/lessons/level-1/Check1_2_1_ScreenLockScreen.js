@@ -500,6 +500,7 @@ const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
                   defaultExpanded={device.autoDetected || userDevices.length === 1}
                   onActionComplete={handleActionComplete}
                   style={styles.deviceSection}
+                  variant="pattern-b"
                 />
               ))
             ) : (

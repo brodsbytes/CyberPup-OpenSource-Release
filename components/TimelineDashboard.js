@@ -22,7 +22,8 @@ const TimelineDashboard = ({
   onStatusChange,
   variant = 'timeline',
   checkId,
-  navigation 
+  navigation,
+  showUnifiedView = false
 }) => {
   // ✅ UPDATED: Timeline-specific state
   const [selectedMilestone, setSelectedMilestone] = useState(0);
@@ -39,6 +40,16 @@ const TimelineDashboard = ({
   
   // Calculate total milestones across all devices
   const getTotalMilestones = () => {
+    if (showUnifiedView) {
+      // For unified view, count actions from first device only
+      const firstDevice = userDevices[0];
+      if (firstDevice) {
+        const actions = deviceActions[firstDevice.id] || [];
+        return actions.length;
+      }
+      return 0;
+    }
+    
     let total = 0;
     userDevices.forEach(device => {
       const actions = deviceActions[device.id] || [];
@@ -49,6 +60,18 @@ const TimelineDashboard = ({
   
   // Calculate current progress
   const calculateProgress = () => {
+    if (showUnifiedView) {
+      // For unified view, calculate progress from first device only
+      const firstDevice = userDevices[0];
+      if (firstDevice) {
+        const actions = deviceActions[firstDevice.id] || [];
+        const total = actions.length;
+        const completed = actions.filter(action => action.completed).length;
+        return total > 0 ? (completed / total) * 100 : 0;
+      }
+      return 0;
+    }
+    
     let completed = 0;
     let total = 0;
     
@@ -76,25 +99,53 @@ const TimelineDashboard = ({
   // Get all milestones across all devices
   const getAllMilestones = () => {
     const milestones = [];
-    userDevices.forEach(device => {
-      const actions = deviceActions[device.id] || [];
-      actions.forEach(action => {
-        milestones.push({
-          id: action.id,
-          title: action.title,
-          description: action.description,
-          completed: action.completed,
-          device: device,
-          action: action
+    
+    if (showUnifiedView) {
+      // For unified view, show actions from the first device only (they're all the same)
+      const firstDevice = userDevices[0];
+      if (firstDevice) {
+        const actions = deviceActions[firstDevice.id] || [];
+        actions.forEach(action => {
+          milestones.push({
+            id: action.id,
+            title: action.title,
+            description: action.description,
+            completed: action.completed,
+            device: firstDevice,
+            action: action
+          });
+        });
+      }
+    } else {
+      // Original device-specific logic
+      userDevices.forEach(device => {
+        const actions = deviceActions[device.id] || [];
+        actions.forEach(action => {
+          milestones.push({
+            id: action.id,
+            title: action.title,
+            description: action.description,
+            completed: action.completed,
+            device: device,
+            action: action
+          });
         });
       });
-    });
+    }
+    
     return milestones;
   };
   
   // Handle timeline action completion
   const handleTimelineActionComplete = async (deviceId, actionId, completed) => {
-    await onActionComplete(deviceId, actionId, completed);
+    if (showUnifiedView) {
+      // For unified view, only call onActionComplete once
+      // The screen's handler will take care of marking all devices
+      await onActionComplete(deviceId, actionId, completed);
+    } else {
+      // Original device-specific logic
+      await onActionComplete(deviceId, actionId, completed);
+    }
     
     // Haptic feedback
     if (Haptics?.impactAsync) {
@@ -181,7 +232,10 @@ const TimelineDashboard = ({
       <View style={styles.timelineOverview}>
         <Text style={styles.timelineTitle}>Security Milestones</Text>
         <Text style={styles.timelineSubtitle}>
-          Complete each milestone to secure your high-value accounts
+          {showUnifiedView 
+            ? 'Complete each milestone to secure your high-value accounts across all your devices'
+            : 'Complete each milestone to secure your high-value accounts'
+          }
         </Text>
       </View>
       

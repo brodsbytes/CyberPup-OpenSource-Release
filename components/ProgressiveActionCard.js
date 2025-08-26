@@ -25,7 +25,8 @@ const ProgressiveActionCard = ({
   device, 
   onComplete, 
   onStatusChange,
-  style 
+  style,
+  variant // Added variant prop
 }) => {
   const [status, setStatus] = useState(action.completed ? 'completed' : 'pending');
   const [showVerification, setShowVerification] = useState(false);
@@ -231,7 +232,23 @@ const ProgressiveActionCard = ({
               />
             </TouchableOpacity>
             
-
+            {/* Complete Step Button - shown when instructions are not expanded, but only for non-wizard variants */}
+            {variant !== 'wizard' && (
+              <View style={styles.completeStepContainer}>
+                <TouchableOpacity
+                  style={styles.completeStepButton}
+                  onPress={handleMarkComplete}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons 
+                    name="checkmark-circle" 
+                    size={Responsive.iconSizes.medium} 
+                    color={Colors.textPrimary} 
+                  />
+                  <Text style={styles.completeStepButtonText}>Complete Step</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         )}
 
@@ -248,7 +265,23 @@ const ProgressiveActionCard = ({
               </View>
             ))}
             
-
+            {/* Complete Step Button - shown when instructions are expanded, but only for non-wizard variants */}
+            {variant !== 'wizard' && (
+              <View style={styles.completeStepContainer}>
+                <TouchableOpacity
+                  style={styles.completeStepButton}
+                  onPress={handleMarkComplete}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons 
+                    name="checkmark-circle" 
+                    size={Responsive.iconSizes.medium} 
+                    color={Colors.textPrimary} 
+                  />
+                  <Text style={styles.completeStepButtonText}>Complete Step</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         )}
 
@@ -567,6 +600,27 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.sm,
     color: Colors.textSecondary,
     textDecorationLine: 'underline',
+  },
+  completeStepContainer: {
+    marginTop: Responsive.spacing.sm,
+    alignItems: 'center',
+  },
+  completeStepButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.green,
+    borderRadius: Responsive.borderRadius.medium,
+    paddingVertical: Responsive.padding.button,
+    paddingHorizontal: Responsive.spacing.lg,
+    minHeight: Responsive.buttonHeight.medium,
+    width: '100%',
+  },
+  completeStepButtonText: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginLeft: Responsive.spacing.sm,
   },
 });
 

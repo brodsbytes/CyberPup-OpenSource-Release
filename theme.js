@@ -47,7 +47,7 @@ export const Colors = {
   accentLighter: '#5B9BE233', // 10% opacity version of accent
   
   // New accent colors for future use
-  green: '#66c98a',
+  green: '#27AE60',
   orange: '#F57C00',
   red: '#FF5252',
   purple: '#7e3eee',

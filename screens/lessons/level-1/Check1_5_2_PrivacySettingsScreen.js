@@ -167,19 +167,20 @@ const Check1_5_2_PrivacySettingsScreen = ({ navigation, route }) => {
           action.id === actionId ? { ...action, completed } : action
         );
       }
+      
+      // Update device completion status within the same callback
+      setDeviceCompletionStatus(prevStatus => {
+        const updatedStatus = { ...prevStatus };
+        if (updatedActions[deviceId]) {
+          const deviceActionsList = updatedActions[deviceId];
+          const completedActions = deviceActionsList.filter(action => action.completed).length;
+          const totalActions = deviceActionsList.length;
+          updatedStatus[deviceId] = totalActions > 0 ? (completedActions / totalActions) * 100 : 0;
+        }
+        return updatedStatus;
+      });
+      
       return updatedActions;
-    });
-
-    // Update device completion status
-    setDeviceCompletionStatus(prevStatus => {
-      const updatedStatus = { ...prevStatus };
-      if (deviceActions[deviceId]) {
-        const deviceActionsList = deviceActions[deviceId];
-        const completedActions = deviceActionsList.filter(action => action.completed).length;
-        const totalActions = deviceActionsList.length;
-        updatedStatus[deviceId] = totalActions > 0 ? (completedActions / totalActions) * 100 : 0;
-      }
-      return updatedStatus;
     });
   };
 
@@ -709,7 +710,7 @@ const styles = StyleSheet.create({
   },
   exitLessonButtonText: {
     fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.semibold,
+    fontWeight: Typography.weights.medium,
     color: Colors.textSecondary,
   },
   completionCard: {

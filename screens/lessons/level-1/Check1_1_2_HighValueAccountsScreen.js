@@ -60,12 +60,16 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
 
       setUserDevices(allDevices);
 
-      // Create device-specific actions using SettingsGuide
-      const actions = {};
-      for (const device of allDevices) {
-        actions[device.id] = await createHighValueAccountActions(device);
+      // Only create new actions if we don't have existing progress
+      // Check if we have any device actions loaded from progress
+      const hasExistingProgress = Object.keys(deviceActions).length > 0;
+      if (!hasExistingProgress) {
+        const actions = {};
+        for (const device of allDevices) {
+          actions[device.id] = await createHighValueAccountActions(device);
+        }
+        setDeviceActions(actions);
       }
-      setDeviceActions(actions);
     } catch (error) {
       console.error('Error initializing device content:', error);
       
@@ -82,9 +86,14 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
         };
         
         setUserDevices([fallbackDevice]);
-        setDeviceActions({
-          'current-device': await createHighValueAccountActions(fallbackDevice)
-        });
+        
+        // Only create new actions if we don't have existing progress
+        const hasExistingProgress = Object.keys(deviceActions).length > 0;
+        if (!hasExistingProgress) {
+          setDeviceActions({
+            'current-device': await createHighValueAccountActions(fallbackDevice)
+          });
+        }
       } catch (fallbackError) {
         console.error('Fallback device initialization failed:', fallbackError);
         // Final fallback: empty state
@@ -94,7 +103,7 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
     }
   };
 
-  // ✅ PRESERVE: Exact same progress management
+  // ✅ UPDATED: Progress management with unified view support
   const loadProgress = async () => {
     try {
       const progressKey = `check_1-1-2_progress`;
@@ -102,11 +111,22 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
       
       if (progressData) {
         const progress = JSON.parse(progressData);
+        
+        // Check if this is old progress data (before unified view implementation)
+        if (!progress.version || progress.version < 2) {
+          console.log('🔄 Clearing old progress data for unified view implementation');
+          await AsyncStorage.removeItem(progressKey);
+          return; // Don't load old data
+        }
+        
         setDeviceActions(progress.deviceActions || {});
         setDeviceCompletionStatus(progress.deviceCompletionStatus || {});
         setIsCompleted(progress.isCompleted || false);
-        // Don't automatically show completion popup when loading progress
-        // Only show it when the user actually completes the check
+        
+        // Show completion popup when returning to a completed check
+        if (progress.isCompleted) {
+          setShowCompletionPopup(true);
+        }
       }
     } catch (error) {
       console.error('Error loading progress:', error);
@@ -117,6 +137,7 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
     try {
       const progressKey = `check_1-1-2_progress`;
       const progressData = {
+        version: 2, // Version 2 includes unified view support
         deviceActions,
         deviceCompletionStatus,
         isCompleted,
@@ -131,8 +152,11 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Standard focus effect
   useFocusEffect(
     React.useCallback(() => {
-      loadProgress();
-      initializeDeviceContent();
+      const initializeScreen = async () => {
+        await loadProgress();
+        await initializeDeviceContent();
+      };
+      initializeScreen();
     }, [])
   );
 
@@ -141,40 +165,68 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
     saveProgress();
   }, [deviceActions, deviceCompletionStatus, isCompleted]);
 
-  // ✅ PRESERVE: Action completion handler
+  // ✅ UPDATED: Action completion handler for unified view
   const handleActionComplete = async (deviceId, actionId, completed) => {
     try {
       setDeviceActions(prev => {
         const newActions = { ...prev };
-        if (newActions[deviceId]) {
-          newActions[deviceId] = newActions[deviceId].map(action => 
-            action.id === actionId ? { ...action, completed } : action
-          );
+        
+        // For unified view, mark the action as completed for ALL devices
+        // since the content is the same across all devices
+        
+        // Extract the action name from the actionId (remove device prefix)
+        // Pattern: {deviceId}-{actionName} or {deviceId}-device-{actionName}
+        const dashIndex = actionId.indexOf('-');
+        let actionName = actionId.substring(dashIndex + 1);
+        // Remove "device-" prefix if it exists
+        if (actionName.startsWith('device-')) {
+          actionName = actionName.substring(7); // Remove "device-" (7 characters)
         }
+        
+        for (const device of userDevices) {
+          if (newActions[device.id]) {
+            newActions[device.id] = newActions[device.id].map(action => {
+              // Match by action name (without device prefix) instead of exact ID
+              const deviceDashIndex = action.id.indexOf('-');
+              let deviceActionName = action.id.substring(deviceDashIndex + 1);
+              // Remove "device-" prefix if it exists
+              if (deviceActionName.startsWith('device-')) {
+                deviceActionName = deviceActionName.substring(7); // Remove "device-" (7 characters)
+              }
+              return deviceActionName === actionName ? { ...action, completed } : action;
+            });
+          }
+        }
+        
+        // Check if all actions for any device are completed (they're all the same)
+        const firstDeviceActions = newActions[userDevices[0]?.id] || [];
+        const allCompleted = firstDeviceActions.every(action => action.completed);
+        
+        if (allCompleted) {
+          // Mark all devices as completed
+          const newCompletionStatus = {};
+          userDevices.forEach(device => {
+            newCompletionStatus[device.id] = true;
+          });
+          setDeviceCompletionStatus(newCompletionStatus);
+        }
+
+        // Check if all devices are completed
+        const allDevicesCompleted = userDevices.every(device => {
+          const deviceActions = newActions[device.id] || [];
+          return deviceActions.every(action => action.completed);
+        });
+
+        // Completion check logging removed for production
+
+        if (allDevicesCompleted && !isCompleted) {
+          setIsCompleted(true);
+          setShowCompletionPopup(true);
+          celebrateCompletion();
+        }
+        
         return newActions;
       });
-
-      // Check if all actions for this device are completed
-      const deviceActions = deviceActions[deviceId] || [];
-      const allCompleted = deviceActions.every(action => action.completed);
-      
-      if (allCompleted) {
-        setDeviceCompletionStatus(prev => ({
-          ...prev,
-          [deviceId]: true
-        }));
-      }
-
-      // Check if all devices are completed
-      const allDevicesCompleted = userDevices.every(device => 
-        deviceCompletionStatus[device.id] || 
-        (deviceActions[device.id] && deviceActions[device.id].every(action => action.completed))
-      );
-
-      if (allDevicesCompleted && !isCompleted) {
-        setIsCompleted(true);
-        celebrateCompletion();
-      }
     } catch (error) {
       console.error('Error handling action completion:', error);
     }
@@ -182,8 +234,19 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
 
   // Calculate progress for the header
   const getProgress = () => {
-    const totalActions = Object.values(deviceActions).flat().length;
-    const completedActions = Object.values(deviceActions).flat().filter(action => action.completed).length;
+    // For unified view, only count actions from the first device since they're all the same
+    const firstDevice = userDevices[0];
+    if (!firstDevice) return 0;
+    
+    const deviceActionsList = deviceActions[firstDevice.id] || [];
+    const totalActions = deviceActionsList.length;
+    const completedActions = deviceActionsList.filter(action => action.completed).length;
+    
+    // If completed, ensure progress shows 100%
+    if (isCompleted) {
+      return 100;
+    }
+    
     return totalActions > 0 ? (completedActions / totalActions) * 100 : 0;
   };
 
@@ -206,6 +269,8 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
     console.log('🎉 Check 1.1.2 High-Value Accounts completed!');
     setShowCompletionPopup(true);
   };
+
+
 
   // Helper function to get device icon
   const getDeviceIcon = (device) => {
@@ -392,6 +457,8 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
         <Text style={styles.description}>
               Secure your most important accounts with advanced protection. Follow this timeline to build comprehensive security for your banking, email, and critical accounts.
         </Text>
+        
+
       </View>
 
           {/* Account Security Timeline */}
@@ -403,6 +470,7 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
               variant="timeline"
               checkId="1-1-2"
               navigation={navigation}
+              showUnifiedView={true}
             />
           ) : (
             <View style={styles.fallbackContainer}>
@@ -587,6 +655,7 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.medium,
     color: Colors.textSecondary,
   },
+
 });
 
 export default Check1_1_2_HighValueAccountsScreen;

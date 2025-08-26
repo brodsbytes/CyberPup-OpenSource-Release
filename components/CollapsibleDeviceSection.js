@@ -28,14 +28,11 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
  */
 const CollapsibleDeviceSection = ({ 
   device, 
-  actions = [], 
+  actions, 
+  onActionComplete, 
   defaultExpanded = false,
-  onToggle,
-  onActionComplete,
-  showDeviceCount = false,
-  completedCount = 0,
-  totalCount = 0,
-  style 
+  style,
+  variant = 'pattern-b' // Default to pattern-b for backward compatibility
 }) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const rotationValue = useRef(new Animated.Value(defaultExpanded ? 1 : 0)).current;
@@ -271,6 +268,7 @@ const CollapsibleDeviceSection = ({
                   device={device}
                   onComplete={handleActionComplete}
                   style={styles.actionCard}
+                  variant={variant}
                 />
               ))}
             </View>
