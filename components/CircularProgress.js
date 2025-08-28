@@ -1,87 +1,99 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
-import { Ionicons } from '@expo/vector-icons';
-import { Colors, Typography, Spacing } from '../theme';
-import { APP_CONSTANTS } from '../constants';
+import Svg, { Path, Defs, LinearGradient, Stop } from 'react-native-svg';
+import { Colors, Typography } from '../theme';
+import { scale } from '../utils/responsive';
 import * as Haptics from 'expo-haptics';
 
+// Helper function to convert polar coordinates to cartesian
+const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
+  const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+  return {
+    x: centerX + (radius * Math.cos(angleInRadians)),
+    y: centerY + (radius * Math.sin(angleInRadians))
+  };
+};
+
 const CircularProgress = ({
-  progress = APP_CONSTANTS.PROGRESS.MIN_PROGRESS,
-  size = 120,
-  strokeWidth = 8,
-  color = Colors.accent,
+  progress = 0,
+  size = 160,
+  strokeWidth = 12,
   backgroundColor = Colors.track,
-  showIcon = true,
   showPercentage = true,
-  showBackground = true,
-  glow = false,
-  onPress,
   interactive = false,
+  onPress,
+  forceAnimation = false,
 }) => {
+  const [animatedProgress] = useState(new Animated.Value(0));
   const [pulseAnim] = useState(new Animated.Value(1));
-  const [glowAnim] = useState(new Animated.Value(0.7));
-  const pulseTimeoutRef = useRef(null);
 
-  const normalized = Math.max(
-    APP_CONSTANTS.PROGRESS.MIN_PROGRESS, 
-    Math.min(APP_CONSTANTS.PROGRESS.MAX_PROGRESS, Number(progress) || 0)
-  );
+  const normalized = Math.max(0, Math.min(100, Number(progress) || 0));
   const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
+  const circumference = radius * 2 * Math.PI;
+  
+  // Speedometer style: 200 degrees arc starting from bottom-left
+  const arcAngle = 200; // degrees
+  const arcLength = (arcAngle / 360) * circumference;
+  const gap = circumference - arcLength;
+  
+  // Background arc - always shows full arc
+  const backgroundDasharray = `${arcLength} ${gap}`;
+  
+  // Progress arc - shows progress portion
+  const progressLength = (normalized / 100) * arcLength;
+  const progressGap = circumference - progressLength;
+  const progressDasharray = `${progressLength} ${progressGap}`;
 
-  // Dynamic color based on score
-  const getScoreColor = (score) => {
-    // Dark mode color mapping (slightly desaturated for accessibility)
-    const colors = {
-      0: '#FF6666',    // Red
-      25: '#FF8C66',   // Orange-red
-      50: '#FFDD66',   // Yellow
-      75: '#99CC66',   // Yellow-green
-      100: '#66BB6A',  // Green
-    };
-
-    // Interpolate between colors based on score
-    if (score <= 25) {
-      const ratio = score / 25;
-      return interpolateColor(colors[0], colors[25], ratio);
-    } else if (score <= 50) {
-      const ratio = (score - 25) / 25;
-      return interpolateColor(colors[25], colors[50], ratio);
-    } else if (score <= 75) {
-      const ratio = (score - 50) / 25;
-      return interpolateColor(colors[50], colors[75], ratio);
-    } else {
-      const ratio = (score - 75) / 25;
-      return interpolateColor(colors[75], colors[100], ratio);
-    }
+  // Calculate arc path for progress
+  const centerX = size / 2;
+  const centerY = size / 2;
+  const startAngle = 260; // Starting angle (rotated 90 degrees clockwise from 170)
+  
+  const AnimatedPath = Animated.createAnimatedComponent(Path);
+  
+  const AnimatedProgressArc = () => {
+    const [currentProgress, setCurrentProgress] = useState(0);
+    
+    useEffect(() => {
+      const listener = animatedProgress.addListener(({ value }) => {
+        setCurrentProgress(value);
+      });
+      
+      return () => {
+        animatedProgress.removeListener(listener);
+      };
+    }, []);
+    
+    const endAngle = startAngle + (currentProgress / 100) * arcAngle;
+    const start = polarToCartesian(centerX, centerY, radius, startAngle);
+    const end = polarToCartesian(centerX, centerY, radius, endAngle);
+    const largeArcFlag = (currentProgress / 100) * arcAngle > 180 ? 1 : 0;
+    const arcPath = `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`;
+    
+    return currentProgress > 0 ? (
+      <Path
+        d={arcPath}
+        stroke="url(#progressGradient)"
+        strokeWidth={strokeWidth}
+        fill="transparent"
+        strokeLinecap="round"
+      />
+    ) : null;
   };
 
-  // Helper function to interpolate between two hex colors
-  const interpolateColor = (color1, color2, ratio) => {
-    const r1 = parseInt(color1.slice(1, 3), 16);
-    const g1 = parseInt(color1.slice(3, 5), 16);
-    const b1 = parseInt(color1.slice(5, 7), 16);
-    
-    const r2 = parseInt(color2.slice(1, 3), 16);
-    const g2 = parseInt(color2.slice(3, 5), 16);
-    const b2 = parseInt(color2.slice(5, 7), 16);
-    
-    const r = Math.round(r1 + (r2 - r1) * ratio);
-    const g = Math.round(g1 + (g2 - g1) * ratio);
-    const b = Math.round(b1 + (b2 - b1) * ratio);
-    
-    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-  };
+  // Animate progress when it changes
+  useEffect(() => {
+    Animated.timing(animatedProgress, {
+      toValue: normalized,
+      duration: 1000,
+      useNativeDriver: false,
+    }).start();
+  }, [normalized, forceAnimation]);
 
-  const scoreColor = getScoreColor(normalized);
-  const dynamicColor = interactive ? scoreColor : color;
-
-  // Pulse animation for tap feedback
+  // Handle press with haptic feedback
   const handlePress = () => {
     if (!interactive || !onPress) return;
 
-    // Haptic feedback
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     // Pulse animation
@@ -98,55 +110,27 @@ const CircularProgress = ({
       }),
     ]).start();
 
-    // Call the onPress handler
     onPress();
   };
-
-  // Glow animation (subtle pulsing)
-  useEffect(() => {
-    if (!interactive) return;
-
-    const startGlowAnimation = () => {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(glowAnim, {
-            toValue: 1.0,
-            duration: 1500, // 1.5 seconds
-            useNativeDriver: true,
-          }),
-          Animated.timing(glowAnim, {
-            toValue: 0.7,
-            duration: 1500, // 1.5 seconds
-            useNativeDriver: true,
-          }),
-        ])
-      ).start();
-    };
-
-    startGlowAnimation();
-
-    return () => {
-      if (pulseTimeoutRef.current) {
-        clearTimeout(pulseTimeoutRef.current);
-      }
-    };
-  }, [interactive, glowAnim]);
 
   const CenterContent = () => (
     <View style={styles.centerContent}>
       {showPercentage && (
         <Animated.Text 
           style={[
-            styles.percentageText,
+            styles.scoreText,
             { 
-              color: dynamicColor,
               transform: [{ scale: pulseAnim }],
-              opacity: interactive ? glowAnim : 1,
             }
           ]}
         >
           {Math.round(normalized)}
         </Animated.Text>
+      )}
+      {showPercentage && (
+        <Text style={styles.scoreLabelText}>
+          Secure Score
+        </Text>
       )}
     </View>
   );
@@ -154,30 +138,25 @@ const CircularProgress = ({
   const ProgressComponent = () => (
     <View style={[styles.container, { width: size, height: size }]}>
       <Svg width={size} height={size}>
-        {/* Optional background circle */}
-        {showBackground && (
-          <Circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke={backgroundColor}
-            strokeWidth={strokeWidth}
-            fill="transparent"
-          />
-        )}
-        {/* Progress circle */}
-        <Circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke={dynamicColor}
+        
+        {/* Define the gradient */}
+        <Defs>
+          <LinearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <Stop offset="0%" stopColor="#2196F3" stopOpacity="1" />
+            <Stop offset="50%" stopColor="#42A5F5" stopOpacity="0.7" />
+            <Stop offset="100%" stopColor="#64B5F6" stopOpacity="0.2" />
+          </LinearGradient>
+        </Defs>
+        
+        <Path
+          d={`M ${polarToCartesian(centerX, centerY, radius, startAngle).x} ${polarToCartesian(centerX, centerY, radius, startAngle).y} A ${radius} ${radius} 0 1 1 ${polarToCartesian(centerX, centerY, radius, startAngle + arcAngle).x} ${polarToCartesian(centerX, centerY, radius, startAngle + arcAngle).y}`}
+          stroke="rgba(255,255,255,0.15)"
           strokeWidth={strokeWidth}
           fill="transparent"
-          strokeDasharray={circumference}
-          strokeDashoffset={circumference - (normalized / 100) * circumference}
           strokeLinecap="round"
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
         />
+        
+        <AnimatedProgressArc />
       </Svg>
       <CenterContent />
     </View>
@@ -212,14 +191,20 @@ const styles = StyleSheet.create({
     position: 'absolute',
     justifyContent: 'center',
     alignItems: 'center',
+    top: '20%', // Position content higher to sit within the semi-circle
   },
-  icon: {
-    marginBottom: 4,
-  },
-  percentageText: {
-    fontSize: Typography.sizes.xxl * 2,
-    fontWeight: Typography.weights.bold,
+  scoreText: {
+    fontSize: scale(80), // Increased from 72 to 80 for more prominent display
+    fontWeight: '300',
+    color: Colors.textPrimary,
     textAlign: 'center',
+  },
+  scoreLabelText: {
+    fontSize: scale(16),
+    color: Colors.textPrimary,
+    textAlign: 'center',
+    marginTop: scale(2), // Reduced from 8 to 2 to bring text closer to number
+    opacity: 0.8,
   },
 });
 

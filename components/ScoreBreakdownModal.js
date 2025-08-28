@@ -137,6 +137,23 @@ const ScoreBreakdownModal = ({ visible, onClose, overallProgress }) => {
     return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
   };
 
+  // Get motivational message based on progress
+  const getMotivationalMessage = () => {
+    if (overallProgress === 0) {
+      return "Ready to secure your digital life?\nLet's start with your first security check.";
+    } else if (overallProgress < 25) {
+      return "Great start!\nKeep the momentum going with the next check.";
+    } else if (overallProgress < 50) {
+      return "You're building strong defences!\nNext up: Protect Your Accounts.";
+    } else if (overallProgress < 75) {
+      return "Excellent progress!\nYou're almost fortress-level secure.\nNext: Protect Your Accounts.";
+    } else if (overallProgress < 100) {
+      return "You're in the final stretch!\nComplete your last checks to achieve full protection.";
+    } else {
+      return "Fully protected!\nRun regular check-ups to stay ahead of new threats.";
+    }
+  };
+
   const LevelCard = ({ level }) => {
     const isExpanded = expandedLevels.has(level.id);
     const scoreColor = getScoreColor(level.progressPercentage);
@@ -260,6 +277,13 @@ const ScoreBreakdownModal = ({ visible, onClose, overallProgress }) => {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.contentContainer}
           >
+            {/* Motivational Message */}
+            <View style={styles.motivationalSection}>
+              <Text style={styles.motivationalText}>
+                {getMotivationalMessage()}
+              </Text>
+            </View>
+
             {levelBreakdown.map((level) => (
               <LevelCard key={level.id} level={level} />
             ))}
@@ -326,6 +350,18 @@ const styles = StyleSheet.create({
   contentContainer: {
     paddingHorizontal: Responsive.padding.screen,
     paddingVertical: Responsive.spacing.md,
+  },
+  motivationalSection: {
+    paddingHorizontal: Responsive.padding.screen,
+    paddingVertical: Responsive.spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  motivationalText: {
+    fontSize: Typography.sizes.md,
+    color: Colors.textPrimary,
+    textAlign: 'center',
+    lineHeight: Typography.sizes.md * 1.4,
   },
   levelCard: {
     backgroundColor: Colors.background,

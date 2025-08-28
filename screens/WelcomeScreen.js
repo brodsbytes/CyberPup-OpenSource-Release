@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,30 +7,27 @@ import {
   SafeAreaView,
   StatusBar,
   ScrollView,
-  TextInput,
   Dimensions,
-  FlatList,
-  Animated,
-  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Typography, Responsive, CommonStyles } from '../theme';
+import { Colors, Typography, Responsive } from '../theme';
+import { scale } from '../utils/responsive';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
-import { levels, getAllChecks, getChecksByArea, getAreasByLevel } from '../data/courseData';
+import { levels, getAllChecks, getAreasByLevel } from '../data/courseData';
 import CircularProgress from '../components/CircularProgress';
 import ScoreBreakdownModal from '../components/ScoreBreakdownModal';
 import StreakDetailsModal from './StreakDetailsScreen';
 import BadgesModal from './BadgesScreen';
 import BottomNavigation from '../components/BottomNavigation';
 import CatalogueModal from '../components/CatalogueModal';
+import CategoryDetailModal from '../components/CategoryDetailModal';
 import { SCREEN_NAMES } from '../constants';
-import { updateStreak, getCurrentStreak } from '../utils/streakStorage';
-import { getEarnedBadges } from '../utils/badgeStorage';
+import { updateStreak } from '../utils/streakStorage';
 import * as Haptics from 'expo-haptics';
 import StickyGamificationBar from '../components/StickyGamificationBar';
 
-const { width, height } = Dimensions.get('window');
+
 
 const WelcomeScreen = ({ navigation }) => {
   const [overallProgress, setOverallProgress] = useState(0);
@@ -39,16 +36,16 @@ const WelcomeScreen = ({ navigation }) => {
   const [showStreakDetails, setShowStreakDetails] = useState(false);
   const [showBadges, setShowBadges] = useState(false);
   const [showCatalogue, setShowCatalogue] = useState(false);
-  const [catalogueOpenedFromSkipAhead, setCatalogueOpenedFromSkipAhead] = useState(false);
-  const catalogueOpenedFromSkipAheadRef = useRef(false);
+  const [showCategoryDetail, setShowCategoryDetail] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+
 
   const [isLoadingActiveLevel, setIsLoadingActiveLevel] = useState(true);
+  const [isLoadingProgress, setIsLoadingProgress] = useState(true);
   const [nextLevel, setNextLevel] = useState(null);
   const [nextArea, setNextArea] = useState(null);
+  const [forceAnimation, setForceAnimation] = useState(0);
   
-  // Animation states for card interactions
-  const [cardAnimations] = useState(new Map());
-
   // Get check data from our course data
   const getCheckData = () => {
     return getAllChecks();
@@ -66,50 +63,31 @@ const WelcomeScreen = ({ navigation }) => {
     return levels.sort((a, b) => a.id - b.id);
   };
 
-  // Legacy function for backward compatibility - maps to getLevelInfo
-  const getCategoryInfo = (levelId) => {
-    return getLevelInfo(levelId);
+  const handleCategoryPress = (categoryId, categoryTitle) => {
+    const category = {
+      id: categoryId,
+      title: categoryTitle,
+    };
+    setSelectedCategory(category);
+    setShowCategoryDetail(true);
   };
 
-  // Helper functions for determining card states (reused from StreakDetailsModal)
-  const getCardState = (area, isNextCard = false) => {
-    const isCompleted = area.completedChecks === area.totalChecks;
-    const hasProgress = area.completedChecks > 0;
-    
-    if (isCompleted) return 'completed';
-    if (hasProgress || isNextCard) return 'in-progress';
-    return 'not-started';
-  };
-
-  const getCardAnimation = (areaId) => {
-    if (!cardAnimations.has(areaId)) {
-      cardAnimations.set(areaId, new Animated.Value(1));
-    }
-    return cardAnimations.get(areaId);
-  };
-
-  const animateCardPress = (areaId) => {
-    const anim = getCardAnimation(areaId);
-    Animated.sequence([
-      Animated.timing(anim, {
-        toValue: 0.95,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(anim, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
+  // Load progress on component mount
+  useEffect(() => {
+    setIsLoadingProgress(true);
+    calculateOverallProgress();
+    loadActiveLevelView();
+    updateStreak();
+  }, []);
 
   // Load progress when component mounts or screen is focused
   useFocusEffect(
     React.useCallback(() => {
+      setIsLoadingProgress(true);
       calculateOverallProgress();
       loadActiveLevelView();
-      updateStreak(); // Update streak when screen is focused
+      updateStreak();
+      setForceAnimation(prev => prev + 1);
     }, [])
   );
 
@@ -138,12 +116,13 @@ const WelcomeScreen = ({ navigation }) => {
       // Calculate overall progress as percentage of completed checks
       const progress = allChecks.length > 0 ? Math.round((completedCount / allChecks.length) * 100) : 0;
       setOverallProgress(progress);
+      setIsLoadingProgress(false);
       
-      // Find and set the next incomplete area
       const nextIncompleteArea = await getNextIncompleteArea();
       setNextArea(nextIncompleteArea);
     } catch (error) {
-      console.log('Error calculating progress:', error);
+      console.error('Error calculating progress:', error);
+      setIsLoadingProgress(false);
     }
   };
 
@@ -180,7 +159,7 @@ const WelcomeScreen = ({ navigation }) => {
                 progressPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
               }
             } catch (error) {
-              console.log('Error parsing progress data:', error);
+              console.error('Error parsing progress data:', error);
             }
           }
         }
@@ -265,7 +244,7 @@ const WelcomeScreen = ({ navigation }) => {
       
       setIsLoadingActiveLevel(false);
     } catch (error) {
-      console.log('Error loading active level view:', error);
+      console.error('Error loading active level view:', error);
       setIsLoadingActiveLevel(false);
     }
   };
@@ -304,69 +283,18 @@ const WelcomeScreen = ({ navigation }) => {
       
       return null; // All areas are complete
     } catch (error) {
-      console.log('Error finding next incomplete area:', error);
+      console.error('Error finding next incomplete area:', error);
       return null;
     }
   };
 
-  const getAreaIcon = (areaId) => {
-    // Map area IDs to appropriate Ionicons
-    const iconMap = {
-      '1-0': 'happy', // Welcome to CyberPup
-      '1-1': 'lock-closed', // Protect Your Accounts
-      '1-2': 'shield-checkmark', // Secure Your Devices
-      '1-3': 'cloud-upload', // Keep Your Data Safe
-      '1-4': 'warning', // Avoid Scams & Fraud
-      '1-5': 'eye-off', // Protect Your Privacy
-    };
-    return iconMap[areaId] || 'document'; // Default icon
-  };
-
-  const getWelcomeMessage = () => {
-    const nextLabel = nextArea?.displayName || 'the next check';
-    if (overallProgress === 0) {
-      return "Ready to secure your digital life?\nLet's start with your first security check.";
-    } else if (overallProgress < 25) {
-      return `Great start!\nKeep the momentum going with ${nextLabel}.`;
-    } else if (overallProgress < 50) {
-      return `You're building strong defences!\nNext up: ${nextLabel}.`;
-    } else if (overallProgress < 75) {
-      return `Excellent progress!\nYou're almost fortress-level secure.\nNext: ${nextLabel}.`;
-    } else if (overallProgress < 100) {
-      return "You're in the final stretch!\nComplete your last checks to achieve full protection.";
-    } else {
-      return 'Fully protected!\nRun regular check-ups to stay ahead of new threats.';
-    }
-  };
 
 
 
-  const ProgressCard = ({ icon, title, subtitle, progress, levelId }) => (
-    <TouchableOpacity
-      style={styles.progressCard}
-      onPress={() => {
-        // Open catalogue modal instead of navigating to deprecated ModuleListScreen
-        setShowCatalogue(true);
-      }}
-      activeOpacity={0.8}
-    >
-      <View style={styles.cardHeader}>
-        <View style={styles.iconPlaceholder}>
-          <Text style={styles.iconText}>{icon}</Text>
-        </View>
-        <View style={styles.cardContent}>
-          <Text style={styles.cardTitle}>{title}</Text>
-          <Text style={styles.cardSubtitle}>{subtitle}</Text>
-        </View>
-      </View>
-      <View style={styles.progressContainer}>
-        <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: `${progress}%` }]} />
-        </View>
-        <Text style={styles.progressText}>{progress}%</Text>
-      </View>
-    </TouchableOpacity>
-  );
+
+
+
+
 
   // Navigate to first incomplete check within an area
   const navigateToArea = async (area) => {
@@ -407,6 +335,14 @@ const WelcomeScreen = ({ navigation }) => {
     }
   };
 
+  const handleContinueSecurityCheck = () => {
+    // Navigate to the first incomplete area, or the first area if all are complete
+    const firstIncompleteArea = activeLevel.areas.find(area => area.completedChecks < area.totalChecks);
+    const targetArea = firstIncompleteArea || activeLevel.areas[0];
+    if (targetArea) {
+      navigateToArea(targetArea);
+    }
+  };
   
 
   return (
@@ -426,239 +362,215 @@ const WelcomeScreen = ({ navigation }) => {
 
         {/* Overall Progress Section */}
         <View style={styles.overallProgressSection}>
-          <View style={styles.overallProgressHeader}>
-            <Text style={styles.overallProgressTitle}>Your Secure Score</Text>
-          </View>
           
           <View style={styles.overallProgressCard}>
             <View style={styles.circularProgressContainer}>
-              <CircularProgress 
-                key={`overall-${overallProgress}`}
-                progress={overallProgress}
-                size={175}
-                strokeWidth={10}
-                color={Colors.accent}
-                backgroundColor={Colors.track}
-                showIcon={false}
-                showPercentage={true}
-                showBackground={true}
-                interactive={true}
-                onPress={() => setShowScoreBreakdown(true)}
-              />
+              {isLoadingProgress ? (
+                <View style={[styles.loadingContainer, { width: scale(200), height: scale(200) }]}>
+                  <Text style={styles.loadingText}>Loading...</Text>
+                </View>
+              ) : (
+                <CircularProgress 
+                  key={`overall-${overallProgress}-${forceAnimation}`}
+                  progress={overallProgress}
+                  size={scale(200)} // Increased from 160 to 200 for larger size
+                  strokeWidth={scale(12)}
+                  backgroundColor={Colors.track}
+                  showPercentage={true}
+                  interactive={true}
+                  onPress={() => setShowScoreBreakdown(true)}
+                  forceAnimation={forceAnimation}
+                />
+              )}
             </View>
-
           </View>
         </View>
 
-        {/* Active Level Check List (replaces Checks in Progress) */}
-          <View style={styles.activeLevelSection}>
-            <Text style={[styles.welcomeMessage, styles.welcomeMessageSpacing]}>{getWelcomeMessage()}</Text>
-            {activeLevel ? (
-              <>
-                <View style={styles.activeLevelHeader}>
-                  {/* Level Badge - Top Row */}
-                  <View style={styles.levelChipContainer}>
-                    <View style={styles.levelChip}>
-                      <Text style={styles.levelChipText}>{`Level ${getDisplayIndexForLevel(activeLevel.id)}`}</Text>
-                    </View>
-                  </View>
-                  
-                  {/* Title and Icon - Middle Row */}
-                  <View style={styles.titleIconRow}>
-                    <Text style={styles.activeLevelTitle}>CyberPup Scout</Text>
-                    <View style={styles.activeLevelIconWrap}>
-                      <Text style={styles.activeLevelIconText}>{activeLevel.icon}</Text>
-                    </View>
-                  </View>
-                  
-                  {/* Security Check Button */}
-                  {(() => {
-                    const hasStartedAnyChecks = activeLevel.areas.some(area => area.completedChecks > 0);
-                    const buttonText = hasStartedAnyChecks ? "Continue My Security Check" : "Start My Security Check";
-                    return (
-                      <TouchableOpacity
-                        style={styles.securityCheckButton}
-                        onPress={() => {
-                          // Navigate to the first incomplete area, or the first area if all are complete
-                          const firstIncompleteArea = activeLevel.areas.find(area => area.completedChecks < area.totalChecks);
-                          const targetArea = firstIncompleteArea || activeLevel.areas[0];
-                          if (targetArea) {
-                            navigateToArea(targetArea);
-                          }
-                        }}
-                        activeOpacity={0.85}
-                      >
-                        <Text style={styles.securityCheckButtonText}>{buttonText}</Text>
-                      </TouchableOpacity>
-                    );
-                  })()}
-                </View>
-
-                <View style={styles.checkListContainer}>
-                {(() => {
-                  const firstIncompleteIndex = activeLevel.areas.findIndex(area => area.completedChecks < area.totalChecks);
-                  return activeLevel.areas.map((area, idx) => {
-                    const isCompleted = area.completedChecks === area.totalChecks;
-                    const progressPercentage = area.totalChecks > 0 ? Math.round((area.completedChecks / area.totalChecks) * 100) : 0;
-                    const isNextCard = idx === firstIncompleteIndex;
-                    const cardState = getCardState(area, isNextCard);
-                    const cardAnim = getCardAnimation(area.id);
-                    
-                    return (
-                      <React.Fragment key={area.id}>
-                        <Animated.View style={{ transform: [{ scale: cardAnim }] }}>
-                          <TouchableOpacity
-                            style={[
-                              styles.checkCardNew,
-                              cardState === 'completed' && styles.checkCardCompleted,
-                              cardState === 'not-started' && styles.checkCardNotStarted,
-                              // Apply next card style first, then in-progress if not next
-                              isNextCard ? styles.checkCardNext : 
-                              cardState === 'in-progress' && styles.checkCardInProgress,
-                              { 
-                                borderColor: isNextCard ? Colors.cardInProgressBorder :
-                                           cardState === 'completed' ? Colors.cardCompletedBorder : 
-                                           cardState === 'not-started' ? Colors.cardNotStartedBorder : 
-                                           cardState === 'in-progress' ? Colors.cardInProgressBorder :
-                                           undefined
-                              }
-                            ]}
-                            activeOpacity={0.85}
-                            onPress={() => {
-                              animateCardPress(area.id);
-                              navigateToArea(area);
-                            }}
-                          >
-                            <View style={isNextCard ? styles.checkCardContentWithButton : styles.checkCardContent}>
-                              <View style={styles.checkCardLeft}>
-                                <Ionicons 
-                                  name={getAreaIcon(area.id)} 
-                                  size={Responsive.iconSizes.large} 
-                                  color={
-                                    cardState === 'completed' ? Colors.cardCompletedIconColor :
-                                    cardState === 'in-progress' ? Colors.cardInProgressIconColor :
-                                    Colors.cardNotStartedIconColor
-                                  } 
-                                />
-                              </View>
-                              <View style={styles.checkCardRight}>
-                                <Text style={[
-                                  styles.checkTitleNew,
-                                  cardState === 'completed' && { 
-                                    color: Colors.cardCompletedTitleColor,
-                                    fontSize: Typography.sizes[Colors.cardCompletedTitleSize]
-                                  },
-                                  cardState === 'in-progress' && { 
-                                    color: Colors.cardInProgressTitleColor,
-                                    fontSize: Typography.sizes[Colors.cardInProgressTitleSize]
-                                  },
-                                  cardState === 'not-started' && { 
-                                    color: Colors.cardNotStartedTitleColor,
-                                    fontSize: Typography.sizes[Colors.cardNotStartedTitleSize]
-                                  }
-                                ]}>
-                                  {area.title}
-                                </Text>
-                                <Text style={[
-                                  styles.checkSubtitleNew,
-                                  cardState === 'completed' && { color: Colors.cardCompletedSubtitleColor },
-                                  cardState === 'in-progress' && { color: Colors.cardInProgressSubtitleColor },
-                                  cardState === 'not-started' && { color: Colors.cardNotStartedSubtitleColor }
-                                ]}>
-                                  {area.description}
-                                </Text>
-                                <View style={styles.checkProgressRow}>
-                                  <View style={styles.checkProgressBar}> 
-                                    <View style={[
-                                      styles.checkProgressFill, 
-                                      { 
-                                        width: `${progressPercentage}%`, 
-                                        backgroundColor: cardState === 'completed' ? Colors.accent : activeLevel.color 
-                                      }
-                                    ]} />
-                                  </View>
-                                  <Text style={[
-                                    styles.checkProgressPercent,
-                                    cardState === 'completed' && styles.checkProgressPercentCompleted
-                                  ]}>
-                                    {area.completedChecks} of {area.totalChecks} checks
-                                  </Text>
-                                </View>
-                              </View>
-                              
-                              {/* Play Button for In-Progress/Next Card */}
-                              {isNextCard && (
-                                <TouchableOpacity
-                                  style={styles.playButton}
-                                  onPress={() => {
-                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                                    animateCardPress(area.id);
-                                    navigateToArea(area);
-                                  }}
-                                  activeOpacity={0.8}
-                                >
-                                  <Ionicons 
-                                    name="play" 
-                                    size={20} 
-                                    color={Colors.heroButtonTextColor}
-                                    style={{ marginLeft: 2 }}
-                                  />
-                                </TouchableOpacity>
-                              )}
-                            </View>
-                          </TouchableOpacity>
-                        </Animated.View>
-                        {idx < activeLevel.areas.length - 1 && (
-                          <View style={styles.cardSeparator} />
-                        )}
-                      </React.Fragment>
-                    );
-                  });
-                })()}
-                </View>
-
-                {nextLevel && (
-                  <View style={styles.nextLevelCard}>
-                    <View style={styles.nextDividerRow}>
-                      <View style={styles.nextDivider} />
-                      <Text style={styles.nextTinyText}>{`Next in Level ${getDisplayIndexForLevel(nextLevel.id)}`}</Text>
-                      <View style={styles.nextDivider} />
-                    </View>
-
-                    <View style={styles.nextIconRow}>
-                      <View style={[styles.nextIconRing, { borderColor: Colors.accent }]}>
-                        <Text style={styles.nextLevelIconText}>{getLevelInfo(nextLevel.id).icon}</Text>
-                      </View>
-                    </View>
-
-                    <Text style={styles.nextTitle}>{nextLevel.title}</Text>
-                    <Text style={styles.nextSubtitle}>{nextLevel.description}</Text>
-
-                    <TouchableOpacity
-                      style={[styles.skipAheadButton, { borderColor: Colors.accent }]}
-                      onPress={() => {
-                        catalogueOpenedFromSkipAheadRef.current = true;
-                        setShowCatalogue(true);
-                      }}
-                      activeOpacity={0.85}
-                    >
-                      <Text style={styles.skipAheadText}>Skip Ahead</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </>
-            ) : (
-              <View style={styles.allDoneCard}>
-                <Text style={styles.allDoneTitle}>All levels complete 🎉</Text>
-                <Text style={styles.allDoneSubtitle}>Review checks or explore topics from the Insights tab.</Text>
-                <TouchableOpacity style={styles.startLearningButton} onPress={() => navigation.navigate(SCREEN_NAMES.CATEGORY)}>
-                  <Text style={styles.startLearningButtonText}>View All Categories</Text>
-                </TouchableOpacity>
+                  {/* Level Progress Card */}
+          {activeLevel && (
+            <View style={styles.levelProgressCard}>
+              <View style={styles.pawPrintIcon}>
+                <Ionicons name="paw" size={24} color={Colors.accent} />
               </View>
-            )}
+              
+              <View style={styles.titleRow}>
+                <Text style={styles.activeLevelTitle}>
+                  Level {activeLevel.id}: CyberPup Scout
+                </Text>
+              </View>
+              
+              <View style={styles.activeLevelMetaRow}>
+                <Text style={styles.activeLevelSubtitle}>
+                  {activeLevel.areas ? 
+                    `${Math.round((activeLevel.areas.reduce((sum, area) => sum + area.completedChecks, 0) / activeLevel.areas.reduce((sum, area) => sum + area.totalChecks, 0)) * 100)}% complete` :
+                    '0% complete'
+                  }
+                </Text>
+              </View>
+
+              <View style={styles.levelProgressBar}>
+                <View style={styles.levelProgressTrack}>
+                  <View 
+                    style={[
+                      styles.levelProgressFill, 
+                      { 
+                        width: activeLevel.areas ? 
+                          `${Math.round((activeLevel.areas.reduce((sum, area) => sum + area.completedChecks, 0) / activeLevel.areas.reduce((sum, area) => sum + area.totalChecks, 0)) * 100)}%` :
+                          '0%'
+                      }
+                    ]} 
+                  />
+                </View>
+              </View>
+            </View>
+          )}
+
+          {/* CTA Button Card */}
+          {activeLevel && (
+            <TouchableOpacity
+              style={styles.ctaButtonCard}
+              onPress={handleContinueSecurityCheck}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.ctaButtonText}>
+                Continue My Security Check
+              </Text>
+            </TouchableOpacity>
+          )}
+
+        {/* Category Sections */}
+        <View style={styles.categorySection}>
+          
+          {/* Protect Your Account */}
+          <TouchableOpacity 
+            style={styles.categoryCard}
+            onPress={() => handleCategoryPress('1.1', 'Protect Your Account')}
+            activeOpacity={0.8}
+          >
+            <View style={styles.categoryCardContent}>
+              <View style={styles.categoryIcon}>
+                <Ionicons name="shield-checkmark-outline" size={24} color={Colors.textSecondary} />
+              </View>
+              <View style={styles.categoryInfo}>
+                <Text style={styles.categoryTitle}>Protect Your Account</Text>
+                <Text style={styles.categoryProgress}>3 of 5 Complete</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+            </View>
+          </TouchableOpacity>
+
+          {/* Secure Your Devices */}
+          <TouchableOpacity 
+            style={styles.categoryCard}
+            onPress={() => handleCategoryPress('1.2', 'Secure Your Devices')}
+            activeOpacity={0.8}
+          >
+            <View style={styles.categoryCardContent}>
+              <View style={styles.categoryIcon}>
+                <Ionicons name="phone-portrait-outline" size={24} color={Colors.textSecondary} />
+              </View>
+              <View style={styles.categoryInfo}>
+                <Text style={styles.categoryTitle}>Secure Your Devices</Text>
+                <Text style={styles.categoryProgress}>2 of 4 Complete</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+            </View>
+          </TouchableOpacity>
+
+          {/* Keep Your Data Safe */}
+          <TouchableOpacity 
+            style={styles.categoryCard}
+            onPress={() => handleCategoryPress('1.3', 'Keep Your Data Safe')}
+            activeOpacity={0.8}
+          >
+            <View style={styles.categoryCardContent}>
+              <View style={styles.categoryIcon}>
+                <Ionicons name="cloud-upload-outline" size={24} color={Colors.textSecondary} />
+              </View>
+              <View style={styles.categoryInfo}>
+                <Text style={styles.categoryTitle}>Keep Your Data Safe</Text>
+                <Text style={styles.categoryProgress}>2 of 4 Complete</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+            </View>
+          </TouchableOpacity>
+
+          {/* Avoid Scams & Fraud */}
+          <TouchableOpacity 
+            style={styles.categoryCard}
+            onPress={() => handleCategoryPress('1.4', 'Avoid Scams & Fraud')}
+            activeOpacity={0.8}
+          >
+            <View style={styles.categoryCardContent}>
+              <View style={styles.categoryIcon}>
+                <Ionicons name="warning-outline" size={24} color={Colors.textSecondary} />
+              </View>
+              <View style={styles.categoryInfo}>
+                <Text style={styles.categoryTitle}>Avoid Scams & Fraud</Text>
+                <Text style={styles.categoryProgress}>1 of 2 Complete</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+            </View>
+          </TouchableOpacity>
+
+          {/* Protect Your Privacy */}
+          <TouchableOpacity 
+            style={styles.categoryCard}
+            onPress={() => handleCategoryPress('1.5', 'Protect Your Privacy')}
+            activeOpacity={0.8}
+          >
+            <View style={styles.categoryCardContent}>
+              <View style={styles.categoryIcon}>
+                <Ionicons name="eye-off-outline" size={24} color={Colors.textSecondary} />
+              </View>
+              <View style={styles.categoryInfo}>
+                <Text style={styles.categoryTitle}>Protect Your Privacy</Text>
+                <Text style={styles.categoryProgress}>0 of 3 Complete</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+            </View>
+          </TouchableOpacity>
+
+          {/* Next Level Card */}
+          {nextLevel && (
+            <View style={styles.nextLevelCard}>
+              <View style={styles.nextDividerRow}>
+                <View style={styles.nextDivider} />
+                <Text style={styles.nextTinyText}>{`Next in Level ${getDisplayIndexForLevel(nextLevel.id)}`}</Text>
+                <View style={styles.nextDivider} />
+              </View>
+
+              <View style={styles.nextIconRow}>
+                <View style={[styles.nextIconRing, { borderColor: Colors.accent }]}>
+                  <Ionicons name="eye-outline" size={32} color={Colors.textSecondary} />
+                </View>
+              </View>
+
+              <Text style={styles.nextTitle}>{nextLevel.title.replace(' 👁️', '')}</Text>
+              <Text style={styles.nextSubtitle}>{nextLevel.description}</Text>
+
+              <TouchableOpacity
+                style={[styles.skipAheadButton, { borderColor: Colors.accent }]}
+                onPress={() => {
+                  setShowCatalogue(true);
+                }}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.skipAheadText}>Skip Ahead</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
+        {!activeLevel && (
+          <View style={styles.allDoneCard}>
+            <Text style={styles.allDoneTitle}>All levels complete 🎉</Text>
+            <Text style={styles.allDoneSubtitle}>Review checks or explore topics from the Insights tab.</Text>
+            <TouchableOpacity style={styles.startLearningButton} onPress={() => navigation.navigate(SCREEN_NAMES.CATEGORY)}>
+              <Text style={styles.startLearningButtonText}>View All Categories</Text>
+            </TouchableOpacity>
           </View>
-
-
+        )}
 
         {/* Bottom spacing for tab navigation */}
         <View style={styles.bottomSpacing} />
@@ -668,7 +580,7 @@ const WelcomeScreen = ({ navigation }) => {
       <BottomNavigation 
         activeTab="home"
         onTabPress={(screen) => {
-          console.log('WelcomeScreen - Tab pressed:', screen);
+          // Tab navigation handled
           if (screen === 'InsightsScreen') {
             navigation.navigate(SCREEN_NAMES.INSIGHTS);
           } else if (screen === 'ProfileScreen') {
@@ -703,6 +615,14 @@ const WelcomeScreen = ({ navigation }) => {
         navigation={navigation}
         activeLevel={activeLevel}
       />
+
+      {/* Category Detail Modal */}
+      <CategoryDetailModal
+        visible={showCategoryDetail}
+        onClose={() => setShowCategoryDetail(false)}
+        category={selectedCategory}
+        navigation={navigation}
+      />
     </SafeAreaView>
   );
 };
@@ -715,146 +635,12 @@ const styles = StyleSheet.create({
 
 
 
-  catalogueScrollView: {
-    flex: 1,
-  },
-  catalogueScrollContent: {
-    paddingHorizontal: Responsive.padding.modal,
-    paddingVertical: Responsive.spacing.md,
-  },
-  catalogueLevel: {
-    marginBottom: Responsive.spacing.md,
-  },
-  catalogueLevelHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: Responsive.spacing.sm,
-    paddingHorizontal: Responsive.spacing.sm,
-    backgroundColor: Colors.background,
-    borderRadius: Responsive.borderRadius.medium,
-  },
-  catalogueLevelInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  catalogueLevelIcon: {
-    fontSize: Typography.sizes.lg,
-    marginRight: Responsive.spacing.sm,
-  },
-  catalogueLevelText: {
-    flex: 1,
-  },
-  catalogueLevelTitle: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
-    marginBottom: Responsive.spacing.xs,
-  },
-  catalogueLevelDescription: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.textSecondary,
-  },
-  catalogueLevelContent: {
-    marginTop: Responsive.spacing.sm,
-    paddingLeft: Responsive.spacing.md,
-  },
-  catalogueArea: {
-    marginBottom: Responsive.spacing.md,
-  },
-  catalogueAreaTitle: {
-    fontSize: Typography.sizes.sm,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textSecondary,
-    marginBottom: Responsive.spacing.xs,
-    marginLeft: Responsive.spacing.sm,
-  },
-  catalogueCheck: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: Responsive.spacing.sm,
-    paddingHorizontal: Responsive.spacing.sm,
-    backgroundColor: Colors.cardNotStarted,
-    borderRadius: Responsive.borderRadius.small,
-    marginBottom: Responsive.spacing.xs,
-    borderWidth: 1,
-    borderColor: Colors.cardNotStartedBorder,
-    opacity: Colors.cardNotStartedOpacity,
-  },
-  catalogueCheckCompleted: {
-    backgroundColor: Colors.cardCompleted,
-    borderColor: Colors.cardCompletedBorder,
-    borderWidth: 1,
-    opacity: Colors.cardCompletedOpacity,
-  },
-  catalogueCheckInProgress: {
-    backgroundColor: Colors.cardInProgress,
-    borderColor: Colors.cardInProgressBorder,
-    borderWidth: 2,
-    opacity: Colors.cardInProgressOpacity,
-  },
-  catalogueCheckNotStarted: {
-    backgroundColor: Colors.cardNotStarted,
-    borderColor: Colors.cardNotStartedBorder,
-    borderWidth: 1,
-    opacity: Colors.cardNotStartedOpacity,
-  },
-  catalogueCheckPlaceholder: {
-    backgroundColor: Colors.muted,
-    borderColor: Colors.border,
-    borderWidth: 1,
-    opacity: 0.5,
-  },
-  catalogueCheckInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  catalogueCheckTitle: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.cardNotStartedTitleColor,
-    marginLeft: Responsive.spacing.sm,
-  },
-  catalogueCheckTitleCompleted: {
-    color: Colors.cardCompletedTitleColor,
-    fontWeight: Typography.weights.semibold,
-  },
-  catalogueCheckTitleInProgress: {
-    color: Colors.cardInProgressTitleColor,
-    fontWeight: Typography.weights.semibold,
-  },
-  catalogueCheckTitleNotStarted: {
-    color: Colors.cardNotStartedTitleColor,
-  },
-  catalogueCheckDuration: {
-    fontSize: Typography.sizes.xs,
-    color: Colors.cardNotStartedSubtitleColor,
-  },
-  catalogueCheckDurationCompleted: {
-    color: Colors.cardCompletedSubtitleColor,
-  },
-  catalogueCheckDurationInProgress: {
-    color: Colors.cardInProgressSubtitleColor,
-  },
-  catalogueCheckDurationNotStarted: {
-    color: Colors.cardNotStartedSubtitleColor,
-  },
-  welcomeMessage: {
-    fontSize: Typography.sizes.md,
-    color: Colors.textSecondary,
-    lineHeight: Typography.sizes.md * 1.4,
-    textAlign: 'center',
-  },
-  welcomeMessageSpacing: {
-    paddingHorizontal: Responsive.padding.screen,
-    marginBottom: Responsive.spacing.sm,
-  },
+
+
 
   overallProgressSection: {
     paddingHorizontal: Responsive.padding.screen,
-    marginBottom: Responsive.spacing.lg,
+    marginBottom: Responsive.spacing.sm, // Reduced from lg to sm to reduce padding between components
   },
   overallProgressHeader: {
     marginBottom: Responsive.spacing.sm,
@@ -883,8 +669,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   circularProgressContainer: {
-    marginBottom: 0,
     alignItems: 'center',
+    marginVertical: scale(20), // Reduced from 40 to 20 to bring components closer
+    paddingTop: Responsive.spacing.md, // Added responsive top padding
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  loadingText: {
+    fontSize: scale(16),
+    color: Colors.textSecondary,
+    textAlign: 'center',
   },
   overallProgressText: {
     fontSize: Typography.sizes.md,
@@ -892,230 +689,97 @@ const styles = StyleSheet.create({
     color: Colors.accent,
     textAlign: 'center',
   },
-  activeLevelSection: {
-    paddingHorizontal: Responsive.padding.screen,
-  },
-  checkListContainer: {
-    position: 'relative',
-    paddingVertical: Responsive.spacing.xs,
-    alignItems: 'stretch',
-  },
 
-  activeLevelHeader: {
-    backgroundColor: Colors.heroCardBackground,
-    borderRadius: Responsive.borderRadius.xlarge,
-    padding: Responsive.spacing.xl, // Increased from lg to xl for more breathing room
-    marginBottom: Responsive.spacing.md, // Increased margin for better separation
-    marginHorizontal: -Responsive.spacing.xs, // Slightly extend beyond container for hero effect
-    borderWidth: Colors.heroCardBorderWidth,
-    borderColor: Colors.heroCardBorder,
-    shadowColor: Colors.heroCardShadowColor,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: Colors.heroCardShadowOpacity,
-    shadowRadius: Colors.heroCardShadowRadius,
-    elevation: Colors.heroCardElevation,
-  },
 
-  levelChipContainer: {
-    marginBottom: Responsive.spacing.md, // Space between badge and title row
-  },
-  titleIconRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: Responsive.spacing.lg, // Space between title row and button
-  },
-  activeLevelTitle: {
-    fontSize: Typography.sizes.xxxl, // Increased from xxl to xxxl for more prominence
-    fontWeight: Typography.weights.bold,
-    color: Colors.heroTitleColor,
-    lineHeight: Typography.sizes.xxxl * 1.2, // Increased line height for better readability
-    flex: 1, // Take up available space
-    marginRight: Responsive.spacing.lg, // Space between title and icon
-  },
-  activeLevelSubtitle: {
-    fontSize: Typography.sizes.md,
-    color: Colors.textSecondary,
-  },
-  activeLevelIconWrap: {
-    width: Responsive.iconSizes.xxlarge + Responsive.spacing.sm, // Increased size
-    height: Responsive.iconSizes.xxlarge + Responsive.spacing.sm, // Increased size
-    borderRadius: (Responsive.iconSizes.xxlarge + Responsive.spacing.sm) / 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3, // Increased border width for more prominence
-    borderColor: Colors.heroIconBorder,
-    backgroundColor: Colors.heroIconBackground,
-  },
-  activeLevelIconText: {
-    fontSize: Typography.sizes.xxxl, // Increased from xxl to xxxl for more prominence
-  },
-  securityCheckButton: {
-    borderRadius: Responsive.borderRadius.large,
-    paddingVertical: Responsive.padding.button + Responsive.spacing.xs, // Increased padding
-    paddingHorizontal: Responsive.spacing.xl, // Increased horizontal padding
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: Responsive.buttonHeight.large, // Increased button height
-    backgroundColor: Colors.heroButtonBackground,
-    shadowColor: Colors.heroButtonShadowColor,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: Colors.heroButtonShadowOpacity,
-    elevation: Colors.heroButtonElevation,
-  },
-  securityCheckButtonText: {
-    color: Colors.heroButtonTextColor,
-    fontSize: Typography.sizes.lg, // Increased from md to lg for more prominence
-    fontWeight: Typography.weights.bold,
-    textAlign: 'center',
-  },
-  levelChip: {
-    alignSelf: 'flex-start',
-    borderRadius: Responsive.borderRadius.medium,
-    paddingHorizontal: Responsive.spacing.md, // Increased horizontal padding
-    paddingVertical: Responsive.spacing.sm, // Increased vertical padding
-    backgroundColor: Colors.heroChipBackground,
-  },
-  levelChipText: {
-    color: Colors.heroChipTextColor,
-    fontWeight: Typography.weights.bold,
-    fontSize: Typography.sizes.md, // Increased from sm to md for more prominence
-  },
-  checkCardNew: {
-    backgroundColor: Colors.background,
-    borderRadius: Responsive.borderRadius.xlarge,
-    padding: Responsive.spacing.sm,
-    marginBottom: Responsive.spacing.md, // Reduced from lg to md for closer spacing
-    borderWidth: 1,
-    elevation: 6,
-  },
-  checkCardCompleted: {
-    borderColor: Colors.cardCompletedBorder,
-    backgroundColor: Colors.cardCompleted,
-    opacity: Colors.cardCompletedOpacity,
-  },
-  checkCardInProgress: {
-    borderColor: Colors.cardInProgressBorder,
-    borderWidth: 2,
-    backgroundColor: Colors.cardInProgress,
-    opacity: Colors.cardInProgressOpacity,
-    // Make in-progress cards slightly larger
-    transform: [{ scale: 1.02 }],
-    marginHorizontal: -Responsive.spacing.xs, // Compensate for the scale to maintain alignment
-  },
-  checkCardNotStarted: {
-    borderColor: Colors.cardNotStartedBorder,
-    backgroundColor: Colors.cardNotStarted,
-    opacity: Colors.cardNotStartedOpacity,
-    shadowColor: Colors.cardNotStartedBorder,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 2,
-  },
-  checkCardNext: {
-    borderWidth: 2,
-    backgroundColor: Colors.cardInProgress,
-    opacity: Colors.cardInProgressOpacity,
-    // Make next card larger like in-progress cards
-    transform: [{ scale: 1.02 }],
-    marginHorizontal: -Responsive.spacing.xs, // Compensate for the scale to maintain alignment
-    // Extra padding for better play button integration
-    paddingVertical: Responsive.spacing.md,
-    paddingHorizontal: Responsive.spacing.md,
-  },
-  cardSeparator: {
-    height: Responsive.spacing.xs, // Reduced from sm to xs for closer spacing
-    backgroundColor: 'transparent',
-  },
-  timelineDot: {
-    display: 'none',
-  },
-  checkCardContent: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Responsive.spacing.sm,
-  },
-  checkCardContentWithButton: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Responsive.spacing.sm,
-    paddingRight: Responsive.spacing.xl + 8, // Extra space for play button (40px + 16px margin)
-  },
-  checkCardLeft: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    position: 'relative',
-  },
-  checkCardRight: {
-    flex: 1,
-  },
-
-  checkTitleNew: {
-    fontSize: Typography.sizes.xl,
-    fontWeight: Typography.weights.bold,
-    marginBottom: Responsive.spacing.xs,
-    textAlign: 'left',
-  },
-  checkSubtitleNew: {
-    fontSize: Typography.sizes.sm,
-    marginBottom: Responsive.spacing.xs,
-  },
-  checkProgressBar: {
-    flex: 1,
-    height: Responsive.spacing.xs,
-    backgroundColor: Colors.border,
-    borderRadius: Responsive.borderRadius.small,
-    overflow: 'hidden',
-    marginRight: Responsive.spacing.sm,
-  },
-  checkProgressRow: {
-    marginTop: Responsive.spacing.xs,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  checkProgressFill: {
-    height: '100%',
-    borderRadius: Responsive.borderRadius.small,
-  },
-  checkProgressPercent: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.textSecondary,
-    textAlign: 'right',
-    minWidth: 28,
-  },
-  checkProgressPercentCompleted: {
-    color: Colors.accent,
-  },
-  
-  // Play button for in-progress cards
-  playButton: {
-    position: 'absolute',
-    right: Responsive.spacing.sm,
-    top: '50%',
-    marginTop: -20, // Half of button height for perfect centering
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.accent, // Solid accent color
-    alignItems: 'center',
-    justifyContent: 'center',
-    // Ensure it's above other elements
-    zIndex: 10,
-  },
 
   activeLevelMetaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    marginBottom: Responsive.spacing.sm,
+  },
+  pawPrintIcon: {
+    marginLeft: Responsive.spacing.sm,
+  },
+  pawPrintText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
   },
 
-
-  viewAllLink: {
+  viewRoadmapButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.overlayLight,
+    borderRadius: Responsive.borderRadius.small,
+    paddingVertical: Responsive.spacing.xs,
+    paddingHorizontal: Responsive.spacing.sm,
+  },
+  viewRoadmapText: {
     color: Colors.accent,
-    fontWeight: Typography.weights.bold,
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.semibold,
+    marginRight: Responsive.spacing.xs,
   },
+  levelProgressBar: {
+    height: Responsive.spacing.xs,
+    backgroundColor: Colors.track,
+    borderRadius: Responsive.borderRadius.small,
+    marginTop: Responsive.spacing.sm,
+    marginBottom: Responsive.spacing.lg,
+    overflow: 'hidden',
+  },
+  levelProgressTrack: {
+    height: '100%',
+    backgroundColor: Colors.track,
+    borderRadius: Responsive.borderRadius.small,
+  },
+  levelProgressFill: {
+    height: '100%',
+    backgroundColor: Colors.accent,
+    borderRadius: Responsive.borderRadius.small,
+  },
+  categorySection: {
+    paddingHorizontal: Responsive.padding.screen,
+    marginBottom: Responsive.spacing.lg,
+    marginTop: Responsive.spacing.lg,
+  },
+  categoryCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.spacing.md, // Reduced from lg back to md (25% reduction)
+    marginBottom: Responsive.spacing.sm, // Reduced from md back to sm for tighter spacing
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  categoryCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  categoryIcon: {
+    width: 32, // Reduced from 40 to 32 (20% reduction)
+    height: 32, // Reduced from 40 to 32 (20% reduction)
+    borderRadius: 16, // Adjusted for new size
+    backgroundColor: 'transparent', // Removed background color
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Responsive.spacing.md,
+    // Removed border - no borderWidth or borderColor
+  },
+  categoryInfo: {
+    flex: 1,
+  },
+  categoryTitle: {
+    fontSize: Typography.sizes.md, // Reduced from lg back to md (25% reduction)
+    fontWeight: Typography.weights.bold, // Changed from semibold to bold for stronger presence
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.xs,
+  },
+  categoryProgress: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+  },
+
+
+
   allDoneCard: {
     backgroundColor: Colors.surface,
     borderRadius: Responsive.borderRadius.xxlarge,
@@ -1135,10 +799,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   nextLevelCard: {
-    marginTop: Responsive.spacing.sm,
     backgroundColor: Colors.surface,
+    marginTop: Responsive.spacing.xl,
     borderRadius: Responsive.borderRadius.xlarge,
-    padding: Responsive.padding.card,
+    paddingTop: Responsive.spacing.sm,
+    paddingBottom: Responsive.padding.card,
+    paddingHorizontal: Responsive.padding.card,
     alignItems: 'center',
   },
   nextDividerRow: {
@@ -1195,98 +861,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  progressSection: {
-    paddingHorizontal: Responsive.padding.screen,
-  },
-  sectionTitle: {
-    fontSize: Typography.sizes.xxl,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-    marginBottom: Responsive.spacing.lg,
-    letterSpacing: 0.5,
-  },
-  progressCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.xlarge,
-    padding: Responsive.padding.modal,
-    marginBottom: Responsive.spacing.md,
-    elevation: 6,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Responsive.spacing.md,
-  },
-  iconPlaceholder: {
-    width: Responsive.iconSizes.xlarge,
-    height: Responsive.iconSizes.xlarge,
-    backgroundColor: Colors.accent,
-    borderRadius: Responsive.iconSizes.xlarge / 2,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Responsive.spacing.md,
-  },
-  iconText: {
-    fontSize: Typography.sizes.lg,
-  },
-  cardContent: {
-    flex: 1,
-  },
-  cardTitle: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
-    marginBottom: Responsive.spacing.xs,
-  },
-  cardSubtitle: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.textSecondary,
-    lineHeight: Typography.sizes.sm * 1.3,
-  },
-  progressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  progressBar: {
-    flex: 1,
-    height: Responsive.spacing.xs,
-    backgroundColor: Colors.track,
-    borderRadius: Responsive.borderRadius.small,
-    marginRight: Responsive.spacing.sm,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: Colors.accent,
-    borderRadius: Responsive.borderRadius.small,
-  },
-  progressText: {
-    fontSize: Typography.sizes.sm,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.accent,
-    minWidth: 35,
-  },
-  emptyProgressCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.xlarge,
-    padding: Responsive.padding.modal,
-    alignItems: 'center',
-    marginBottom: Responsive.spacing.md,
-  },
-  emptyProgressTitle: {
-    fontSize: Typography.sizes.lg,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-    marginBottom: Responsive.spacing.sm,
-    textAlign: 'center',
-  },
-  emptyProgressSubtitle: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: Responsive.spacing.md,
-    lineHeight: Typography.sizes.sm * 1.4,
-  },
+
   startLearningButton: {
     backgroundColor: Colors.accent,
     paddingHorizontal: Responsive.spacing.lg,
@@ -1305,8 +880,73 @@ const styles = StyleSheet.create({
   bottomSpacing: {
     height: Responsive.iconSizes.xlarge,
   },
-  nextLevelIconText: {
-    fontSize: Typography.sizes.xxl,
+
+  
+  // Level Progress Card Styles
+  levelProgressCard: {
+    backgroundColor: Colors.surface,
+    padding: 20,
+    borderRadius: 16,
+    marginHorizontal: 16,
+    marginBottom: 16, // Reduced from 24 to 16 to reduce padding between components
+    position: 'relative', // Added to enable absolute positioning of paw icon
+  },
+  titleRow: {
+    marginBottom: Responsive.spacing.sm,
+  },
+  activeLevelTitle: {
+    fontSize: Typography.sizes.xl, // Increased from lg to xl for larger text
+    fontWeight: Typography.weights.bold,
+    color: Colors.textPrimary,
+  },
+  activeLevelMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Responsive.spacing.sm,
+  },
+  activeLevelSubtitle: {
+    fontSize: Typography.sizes.md, // Increased from sm to md for larger text
+    color: Colors.textSecondary,
+  },
+  pawPrintIcon: {
+    position: 'absolute',
+    right: 20,
+    top: '45%',
+    transform: [{ translateY: -12 }], // Half of icon height to center vertically
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  levelProgressBar: {
+    width: '100%',
+    marginTop: 12,
+  },
+  levelProgressTrack: {
+    height: 8, // Increased from 6 to 8 for slightly taller progress bar
+    backgroundColor: Colors.track,
+    borderRadius: 4, // Adjusted from 3 to 4 to match new height
+    overflow: 'hidden',
+  },
+  levelProgressFill: {
+    height: '100%',
+    backgroundColor: Colors.accent,
+    borderRadius: 4, // Adjusted from 3 to 4 to match new height
+  },
+  
+  // CTA Button Card Styles
+  ctaButtonCard: {
+    backgroundColor: Colors.accent,
+    marginHorizontal: 16,
+    height: 56,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Responsive.spacing.md,
+  },
+  ctaButtonText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    textAlign: 'center',
   },
 });
 

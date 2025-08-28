@@ -171,7 +171,7 @@ const StickyGamificationBar = ({
               accessibilityLabel="View level catalogue"
               accessibilityHint="Shows all available security levels"
             >
-              <Text style={styles.mascotIcon}>🐾</Text>
+              <Ionicons name="paw-outline" size={24} color={Colors.textSecondary} />
               {(activeLevel || currentActiveLevel) && (
                 <Text style={styles.gamificationText}>
                   {(activeLevel || currentActiveLevel).id}
@@ -191,7 +191,7 @@ const StickyGamificationBar = ({
               accessibilityLabel="View streak details"
               accessibilityHint="Shows your current streak and milestones"
             >
-              <Text style={styles.streakIcon}>🔥</Text>
+              <Ionicons name="flame-outline" size={24} color={Colors.textSecondary} />
               <Text style={styles.gamificationText}>{isLoading ? '-' : streakCount}</Text>
             </TouchableOpacity>
           </Animated.View>
@@ -207,7 +207,7 @@ const StickyGamificationBar = ({
               accessibilityLabel="View badges"
               accessibilityHint="Shows your earned badges and achievements"
             >
-              <Text style={styles.badgeIcon}>🏅</Text>
+              <Ionicons name="ribbon-outline" size={24} color={Colors.textSecondary} />
               <Text style={styles.gamificationText}>{isLoading ? '-' : badgesCount}</Text>
             </TouchableOpacity>
           </Animated.View>
@@ -239,15 +239,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: Responsive.spacing.xs,
-  },
-  mascotIcon: {
-    fontSize: Typography.sizes.xxl,
-  },
-  streakIcon: {
-    fontSize: Typography.sizes.xxl,
-  },
-  badgeIcon: {
-    fontSize: Typography.sizes.xxl,
   },
   gamificationText: {
     fontSize: Typography.sizes.sm,

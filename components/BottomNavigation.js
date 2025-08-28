@@ -27,7 +27,7 @@ const BottomNavigation = ({ activeTab, onTabPress }) => {
               activeOpacity={0.7}
             >
               <Ionicons
-                name={isActive ? tab.icon.replace('-outline', '') : tab.icon}
+                name={isActive ? tab.iconActive : tab.icon}
                 size={responsiveIconSizes.medium}
                 color={isActive ? Colors.accent : Colors.textSecondary}
               />
