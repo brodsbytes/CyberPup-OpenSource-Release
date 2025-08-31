@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import WelcomeScreen from './screens/WelcomeScreen';
 import InsightsScreen from './screens/InsightsScreen';
-import LoadingScreen from './components/LoadingScreen';
+import LoadingScreen from './components/ui/LoadingScreen';
 import { GuideDetailScreen, ToolDetailScreen, AlertDetailScreen } from './screens/Insights';
 
 import { APP_CONSTANTS, SCREEN_NAMES, ERROR_MESSAGES } from './constants';

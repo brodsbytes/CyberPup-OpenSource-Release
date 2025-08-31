@@ -243,10 +243,6 @@ export const levels = [
   }
 ];
 
-// Legacy support - keeping old structure for smooth transition
-// TODO: Remove this after all components are updated
-export const categories = levels;
-
 export const getLevelById = (id) => {
   return levels.find(level => level.id === id);
 };
@@ -287,14 +283,6 @@ export const getAllChecks = () => {
   });
   return allChecks;
 };
-
-// Legacy functions for backward compatibility
-// TODO: Remove these after all components are updated
-export const getCategoryById = getLevelById;
-export const getModulesByCategory = getAreasByLevel;
-export const getLessonsByModule = getChecksByArea;
-export const getAllModules = getAllChecks;
-export const getAllLessons = getAllChecks;
 
 export const searchContent = (query) => {
   const results = [];

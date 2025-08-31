@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Responsive } from '../theme';
 import { isSmallScreen } from '../utils/responsive';
 import { loadUserBadges, getEarnedBadgesCount } from '../utils/badgeStorage';
-import Badge from '../components/Badge';
+import Badge from '../components/ui/Badge';
 import * as Haptics from 'expo-haptics';
 
 const { height, width } = Dimensions.get('window');

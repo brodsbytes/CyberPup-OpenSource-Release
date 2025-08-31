@@ -4,23 +4,31 @@ This folder contains all project documentation organized by category.
 
 ## 📁 Folder Structure
 
-### 🛠️ `/development`
+### 🛠️ `/active/development`
 Development workflows, coding standards, and technical processes
 - `DEVELOPMENT_WORKFLOW.md` - Development processes and workflows
 - `RESPONSIVE_DESIGN_GUIDE.md` - Design system and responsive patterns
 - `RESPONSIVE_DESIGN_PROGRESS.md` - Implementation progress tracking
 - `REFACTORING_CHANGES.md` - Code refactoring documentation
+- `CODEBASE_CLEANUP_IMPLEMENTATION_PLAN.md` - **Active codebase cleanup project**
+- `CLEANUP_QUICK_REFERENCE.md` - Quick reference for cleanup tasks and commands
+- `LEGACY_CODE_AUDIT.md` - Comprehensive legacy code audit
 
-### ✨ `/features`
+### ✨ `/active/features`
 Feature specifications and enhancement plans
 - `GAMIFICATION_FEATURES.md` - Gamification system documentation
 - `LIGHT_MODE_IMPLEMENTATION_PLAN.md` - Light mode feature planning
 
-### 🚀 `/implementation`
+### 🚀 `/active/architecture`
 Implementation roadmaps and technical specifications
 - `LEVEL_1_INTERACTIVE_ROADMAP.md` - **Main implementation roadmap**
 - `INSIGHTS_IMPLEMENTATION.md` - Insights feature implementation
 - `TEST_BREACH_INTEGRATION.md` - Breach checking integration specs
+
+### 📚 `/archived`
+Completed and historical documentation
+- `/archived/implementation/` - Completed implementation plans
+- `/archived/features/` - Completed feature specifications
 
 ### 📚 `/reference`
 Reference materials and external service documentation
@@ -35,8 +43,9 @@ Reference materials and external service documentation
 
 ## 🔗 Quick Links
 
-- **Main Implementation Plan:** [`implementation/LEVEL_1_INTERACTIVE_ROADMAP.md`](implementation/LEVEL_1_INTERACTIVE_ROADMAP.md)
-- **Development Workflow:** [`development/DEVELOPMENT_WORKFLOW.md`](development/DEVELOPMENT_WORKFLOW.md)
+- **Main Implementation Plan:** [`active/architecture/LEVEL_1_INTERACTIVE_ROADMAP.md`](active/architecture/LEVEL_1_INTERACTIVE_ROADMAP.md)
+- **Development Workflow:** [`active/development/DEVELOPMENT_WORKFLOW.md`](active/development/DEVELOPMENT_WORKFLOW.md)
+- **Codebase Cleanup:** [`active/development/CODEBASE_CLEANUP_IMPLEMENTATION_PLAN.md`](active/development/CODEBASE_CLEANUP_IMPLEMENTATION_PLAN.md)
 - **Project Reference:** [`project-reference/`](project-reference/)
 
 ## 📝 Adding Documentation

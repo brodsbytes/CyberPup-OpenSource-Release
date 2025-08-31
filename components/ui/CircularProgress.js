@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import Svg, { Path, Defs, LinearGradient, Stop } from 'react-native-svg';
-import { Colors, Typography } from '../theme';
-import { scale } from '../utils/responsive';
+import { Colors, Typography } from '../../theme';
+import { scale } from '../../utils/responsive';
 import * as Haptics from 'expo-haptics';
 
 // Helper function to convert polar coordinates to cartesian

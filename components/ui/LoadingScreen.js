@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import { Colors } from '../theme';
+import { Colors } from '../../theme';
 
 const LoadingScreen = ({ 
   message = 'Loading CyberPup...', 

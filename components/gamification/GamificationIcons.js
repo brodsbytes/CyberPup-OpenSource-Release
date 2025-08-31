@@ -7,9 +7,9 @@ import {
   Text,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Responsive, Typography } from '../theme';
-import { getStreakStats } from '../utils/streakStorage';
-import { getEarnedBadgesCount } from '../utils/badgeStorage';
+import { Colors, Responsive, Typography } from '../../theme';
+import { getStreakStats } from '../../utils/streakStorage';
+import { getEarnedBadgesCount } from '../../utils/badgeStorage';
 
 const GamificationIcons = ({ onStreakPress, onBadgesPress }) => {
   const [streakCount, setStreakCount] = useState(0);

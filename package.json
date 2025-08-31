@@ -9,6 +9,8 @@
     "web": "expo start --web",
     "cleanup": "./scripts/cleanup-dev-servers.sh",
     "kill-servers": "./scripts/cleanup-dev-servers.sh",
+    "cleanup:progress": "node scripts/track-cleanup-progress.js",
+    "cleanup:import-map": "node scripts/generate-import-map.js",
     "test:e2e": "detox test",
     "test:e2e:build": "detox build",
     "test:e2e:ios": "detox test --configuration ios.sim.debug",

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import { scale } from '../utils/responsive';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { levels, getAllChecks, getAreasByLevel } from '../data/courseData';
-import CircularProgress from '../components/CircularProgress';
+import CircularProgress from '../components/ui/CircularProgress';
 import ScoreBreakdownModal from '../components/ScoreBreakdownModal';
 import StreakDetailsModal from './StreakDetailsScreen';
 import BadgesModal from './BadgesScreen';
@@ -310,7 +310,6 @@ const WelcomeScreen = ({ navigation }) => {
           '1-1-4': SCREEN_NAMES.CHECK_1_1_4_MFA_SETUP,
     '1-1-5': SCREEN_NAMES.CHECK_1_1_5_BREACH_CHECK,
       '1-2-1': SCREEN_NAMES.CHECK_1_2_1_SCREEN_LOCK,
-      // TODO: Add more check screens as they are created
     };
 
     // Find the first incomplete check in the area
@@ -755,21 +754,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   categoryIcon: {
-    width: 32, // Reduced from 40 to 32 (20% reduction)
-    height: 32, // Reduced from 40 to 32 (20% reduction)
-    borderRadius: 16, // Adjusted for new size
-    backgroundColor: 'transparent', // Removed background color
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Responsive.spacing.md,
-    // Removed border - no borderWidth or borderColor
   },
   categoryInfo: {
     flex: 1,
   },
   categoryTitle: {
-    fontSize: Typography.sizes.md, // Reduced from lg back to md (25% reduction)
-    fontWeight: Typography.weights.bold, // Changed from semibold to bold for stronger presence
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
     marginBottom: Responsive.spacing.xs,
   },

@@ -44,104 +44,104 @@ describe('Device Audit', () => {
 
   describe('Device Audit Flow', () => {
     it('should handle device addition correctly', async () => {
-      await device.waitForElementByLabelText('Welcome to CyberPup').toBeVisible();
-      await device.tapByLabelText('Get Started');
+      await element(by.text('Welcome to CyberPup')).toBeVisible();
+      await element(by.text('Get Started')).tap();
       
       // Verify device audit screen
-      await device.waitForElementByLabelText('Device Audit').toBeVisible();
+      await element(by.text('Device Audit')).toBeVisible();
       
       // Add a device
-      await device.tapByLabelText('Add Device');
+      await element(by.text('Add Device')).tap();
       await device.wait(1000);
       
       // Select mobile device
-      await device.tapByLabelText('Mobile Device');
+      await element(by.text('Mobile Device')).tap();
       await device.wait(1000);
       
       // Select iOS
-      await device.tapByLabelText('Apple (iPhone, iPad)');
+      await element(by.text('Apple (iPhone, iPad)')).tap();
       await device.wait(1000);
       
       // Select iPhone model
-      const iphoneModels = await device.findElementsByLabelText(/iPhone/);
-      if (iphoneModels.length > 0) {
-        await iphoneModels[0].tap();
+      const iphoneModels = await element(by.text(/iPhone/)).atIndex(0);
+      if (await iphoneModels.isVisible()) {
+        await iphoneModels.tap();
       }
       await device.wait(1000);
       
       // Save device
-      await device.tapByLabelText('Save Device');
+      await element(by.text('Save Device')).tap();
       await device.wait(1000);
       
       // Verify device was added
-      const deviceElement = await device.findElementByLabelText(/iPhone/);
-      expect(await deviceElement.isDisplayed()).toBe(true);
+      const deviceElement = element(by.text(/iPhone/));
+      await expect(deviceElement).toBeVisible();
     });
 
     it('should handle device removal correctly', async () => {
-      await device.waitForElementByLabelText('Welcome to CyberPup').toBeVisible();
-      await device.tapByLabelText('Get Started');
+      await element(by.text('Welcome to CyberPup')).toBeVisible();
+      await element(by.text('Get Started')).tap();
       
       // Add a device first
-      await device.tapByLabelText('Add Device');
+      await element(by.text('Add Device')).tap();
       await device.wait(1000);
-      await device.tapByLabelText('Mobile Device');
+      await element(by.text('Mobile Device')).tap();
       await device.wait(1000);
-      await device.tapByLabelText('Apple (iPhone, iPad)');
+      await element(by.text('Apple (iPhone, iPad)')).tap();
       await device.wait(1000);
       
-      const iphoneModels = await device.findElementsByLabelText(/iPhone/);
-      if (iphoneModels.length > 0) {
-        await iphoneModels[0].tap();
+      const iphoneModels = element(by.text(/iPhone/)).atIndex(0);
+      if (await iphoneModels.isVisible()) {
+        await iphoneModels.tap();
       }
       await device.wait(1000);
-      await device.tapByLabelText('Save Device');
+      await element(by.text('Save Device')).tap();
       await device.wait(1000);
       
       // Remove the device
-      const deviceElement = await device.findElementByLabelText(/iPhone/);
+      const deviceElement = element(by.text(/iPhone/));
       await deviceElement.longPress();
       await device.wait(1000);
       
       // Confirm removal
-      await device.tapByLabelText('Remove Device');
+      await element(by.text('Remove Device')).tap();
       await device.wait(1000);
       
       // Verify device was removed
-      const removedDevice = await device.findElementByLabelText(/iPhone/);
-      expect(await removedDevice.isDisplayed()).toBe(false);
+      const removedDevice = element(by.text(/iPhone/));
+      await expect(removedDevice).not.toBeVisible();
     });
 
     it('should complete audit and proceed to main app', async () => {
-      await device.waitForElementByLabelText('Welcome to CyberPup').toBeVisible();
-      await device.tapByLabelText('Get Started');
+      await element(by.text('Welcome to CyberPup')).toBeVisible();
+      await element(by.text('Get Started')).tap();
       
       // Add at least one device
-      await device.tapByLabelText('Add Device');
+      await element(by.text('Add Device')).tap();
       await device.wait(1000);
-      await device.tapByLabelText('Mobile Device');
+      await element(by.text('Mobile Device')).tap();
       await device.wait(1000);
-      await device.tapByLabelText('Apple (iPhone, iPad)');
+      await element(by.text('Apple (iPhone, iPad)')).tap();
       await device.wait(1000);
       
-      const iphoneModels = await device.findElementsByLabelText(/iPhone/);
-      if (iphoneModels.length > 0) {
-        await iphoneModels[0].tap();
+      const iphoneModels = element(by.text(/iPhone/)).atIndex(0);
+      if (await iphoneModels.isVisible()) {
+        await iphoneModels.tap();
       }
       await device.wait(1000);
-      await device.tapByLabelText('Save Device');
+      await element(by.text('Save Device')).tap();
       await device.wait(1000);
       
       // Complete audit
-      await device.tapByLabelText('Complete Audit');
+      await element(by.text('Complete Audit')).tap();
       await device.wait(2000);
       
       // Verify we're on the main welcome screen
-      await device.waitForElementByLabelText('Welcome to CyberPup').toBeVisible();
+      await element(by.text('Welcome to CyberPup')).toBeVisible();
       
       // Verify we can start Level 1
-      const startButton = await device.findElementByLabelText('Start Level 1');
-      expect(await startButton.isDisplayed()).toBe(true);
+      const startButton = element(by.text('Start Level 1'));
+      await expect(startButton).toBeVisible();
     });
   });
 
