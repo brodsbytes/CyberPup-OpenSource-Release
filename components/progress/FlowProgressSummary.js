@@ -12,8 +12,8 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Typography, Responsive } from '../theme';
-import { ProgressManager } from '../utils/progressManager';
+import { Colors, Typography, Responsive } from '../../theme';
+import { ProgressManager } from '../../utils/progressManager';
 
 const FlowProgressSummary = ({ visible, onClose, flowId }) => {
   const [analytics, setAnalytics] = useState(null);

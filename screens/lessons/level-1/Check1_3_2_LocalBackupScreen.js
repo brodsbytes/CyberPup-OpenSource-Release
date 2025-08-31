@@ -19,11 +19,11 @@ import { SCREEN_NAMES } from '../../../constants';
 import { DeviceCapabilities } from '../../../utils/deviceCapabilities';
 import { SettingsGuide } from '../../../utils/settingsGuide';
 import { AppStorage } from '../../../utils/storage';
-import CompletionPopup from '../../../components/CompletionPopup';
+import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
-import HeaderWithProgress from '../../../components/HeaderWithProgress';
+import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 
-import InteractiveChecklist from '../../../components/InteractiveChecklist';
+import InteractiveChecklist from '../../../components/validation-steps/InteractiveChecklist';
 
 const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Exact same state management as Check 1.4

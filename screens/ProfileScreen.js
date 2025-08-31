@@ -10,15 +10,15 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import BottomNavigation from '../components/BottomNavigation';
+import BottomNavigation from '../components/navigation/BottomNavigation';
 import { Colors, Typography, Responsive, CommonStyles } from '../theme';
 import { getStreakStats } from '../utils/streakStorage';
 import { SCREEN_NAMES } from '../constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import StickyGamificationBar from '../components/StickyGamificationBar';
+import StickyGamificationBar from '../components/gamification/StickyGamificationBar';
 import StreakDetailsModal from './StreakDetailsScreen';
 import BadgesModal from './BadgesScreen';
-import CatalogueModal from '../components/CatalogueModal';
+import CatalogueModal from '../components/navigation/CatalogueModal';
 
 const ProfileScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);

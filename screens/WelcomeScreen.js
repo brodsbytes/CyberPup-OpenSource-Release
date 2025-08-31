@@ -16,16 +16,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { levels, getAllChecks, getAreasByLevel } from '../data/courseData';
 import CircularProgress from '../components/ui/CircularProgress';
-import ScoreBreakdownModal from '../components/ScoreBreakdownModal';
+import ScoreBreakdownModal from '../components/gamification/ScoreBreakdownModal';
 import StreakDetailsModal from './StreakDetailsScreen';
 import BadgesModal from './BadgesScreen';
-import BottomNavigation from '../components/BottomNavigation';
-import CatalogueModal from '../components/CatalogueModal';
-import CategoryDetailModal from '../components/CategoryDetailModal';
+import BottomNavigation from '../components/navigation/BottomNavigation';
+import CatalogueModal from '../components/navigation/CatalogueModal';
+import CategoryDetailModal from '../components/navigation/CategoryDetailModal';
 import { SCREEN_NAMES } from '../constants';
 import { updateStreak } from '../utils/streakStorage';
 import * as Haptics from 'expo-haptics';
-import StickyGamificationBar from '../components/StickyGamificationBar';
+import StickyGamificationBar from '../components/gamification/StickyGamificationBar';
 
 
 

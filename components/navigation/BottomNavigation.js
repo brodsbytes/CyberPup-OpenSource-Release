@@ -1,15 +1,15 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Colors, Spacing } from '../theme';
+import { Colors, Spacing } from '../../theme';
 import { Ionicons } from '@expo/vector-icons';
-import { TAB_NAVIGATION } from '../constants';
+import { TAB_NAVIGATION } from '../../constants';
 import { 
   responsiveIconSizes, 
   responsivePadding, 
   responsiveTypography,
   responsiveButtonHeight,
   isSmallScreen 
-} from '../utils/responsive';
+} from '../../utils/responsive';
 
 const BottomNavigation = ({ activeTab, onTabPress }) => {
   const tabs = TAB_NAVIGATION.TABS;

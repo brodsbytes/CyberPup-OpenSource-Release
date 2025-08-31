@@ -11,15 +11,15 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Responsive } from '../theme';
-import BottomNavigation from '../components/BottomNavigation';
+import BottomNavigation from '../components/navigation/BottomNavigation';
 import SegmentedControl from '../components/insights/SegmentedControl';
 import LearnTabContent from './Insights/LearnTabContent';
 import ToolsTabContent from './Insights/ToolsTabContent';
 import { SCREEN_NAMES } from '../constants';
-import StickyGamificationBar from '../components/StickyGamificationBar';
+import StickyGamificationBar from '../components/gamification/StickyGamificationBar';
 import StreakDetailsModal from './StreakDetailsScreen';
 import BadgesModal from './BadgesScreen';
-import CatalogueModal from '../components/CatalogueModal';
+import CatalogueModal from '../components/navigation/CatalogueModal';
 
 const InsightsScreen = ({ navigation }) => {
   const [tab, setTab] = useState(0); // 0 = Learn, 1 = Tools

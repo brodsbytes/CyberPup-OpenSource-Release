@@ -10,10 +10,10 @@ import {
   Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Typography, Responsive } from '../theme';
+import { Colors, Typography, Responsive } from '../../theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { levels, getAllChecks, getAreasByLevel } from '../data/courseData';
-import { SCREEN_NAMES } from '../constants';
+import { levels, getAllChecks, getAreasByLevel } from '../../data/courseData';
+import { SCREEN_NAMES } from '../../constants';
 
 const { width, height } = Dimensions.get('window');
 

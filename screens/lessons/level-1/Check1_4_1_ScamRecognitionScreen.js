@@ -14,10 +14,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
-import InteractiveValidationFlow from '../../../components/InteractiveValidationFlow';
+import InteractiveValidationFlow from '../../../components/validation-steps/InteractiveValidationFlow';
 import ScamRecognitionStep from '../../../components/validation-steps/ScamRecognitionStep';
-import CompletionPopup from '../../../components/CompletionPopup';
-import HeaderWithProgress from '../../../components/HeaderWithProgress';
+import CompletionPopup from '../../../components/gamification/CompletionPopup';
+import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 
 const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {

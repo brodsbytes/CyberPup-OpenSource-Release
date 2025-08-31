@@ -7,10 +7,10 @@ import {
   Text,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Typography, Responsive } from '../theme';
-import { getStreakStats } from '../utils/streakStorage';
-import { getEarnedBadgesCount } from '../utils/badgeStorage';
-import { levels, getAllChecks, getAreasByLevel } from '../data/courseData';
+import { Colors, Typography, Responsive } from '../../theme';
+import { getStreakStats } from '../../utils/streakStorage';
+import { getEarnedBadgesCount } from '../../utils/badgeStorage';
+import { levels, getAllChecks, getAreasByLevel } from '../../data/courseData';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 

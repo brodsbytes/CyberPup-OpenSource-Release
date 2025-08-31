@@ -11,9 +11,9 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Linking } from 'react-native';
 
-import { Colors, Typography, Responsive, CommonStyles, CheckVariants } from '../theme';
-import CircularProgress from './ui/CircularProgress';
-import ProgressiveActionCard from './ProgressiveActionCard';
+import { Colors, Typography, Responsive, CommonStyles, CheckVariants } from '../../theme';
+import CircularProgress from '../../components/ui/CircularProgress';
+import ProgressiveActionCard from '../../components/ui/ProgressiveActionCard';
 
 const WizardFlow = ({ 
   userDevices, 

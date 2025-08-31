@@ -20,9 +20,9 @@ import { DeviceCapabilities } from '../../../utils/deviceCapabilities';
 import { SettingsGuide } from '../../../utils/settingsGuide';
 import { AppStorage } from '../../../utils/storage';
 
-import TimelineDashboard from '../../../components/TimelineDashboard';
-import CompletionPopup from '../../../components/CompletionPopup';
-import HeaderWithProgress from '../../../components/HeaderWithProgress';
+import TimelineDashboard from '../../../components/ui/TimelineDashboard';
+import CompletionPopup from '../../../components/gamification/CompletionPopup';
+import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 
 const Check1_5_2_PrivacySettingsScreen = ({ navigation, route }) => {

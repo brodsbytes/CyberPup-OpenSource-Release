@@ -10,8 +10,8 @@ import {
   UIManager
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Typography, Responsive } from '../theme';
-import ProgressiveActionCard from './ProgressiveActionCard';
+import { Colors, Typography, Responsive } from '../../theme';
+import ProgressiveActionCard from '../../components/ui/ProgressiveActionCard';
 import * as Haptics from 'expo-haptics';
 
 // Enable LayoutAnimation on Android

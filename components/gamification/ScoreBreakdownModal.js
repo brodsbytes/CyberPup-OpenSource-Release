@@ -10,8 +10,8 @@ import {
   Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Typography, Responsive, CommonStyles } from '../theme';
-import { levels, getAllChecks, getAreasByLevel } from '../data/courseData';
+import { Colors, Typography, Responsive, CommonStyles } from '../../theme';
+import { levels, getAllChecks, getAreasByLevel } from '../../data/courseData';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');

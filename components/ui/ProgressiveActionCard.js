@@ -10,7 +10,7 @@ import {
   Platform
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Typography, Responsive, CommonStyles } from '../theme';
+import { Colors, Typography, Responsive, CommonStyles } from '../../theme';
 import * as Haptics from 'expo-haptics';
 
 /**

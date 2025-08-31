@@ -11,8 +11,8 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Linking } from 'react-native';
 
-import { Colors, Typography, Responsive, CommonStyles, CheckVariants } from '../theme';
-import CircularProgress from './ui/CircularProgress';
+import { Colors, Typography, Responsive, CommonStyles, CheckVariants } from '../../theme';
+import CircularProgress from './CircularProgress';
 import ProgressiveActionCard from './ProgressiveActionCard';
 
 const TimelineDashboard = ({ 

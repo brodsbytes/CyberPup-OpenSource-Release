@@ -18,9 +18,9 @@ import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
 import { SCREEN_NAMES } from '../../../constants';
 import { AppStorage } from '../../../utils/storage';
 
-import InteractiveChecklist from '../../../components/InteractiveChecklist';
-import CompletionPopup from '../../../components/CompletionPopup';
-import HeaderWithProgress from '../../../components/HeaderWithProgress';
+import InteractiveChecklist from '../../../components/validation-steps/InteractiveChecklist';
+import CompletionPopup from '../../../components/gamification/CompletionPopup';
+import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 
 const Check1_2_5_PublicChargingScreen = ({ navigation, route }) => {

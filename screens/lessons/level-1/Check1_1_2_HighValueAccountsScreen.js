@@ -21,9 +21,9 @@ import { SettingsGuide } from '../../../utils/settingsGuide';
 import { AppStorage } from '../../../utils/storage';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 
-import TimelineDashboard from '../../../components/TimelineDashboard';
-import CompletionPopup from '../../../components/CompletionPopup';
-import HeaderWithProgress from '../../../components/HeaderWithProgress';
+import TimelineDashboard from '../../../components/ui/TimelineDashboard';
+import CompletionPopup from '../../../components/gamification/CompletionPopup';
+import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 
 const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Exact same state management as Check 1.4

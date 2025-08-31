@@ -21,10 +21,10 @@ import { DeviceCapabilities } from '../../../utils/deviceCapabilities';
 import { SettingsGuide } from '../../../utils/settingsGuide';
 import { AppStorage } from '../../../utils/storage';
 
-import WizardFlow from '../../../components/WizardFlow';
-import CompletionPopup from '../../../components/CompletionPopup';
+import WizardFlow from '../../../components/validation-steps/WizardFlow';
+import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
-import HeaderWithProgress from '../../../components/HeaderWithProgress';
+import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 
 const Check1_2_4_BluetoothWifiScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Exact same state management as Check 1.4

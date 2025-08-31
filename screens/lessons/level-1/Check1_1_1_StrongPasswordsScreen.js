@@ -19,9 +19,9 @@ import { SCREEN_NAMES } from '../../../constants';
 import { AppStorage } from '../../../utils/storage';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 
-import InteractiveChecklist from '../../../components/InteractiveChecklist';
-import CompletionPopup from '../../../components/CompletionPopup';
-import HeaderWithProgress from '../../../components/HeaderWithProgress';
+import InteractiveChecklist from '../../../components/validation-steps/InteractiveChecklist';
+import CompletionPopup from '../../../components/gamification/CompletionPopup';
+import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 
 const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Standard state management

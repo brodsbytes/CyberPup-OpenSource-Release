@@ -15,12 +15,12 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
 import { DeviceCapabilities } from '../../../utils/deviceCapabilities';
-import CollapsibleDeviceSection from '../../../components/CollapsibleDeviceSection';
+import CollapsibleDeviceSection from '../../../components/forms/CollapsibleDeviceSection';
 import { SettingsGuide } from '../../../utils/settingsGuide';
 import * as Haptics from 'expo-haptics';
-import CompletionPopup from '../../../components/CompletionPopup';
+import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
-import HeaderWithProgress from '../../../components/HeaderWithProgress';
+import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 
 /**
  * Check1_3_1_CloudBackupScreen - Pattern B Implementation

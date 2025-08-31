@@ -10,8 +10,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
-import { Colors, Typography, Responsive, CommonStyles, CheckVariants } from '../theme';
-import ProgressiveActionCard from './ProgressiveActionCard';
+import { Colors, Typography, Responsive, CommonStyles, CheckVariants } from '../../theme';
+import ProgressiveActionCard from '../../components/ui/ProgressiveActionCard';
 
 const InteractiveChecklist = ({ 
   userDevices, 

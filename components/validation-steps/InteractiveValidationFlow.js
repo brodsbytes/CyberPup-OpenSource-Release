@@ -13,8 +13,8 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Typography, Responsive } from '../theme';
-import { ValidationEngine } from '../utils/validationEngine';
+import { Colors, Typography, Responsive } from '../../theme';
+import { ValidationEngine } from '../../utils/validationEngine';
 
 const InteractiveValidationFlow = ({ 
   flowId, 

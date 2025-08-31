@@ -18,10 +18,10 @@ import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
 import { BreachCheckService } from '../../../utils/breachCheckService';
-import InteractiveValidationFlow from '../../../components/InteractiveValidationFlow';
+import InteractiveValidationFlow from '../../../components/validation-steps/InteractiveValidationFlow';
 import BreachCheckStep from '../../../components/validation-steps/BreachCheckStep';
-import CompletionPopup from '../../../components/CompletionPopup';
-import HeaderWithProgress from '../../../components/HeaderWithProgress';
+import CompletionPopup from '../../../components/gamification/CompletionPopup';
+import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 
 const Check1_5_BreachCheckScreen = ({ navigation, route }) => {

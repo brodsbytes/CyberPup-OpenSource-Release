@@ -16,11 +16,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
 import { SCREEN_NAMES } from '../../../constants';
 import { AppStorage } from '../../../utils/storage';
-import CompletionPopup from '../../../components/CompletionPopup';
+import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 
-import InteractiveChecklist from '../../../components/InteractiveChecklist';
-import HeaderWithProgress from '../../../components/HeaderWithProgress';
+import InteractiveChecklist from '../../../components/validation-steps/InteractiveChecklist';
+import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 
 const Check1_4_2_ScamReportingScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Standard state management

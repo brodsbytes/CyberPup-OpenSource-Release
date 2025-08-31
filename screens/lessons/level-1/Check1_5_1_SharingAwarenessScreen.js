@@ -16,11 +16,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
 import { SCREEN_NAMES } from '../../../constants';
 import { AppStorage } from '../../../utils/storage';
-import CompletionPopup from '../../../components/CompletionPopup';
+import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
-import HeaderWithProgress from '../../../components/HeaderWithProgress';
+import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 
-import InteractiveChecklist from '../../../components/InteractiveChecklist';
+import InteractiveChecklist from '../../../components/validation-steps/InteractiveChecklist';
 
 const Check1_5_1_SharingAwarenessScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Standard state management

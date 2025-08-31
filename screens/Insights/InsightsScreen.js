@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Responsive } from '../../theme';
-import BottomNavigation from '../../components/BottomNavigation';
+import BottomNavigation from '../../components/navigation/BottomNavigation';
 import SegmentedControl from '../../components/insights/SegmentedControl';
 import LearnTab from './LearnTab';
 import ToolsTab from './ToolsTab';
