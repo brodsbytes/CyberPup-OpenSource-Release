@@ -17,7 +17,7 @@ import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
 import { SCREEN_NAMES } from '../../../constants';
 import { AppStorage } from '../../../utils/storage';
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
-import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
+import { getCompletionMessage, getNextScreenName, getCompletionNavigation } from '../../../utils/completionMessages';
 
 import InteractiveChecklist from '../../../components/validation-steps/InteractiveChecklist';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
@@ -290,8 +290,9 @@ const Check1_4_2_ScamReportingScreen = ({ navigation, route }) => {
 
   // ✅ STANDARD: Completion celebration
   const celebrateCompletion = () => {
-    // The completion popup will be shown automatically when isCompleted is true
-    // No need to call it as a function
+    console.log('🎉 Celebrating completion of Check 1.4.2');
+    // Always show CompletionPopup first, let user click "Continue" to go to AreaCompletionScreen
+    setShowCompletionPopup(true);
   };
 
   // Calculate progress for the header

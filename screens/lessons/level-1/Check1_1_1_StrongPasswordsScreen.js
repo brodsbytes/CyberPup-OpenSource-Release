@@ -17,7 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
 import { SCREEN_NAMES } from '../../../constants';
 import { AppStorage } from '../../../utils/storage';
-import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
+import { getCompletionMessage, getNextScreenName, getCompletionNavigation } from '../../../utils/completionMessages';
 
 import InteractiveChecklist from '../../../components/validation-steps/InteractiveChecklist';
 import CompletionPopup from '../../../components/gamification/CompletionPopup';

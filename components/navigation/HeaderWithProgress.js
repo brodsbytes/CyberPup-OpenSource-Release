@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Responsive } from '../../theme';
-import { getNextScreenName } from '../../utils/completionMessages';
+import { getNextScreenName, getCompletionNavigation } from '../../utils/completionMessages';
 
 const HeaderWithProgress = ({ 
   checkId, 
@@ -16,8 +16,12 @@ const HeaderWithProgress = ({
     if (isCompleted && onNext) {
       onNext();
     } else if (isCompleted) {
-      const nextScreen = getNextScreenName(checkId);
-      navigation.navigate(nextScreen);
+      const completionNav = getCompletionNavigation(checkId);
+      if (completionNav.type === 'area_completion') {
+        navigation.navigate(completionNav.target, completionNav.params);
+      } else {
+        navigation.navigate(completionNav.target);
+      }
     }
   };
 

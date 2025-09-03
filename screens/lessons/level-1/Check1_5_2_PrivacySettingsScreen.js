@@ -23,7 +23,7 @@ import { AppStorage } from '../../../utils/storage';
 import TimelineDashboard from '../../../components/ui/TimelineDashboard';
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
-import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
+import { getCompletionMessage, getNextScreenName, getCompletionNavigation } from '../../../utils/completionMessages';
 
 const Check1_5_2_PrivacySettingsScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Standard state management
@@ -207,8 +207,9 @@ const Check1_5_2_PrivacySettingsScreen = ({ navigation, route }) => {
 
   // ✅ STANDARD: Completion celebration
   const celebrateCompletion = () => {
-    // The completion popup will be shown automatically when isCompleted is true
-    // No need to call it as a function
+    console.log('🎉 Celebrating completion of Check 1.5.2');
+    // Always show CompletionPopup first, let user click "Continue" to go to AreaCompletionScreen
+    setShowCompletionPopup(true);
   };
 
   // ✅ CRITICAL: Create privacy settings actions for each device

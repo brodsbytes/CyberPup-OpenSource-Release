@@ -30,7 +30,7 @@ const BadgeEarnedModal = ({
           toValue: 1,
           tension: 100,
           friction: 8,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
         // Glow effect
         Animated.timing(glowAnim, {
@@ -42,13 +42,13 @@ const BadgeEarnedModal = ({
         Animated.timing(textAnim, {
           toValue: 1,
           duration: 300,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
         // Confetti animation
         Animated.timing(confettiAnim, {
           toValue: 1,
           duration: 1000,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
       ]).start();
     } else {
@@ -118,9 +118,7 @@ const BadgeEarnedModal = ({
               styles.badgeContainer,
               {
                 transform: [{ scale: scaleAnim }],
-                shadowColor: badge.color,
-                shadowOpacity: glowOpacity,
-                shadowRadius: 20,
+                boxShadow: `0px 0px 20px ${badge.color}${Math.round(glowOpacity * 255).toString(16).padStart(2, '0')}`,
                 elevation: 15,
               },
             ]}

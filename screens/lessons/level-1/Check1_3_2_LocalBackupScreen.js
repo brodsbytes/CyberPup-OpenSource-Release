@@ -20,7 +20,7 @@ import { DeviceCapabilities } from '../../../utils/deviceCapabilities';
 import { SettingsGuide } from '../../../utils/settingsGuide';
 import { AppStorage } from '../../../utils/storage';
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
-import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
+import { getCompletionMessage, getNextScreenName, getCompletionNavigation } from '../../../utils/completionMessages';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 
 import InteractiveChecklist from '../../../components/validation-steps/InteractiveChecklist';
@@ -76,11 +76,7 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
       const checklistItemsFromActions = convertActionsToChecklistItems(actions, allDevices);
       setChecklistItems(checklistItemsFromActions);
       
-      console.log('Debug: userDevices.length:', allDevices.length);
-      console.log('Debug: checklistItems.length:', checklistItemsFromActions.length);
-      console.log('Debug: checklistItems:', checklistItemsFromActions);
-      console.log('Debug: All devices:', allDevices);
-      console.log('Debug: All actions:', actions);
+      // Debug logs removed for cleaner console
       
       setIsLoading(false);
     } catch (error) {
@@ -109,9 +105,7 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
         const fallbackChecklistItems = convertActionsToChecklistItems(fallbackActions, [fallbackDevice]);
         setChecklistItems(fallbackChecklistItems);
         
-        console.log('Debug: Fallback - userDevices.length:', 1);
-        console.log('Debug: Fallback - checklistItems.length:', fallbackChecklistItems.length);
-        console.log('Debug: Fallback - checklistItems:', fallbackChecklistItems);
+        // Debug logs removed for cleaner console
         
         setIsLoading(false);
       } catch (fallbackError) {
@@ -135,9 +129,7 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
         const genericChecklistItems = convertActionsToChecklistItems(genericActions, [genericDevice]);
         setChecklistItems(genericChecklistItems);
         
-        console.log('Debug: Generic - userDevices.length:', 1);
-        console.log('Debug: Generic - checklistItems.length:', genericChecklistItems.length);
-        console.log('Debug: Generic - checklistItems:', genericChecklistItems);
+        // Debug logs removed for cleaner console
         
         setIsLoading(false);
       }
@@ -148,13 +140,8 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
   const convertActionsToChecklistItems = (actions, devices) => {
     const checklistItems = [];
     
-    console.log('Debug: Converting actions to checklist items');
-    console.log('Debug: Actions:', actions);
-    console.log('Debug: Devices:', devices);
-    
     devices.forEach(device => {
       const deviceActions = actions[device.id] || [];
-      console.log(`Debug: Device ${device.id} has ${deviceActions.length} actions:`, deviceActions);
       
       deviceActions.forEach(action => {
         checklistItems.push({
@@ -174,11 +161,10 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
       });
     });
     
-    console.log('Debug: Final checklist items:', checklistItems);
     return checklistItems;
   };
 
-  // ✅ PRESERVE: Exact same progress management
+  // ✅ FIXED: Progress management
   const loadProgress = async () => {
     try {
       const progressKey = `check_1-3-2_progress`;
@@ -194,6 +180,12 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
         if (progress.checklistItems) {
           setChecklistItems(progress.checklistItems);
         }
+        
+        // Set loading to false if we have progress data
+        setIsLoading(false);
+        
+        // Don't automatically show completion popup when returning to a completed check
+        // Let the user navigate using the header arrow or complete the check again
       }
     } catch (error) {
       console.error('Error loading progress:', error);
@@ -216,50 +208,58 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
     }
   };
 
-  // ✅ PRESERVE: Standard focus effect
+  // ✅ FIXED: Standard focus effect
   useFocusEffect(
     React.useCallback(() => {
-      loadProgress();
-      initializeDeviceContent();
-      // Reset completion state when screen comes into focus
-      // This ensures the completion popup doesn't stay visible after navigation
-      setIsCompleted(false);
-      setShowCompletionPopup(false);
+      const initializeScreen = async () => {
+        // First load progress to preserve existing state
+        await loadProgress();
+        
+        // Then initialize device content only if no progress exists
+        const progressKey = `check_1-3-2_progress`;
+        const progressData = await AsyncStorage.getItem(progressKey);
+        
+        if (!progressData) {
+          await initializeDeviceContent();
+        }
+      };
+      
+      initializeScreen();
     }, [])
   );
 
-  // 🎨 NEW: Clear any existing progress to start fresh
+  // ✅ FIXED: Save progress and check completion when actions change
   useEffect(() => {
-    const clearProgress = async () => {
-      try {
-        await AsyncStorage.removeItem('check_1-3-2_progress');
-        console.log('Debug: Cleared existing progress');
-      } catch (error) {
-        console.error('Error clearing progress:', error);
+    if (Object.keys(deviceActions).length > 0) {
+      saveProgress();
+      
+      // Check if all devices are completed
+      const allDevicesCompleted = Object.keys(deviceActions).every(deviceId => {
+        const deviceActionsList = deviceActions[deviceId] || [];
+        return deviceActionsList.length > 0 && deviceActionsList.every(action => action.completed);
+      });
+      
+      if (allDevicesCompleted && !isCompleted) {
+        setIsCompleted(true);
+        // Don't show CompletionPopup here - let celebrateCompletion handle it
+        celebrateCompletion();
       }
-    };
-    clearProgress();
-  }, []);
-
-  // ✅ PRESERVE: Save progress when actions change
-  useEffect(() => {
-    saveProgress();
+    }
   }, [deviceActions, deviceCompletionStatus, isCompleted, checklistItems]);
 
-  // ✅ PRESERVE: Action completion handler
+  // ✅ FIXED: Action completion handler
   const handleActionComplete = async (deviceId, actionId, completed) => {
     try {
-      console.log('Debug: handleActionComplete called with:', deviceId, actionId, completed);
+      
       // Update device actions
-      setDeviceActions(prev => {
-        const newActions = { ...prev };
-        if (newActions[deviceId]) {
-          newActions[deviceId] = newActions[deviceId].map(action => 
-            action.id === actionId ? { ...action, completed } : action
-          );
+      const updatedActions = { ...deviceActions };
+      if (updatedActions[deviceId]) {
+        const actionIndex = updatedActions[deviceId].findIndex(action => action.id === actionId);
+        if (actionIndex !== -1) {
+          updatedActions[deviceId][actionIndex].completed = completed;
+          setDeviceActions(updatedActions);
         }
-        return newActions;
-      });
+      }
 
       // 🎨 NEW: Update checklist items
       setChecklistItems(prev => 
@@ -270,21 +270,17 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
         )
       );
 
-      // Check if all actions for this device are completed
-      const deviceActions = deviceActions[deviceId] || [];
-      const allCompleted = deviceActions.every(action => action.completed);
-      
-      if (allCompleted) {
-        setDeviceCompletionStatus(prev => ({
-          ...prev,
-          [deviceId]: true
-        }));
-      }
+      // Update device completion status
+      const updatedCompletionStatus = { ...deviceCompletionStatus };
+      const deviceActionsList = updatedActions[deviceId] || [];
+      const allCompleted = deviceActionsList.every(action => action.completed);
+      updatedCompletionStatus[deviceId] = allCompleted;
+      setDeviceCompletionStatus(updatedCompletionStatus);
 
-      // Check if all devices are completed
+      // Check if all devices are completed using updated state
       const allDevicesCompleted = userDevices.every(device => 
-        deviceCompletionStatus[device.id] || 
-        (deviceActions[device.id] && deviceActions[device.id].every(action => action.completed))
+        updatedCompletionStatus[device.id] || 
+        (updatedActions[device.id] && updatedActions[device.id].every(action => action.completed))
       );
 
       if (allDevicesCompleted && !isCompleted) {
@@ -300,16 +296,12 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
   // 🎨 NEW: Checklist-specific completion handler
   const handleChecklistItemComplete = async (itemId, completed) => {
     try {
-      console.log('Debug: handleChecklistItemComplete called with:', itemId, completed);
-      
       // Find the item to get device and action IDs
       const item = checklistItems.find(item => item.id === itemId);
-      console.log('Debug: Found item:', item);
       if (item) {
-        console.log('Debug: Calling handleActionComplete with:', item.deviceId, item.actionId, completed);
         await handleActionComplete(item.deviceId, item.actionId, completed);
       } else {
-        console.error('Debug: Item not found for ID:', itemId);
+        console.error('Item not found for ID:', itemId);
       }
     } catch (error) {
       console.error('Error handling checklist item completion:', error);
@@ -339,8 +331,9 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
 
   // ✅ PRESERVE: Completion celebration
   const celebrateCompletion = () => {
-    // The completion popup will be shown automatically when isCompleted is true
-    // No need to call it as a function
+    console.log('🎉 Celebrating completion of Check 1.3.2');
+    // Always show CompletionPopup first, let user click "Continue" to go to AreaCompletionScreen
+    setShowCompletionPopup(true);
   };
 
   // Helper function to get device icon
@@ -363,8 +356,7 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
     const platform = device.platform || device.tier2;
     const type = device.type;
 
-    console.log('Debug: createLocalBackupActions called with device:', device);
-    console.log('Debug: platform:', platform, 'type:', type);
+    // Debug logs removed for cleaner console
 
     // Add fallback for unknown platform or web
     if (platform === 'unknown' || !platform || platform === 'web') {
@@ -415,9 +407,7 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
       return deviceActionsList;
     }
 
-    console.log('Debug: Checking device type:', type);
     if (type === 'mobile' || type === 'Mobile') {
-      console.log('Debug: Device is mobile, checking platform:', platform);
       if (platform === 'ios') {
         deviceActionsList.push(
           {
@@ -482,7 +472,6 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
           }
         );
       } else if (platform === 'android') {
-        console.log('Debug: Platform is Android, adding Android actions');
         deviceActionsList.push(
           {
             id: 'android-adb-backup',
@@ -547,7 +536,6 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
         );
       }
     } else if (type === 'computer' || type === 'Computer') {
-      console.log('Debug: Device is computer, checking platform:', platform);
       if (platform === 'macos') {
         deviceActionsList.push(
           {
@@ -612,7 +600,6 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
           }
         );
       } else if (platform === 'windows') {
-        console.log('Debug: Platform is Windows, adding Windows actions');
         deviceActionsList.push(
           {
             id: 'windows-file-history',
@@ -676,7 +663,6 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
           }
         );
       } else if (platform === 'web') {
-        console.log('Debug: Platform is Web, adding Web actions');
         deviceActionsList.push(
           {
             id: 'web-browser-backup',
@@ -724,8 +710,7 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
       }
     }
 
-    console.log('Debug: Final deviceActionsList length:', deviceActionsList.length);
-    console.log('Debug: Final deviceActionsList:', deviceActionsList);
+    // Debug logs removed for cleaner console
     return deviceActionsList;
   };
 
@@ -823,9 +808,7 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
               <Text style={styles.fallbackText}>
                 We're preparing personalized backup recommendations for your devices.
               </Text>
-              <Text style={styles.debugText}>
-                Debug: userDevices={userDevices.length}, checklistItems={checklistItems.length}
-              </Text>
+
               <TouchableOpacity
                 style={styles.retryButton}
                 onPress={initializeDeviceContent}
@@ -839,18 +822,25 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
       
       {/* ✅ PRESERVE: Exact same completion card */}
           <CompletionPopup
-          isVisible={showCompletionPopup}
-          title={getCompletionMessage('1-3-2').title}
-          description={getCompletionMessage('1-3-2').description}
-          nextScreenName={getNextScreenName('1-3-2')}
-          navigation={navigation}
-          onContinue={() => {
-            setIsCompleted(false);
-            navigation.navigate(getNextScreenName('1-3-2'));
-          }}
-          variant="modal"
+            isVisible={showCompletionPopup}
+            title={getCompletionMessage('1-3-2').title}
+            description={getCompletionMessage('1-3-2').description}
+            nextScreenName={getNextScreenName('1-3-2')}
+            navigation={navigation}
             onClose={() => setShowCompletionPopup(false)}
+            variant="modal"
             checkId="1-3-2"
+            onContinue={() => {
+              setShowCompletionPopup(false);
+              setIsCompleted(false);
+              // Use the new navigation logic for area completion
+              const completionNav = getCompletionNavigation('1-3-2');
+              if (completionNav.type === 'area_completion') {
+                navigation.navigate(completionNav.target, completionNav.params);
+              } else {
+                navigation.navigate(completionNav.target);
+              }
+            }}
           />
     </SafeAreaView>
   );
@@ -939,13 +929,7 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.medium,
     color: Colors.textPrimary,
   },
-  debugText: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    marginTop: Responsive.spacing.sm,
-    fontFamily: 'monospace',
-  },
+
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',

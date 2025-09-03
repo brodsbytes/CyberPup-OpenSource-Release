@@ -34,6 +34,7 @@ export const SCREEN_NAMES = {
   // Gamification screens
   STREAK_DETAILS: 'StreakDetailsScreen',
   BADGES: 'BadgesScreen',
+  AREA_COMPLETION: 'AreaCompletionScreen',
   // Level 1 Check screens
   CHECK_1_1_1_STRONG_PASSWORDS: 'Check1_1_1_StrongPasswordsScreen',
   CHECK_1_1_2_HIGH_VALUE_ACCOUNTS: 'Check1_1_2_HighValueAccountsScreen',

@@ -22,7 +22,7 @@ import InteractiveValidationFlow from '../../../components/validation-steps/Inte
 import BreachCheckStep from '../../../components/validation-steps/BreachCheckStep';
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
-import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
+import { getCompletionMessage, getNextScreenName, getCompletionNavigation } from '../../../utils/completionMessages';
 
 const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
 
@@ -173,29 +173,8 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
     // Ensure completion is saved before showing alert
     await saveProgress(checklistItems, true);
     
-    Alert.alert(
-      '🎉 Check Complete!',
-      'Great job! You\'ve checked for data breaches and secured any compromised accounts. This is a crucial step in protecting your digital identity.',
-      [
-        {
-          text: 'Continue to Next Area',
-          onPress: async () => {
-            console.log('🚀 Navigating to Check 1.2.1');
-            // Navigate to the next area (Secure Your Devices)
-            navigation.navigate('Check1_2_1_ScreenLockScreen');
-          },
-        },
-        {
-          text: 'Go Back',
-          style: 'cancel',
-          onPress: async () => {
-            console.log('🏠 Navigating back to Welcome');
-            // Force refresh of WelcomeScreen progress
-            navigation.navigate('Welcome');
-          },
-        },
-      ]
-    );
+    // Always show CompletionPopup first, let user click "Continue" to go to AreaCompletionScreen
+    setShowCompletionPopup(true);
   };
 
   const checkBreach = async () => {
@@ -614,16 +593,25 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
           )}
           
           {/* Completion Status */}
-                <CompletionPopup
-        isVisible={showCompletionPopup}
-        title={getCompletionMessage('1-1-5').title}
-        description={getCompletionMessage('1-1-5').description}
-        nextScreenName={getNextScreenName('1-1-5')}
-        navigation={navigation}
-        onClose={() => setShowCompletionPopup(false)}
-        variant="modal"
-        checkId="1-1-5"
-      />
+          <CompletionPopup
+            isVisible={showCompletionPopup}
+            title={getCompletionMessage('1-1-5').title}
+            description={getCompletionMessage('1-1-5').description}
+            nextScreenName={getNextScreenName('1-1-5')}
+            navigation={navigation}
+            onClose={() => setShowCompletionPopup(false)}
+            variant="modal"
+            checkId="1-1-5"
+            onContinue={() => {
+              // Use the new navigation logic for area completion
+              const completionNav = getCompletionNavigation('1-1-5');
+              if (completionNav.type === 'area_completion') {
+                navigation.navigate(completionNav.target, completionNav.params);
+              } else {
+                navigation.navigate(completionNav.target);
+              }
+            }}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

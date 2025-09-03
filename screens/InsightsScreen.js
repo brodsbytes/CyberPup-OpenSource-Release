@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Responsive } from '../theme';
-import BottomNavigation from '../components/navigation/BottomNavigation';
+
 import SegmentedControl from '../components/insights/SegmentedControl';
 import LearnTabContent from './Insights/LearnTabContent';
 import ToolsTabContent from './Insights/ToolsTabContent';
@@ -128,11 +128,7 @@ const InsightsScreen = ({ navigation }) => {
         )}
       </ScrollView>
 
-      {/* Bottom Navigation */}
-      <BottomNavigation 
-        activeTab="insights"
-        onTabPress={handleTabPress}
-      />
+
 
       {/* Modal Components */}
       <StreakDetailsModal

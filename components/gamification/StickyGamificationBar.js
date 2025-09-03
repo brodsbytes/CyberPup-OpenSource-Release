@@ -1,18 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   TouchableOpacity,
   StyleSheet,
   Animated,
   Text,
+  Image,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Responsive } from '../../theme';
 import { getStreakStats } from '../../utils/streakStorage';
 import { getEarnedBadgesCount } from '../../utils/badgeStorage';
 import { levels, getAllChecks, getAreasByLevel } from '../../data/courseData';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
+
+// Import custom SVG icons
+import { RobotDogIcon, FireIcon, TrophyIcon } from './icons';
+import AnimatedStatItem from './AnimatedStatItem';
 
 const StickyGamificationBar = ({ 
   onMascotPress, 
@@ -21,21 +25,20 @@ const StickyGamificationBar = ({
   showMascot = true,
   showStreak = true,
   showBadges = true,
+  showLabels = false,
   activeLevel = null
 }) => {
   const [streakCount, setStreakCount] = useState(0);
   const [badgesCount, setBadgesCount] = useState(0);
+  const [robotDogs, setRobotDogs] = useState(1); // Default to 1 robot dog (the mascot)
   const [currentActiveLevel, setCurrentActiveLevel] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Animation values
-  const [mascotAnim] = useState(new Animated.Value(1));
-  const [streakAnim] = useState(new Animated.Value(1));
-  const [badgesAnim] = useState(new Animated.Value(1));
 
   useEffect(() => {
     loadData();
   }, []);
+
+
 
   const loadActiveLevel = async () => {
     try {
@@ -117,44 +120,7 @@ const StickyGamificationBar = ({
     }
   };
 
-  const animatePress = (animValue) => {
-    Animated.sequence([
-      Animated.timing(animValue, {
-        toValue: 0.9,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(animValue, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  const handleMascotPress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    animatePress(mascotAnim);
-    if (onMascotPress) {
-      onMascotPress();
-    }
-  };
-
-  const handleStreakPress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    animatePress(streakAnim);
-    if (onStreakPress) {
-      onStreakPress();
-    }
-  };
-
-  const handleBadgesPress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    animatePress(badgesAnim);
-    if (onBadgesPress) {
-      onBadgesPress();
-    }
-  };
+  // Animation and press handling now managed by AnimatedStatItem components
 
   // Don't return null when loading, just show the bar without counts
 
@@ -163,54 +129,41 @@ const StickyGamificationBar = ({
       <View style={styles.gamificationContent}>
         {/* CyberPup Mascot */}
         {showMascot && (
-          <Animated.View style={{ transform: [{ scale: mascotAnim }] }}>
-            <TouchableOpacity
-              style={styles.gamificationIcon}
-              onPress={handleMascotPress}
-              activeOpacity={0.8}
-              accessibilityLabel="View level catalogue"
-              accessibilityHint="Shows all available security levels"
-            >
-              <Ionicons name="paw-outline" size={24} color={Colors.textSecondary} />
-              {(activeLevel || currentActiveLevel) && (
-                <Text style={styles.gamificationText}>
-                  {(activeLevel || currentActiveLevel).id}
-                </Text>
-              )}
-            </TouchableOpacity>
-          </Animated.View>
+          <AnimatedStatItem 
+            icon={<RobotDogIcon size={24} />} // Slightly larger for mascot
+            count={isLoading ? '-' : ((activeLevel || currentActiveLevel) ? (activeLevel || currentActiveLevel).id : robotDogs)}
+            type="dog"
+            label={showLabels ? "Level" : null}
+            onPress={onMascotPress}
+            accessibilityLabel="View level catalogue"
+            accessibilityHint="Shows all available security levels"
+          />
         )}
 
         {/* Streak */}
         {showStreak && (
-          <Animated.View style={{ transform: [{ scale: streakAnim }] }}>
-            <TouchableOpacity
-              style={styles.gamificationIcon}
-              onPress={handleStreakPress}
-              activeOpacity={0.8}
-              accessibilityLabel="View streak details"
-              accessibilityHint="Shows your current streak and milestones"
-            >
-              <Ionicons name="flame-outline" size={24} color={Colors.textSecondary} />
-              <Text style={styles.gamificationText}>{isLoading ? '-' : streakCount}</Text>
-            </TouchableOpacity>
-          </Animated.View>
+          <AnimatedStatItem 
+            icon={<FireIcon size={24} />} 
+            count={isLoading ? '-' : streakCount}
+            type="fire"
+            label={showLabels ? "Streak" : null}
+            onPress={onStreakPress}
+            accessibilityLabel="View streak details"
+            accessibilityHint="Shows your current streak and milestones"
+          />
         )}
 
         {/* Badges */}
         {showBadges && (
-          <Animated.View style={{ transform: [{ scale: badgesAnim }] }}>
-            <TouchableOpacity
-              style={styles.gamificationIcon}
-              onPress={handleBadgesPress}
-              activeOpacity={0.8}
-              accessibilityLabel="View badges"
-              accessibilityHint="Shows your earned badges and achievements"
-            >
-              <Ionicons name="ribbon-outline" size={24} color={Colors.textSecondary} />
-              <Text style={styles.gamificationText}>{isLoading ? '-' : badgesCount}</Text>
-            </TouchableOpacity>
-          </Animated.View>
+          <AnimatedStatItem 
+            icon={<TrophyIcon size={24} />} 
+            count={isLoading ? '-' : badgesCount}
+            type="trophy"
+            label={showLabels ? "Awards" : null}
+            onPress={onBadgesPress}
+            accessibilityLabel="View badges"
+            accessibilityHint="Shows your earned badges and achievements"
+          />
         )}
       </View>
     </View>
@@ -219,32 +172,17 @@ const StickyGamificationBar = ({
 
 const styles = StyleSheet.create({
   gamificationBar: {
-    backgroundColor: 'transparent',
-    paddingVertical: Responsive.spacing.xs,
-    paddingHorizontal: Responsive.padding.screen,
-    shadowColor: Colors.background,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-    elevation: 2,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
     zIndex: 1000,
   },
   gamificationContent: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  gamificationIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: Responsive.spacing.xs,
-  },
-  gamificationText: {
-    fontSize: Typography.sizes.sm,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-    marginLeft: Responsive.spacing.xs,
+    flex: 1,
   },
 });
 

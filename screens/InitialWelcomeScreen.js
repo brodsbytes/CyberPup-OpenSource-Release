@@ -92,7 +92,7 @@ const InitialWelcomeScreen = ({ navigation }) => {
       <Text style={styles.mainTitle}>Welcome to CyberPup - Your Personal Cybersecurity Guide</Text>
       
       <Text style={styles.mainDescription}>
-        CyberPup is your step-by-step guide to securing your entire cybersecurity footprint, without the jargon. <br /> We'll take you from 'at risk' to 'resilient' in just a few minutes a day.
+        CyberPup is your step-by-step guide to securing your entire cybersecurity footprint, without the jargon.{'\n\n'}We'll take you from 'at risk' to 'resilient' in just a few minutes a day.
       </Text>
 
       <View style={styles.keyPointsContainer}>
@@ -608,10 +608,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accent,
     opacity: 0.1,
     zIndex: -2,
-    shadowColor: Colors.accent,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
+    boxShadow: `0px 0px 20px ${Colors.accent}80`, // 80 = 50% opacity in hex
     elevation: 10,
   },
   pulseGlowInner: {
@@ -622,10 +619,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accent,
     opacity: 0.2,
     zIndex: -1,
-    shadowColor: Colors.accent,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 15,
+    boxShadow: `0px 0px 15px ${Colors.accent}4D`, // 4D = 30% opacity in hex
     elevation: 8,
   },
   finalMascotImage: {

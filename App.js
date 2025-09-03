@@ -45,6 +45,8 @@ import DeviceAuditScreen from './screens/DeviceAuditScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import { SecurityAlertsService } from './utils/securityAlerts';
 import { BackgroundAlertsService } from './utils/backgroundAlerts';
+import AreaCompletionScreen from './components/gamification/AreaCompletionScreen';
+import MainTabsScreen from './components/navigation/MainTabsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -108,13 +110,25 @@ export default function App() {
       >
         <Stack.Screen name={SCREEN_NAMES.INITIAL_WELCOME} component={InitialWelcomeScreen} />
         <Stack.Screen name={SCREEN_NAMES.DEVICE_AUDIT} component={DeviceAuditScreen} />
-        <Stack.Screen name={SCREEN_NAMES.WELCOME} component={WelcomeScreen} />
-        <Stack.Screen name={SCREEN_NAMES.INSIGHTS} component={InsightsScreen} />
+        
+        {/* Main tabs with swipe navigation */}
+        <Stack.Screen name="MainTabs" component={MainTabsScreen} />
+        
+        {/* Individual screens for backward compatibility and deep linking */}
+        <Stack.Screen name={SCREEN_NAMES.WELCOME} component={MainTabsScreen} 
+          initialParams={{ initialTab: SCREEN_NAMES.WELCOME }} />
+        <Stack.Screen name={SCREEN_NAMES.INSIGHTS} component={MainTabsScreen} 
+          initialParams={{ initialTab: SCREEN_NAMES.INSIGHTS }} />
+        <Stack.Screen name={SCREEN_NAMES.PROFILE} component={MainTabsScreen} 
+          initialParams={{ initialTab: SCREEN_NAMES.PROFILE }} />
         
         {/* Insights detail screens */}
         <Stack.Screen name={SCREEN_NAMES.GUIDE_DETAIL} component={GuideDetailScreen} />
         <Stack.Screen name={SCREEN_NAMES.TOOL_DETAIL} component={ToolDetailScreen} />
         <Stack.Screen name={SCREEN_NAMES.ALERT_DETAIL} component={AlertDetailScreen} />
+        
+        {/* Gamification screens */}
+        <Stack.Screen name={SCREEN_NAMES.AREA_COMPLETION} component={AreaCompletionScreen} />
         
         {/* Level 1 Check screens */}
         <Stack.Screen name={SCREEN_NAMES.CHECK_1_1_1_STRONG_PASSWORDS} component={Check1_1_StrongPasswordsScreen} />
@@ -142,8 +156,6 @@ export default function App() {
         {/* 🎯 Phase 4 Pattern A Enhanced Screens */}
         <Stack.Screen name={SCREEN_NAMES.CHECK_1_2_5_PUBLIC_CHARGING} component={Check1_2_5_PublicChargingScreen} />
         <Stack.Screen name={SCREEN_NAMES.CHECK_1_5_1_SHARING_AWARENESS} component={Check1_5_1_SharingAwarenessScreen} />
-        
-        <Stack.Screen name={SCREEN_NAMES.PROFILE} component={ProfileScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

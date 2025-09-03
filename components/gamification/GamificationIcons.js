@@ -50,12 +50,12 @@ const GamificationIcons = ({ onStreakPress, onBadgesPress }) => {
         Animated.timing(flickerAnim, {
           toValue: 0.7,
           duration: 800,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
         Animated.timing(flickerAnim, {
           toValue: 1,
           duration: 800,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
       ])
     ).start();
@@ -66,12 +66,12 @@ const GamificationIcons = ({ onStreakPress, onBadgesPress }) => {
         Animated.timing(shineAnim, {
           toValue: 1,
           duration: 2000,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
         Animated.timing(shineAnim, {
           toValue: 0,
           duration: 2000,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
       ])
     ).start();
@@ -83,12 +83,12 @@ const GamificationIcons = ({ onStreakPress, onBadgesPress }) => {
       Animated.timing(scaleAnim, {
         toValue: 0.9,
         duration: 100,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
       Animated.timing(scaleAnim, {
         toValue: 1,
         duration: 100,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
     ]).start();
 
@@ -103,12 +103,12 @@ const GamificationIcons = ({ onStreakPress, onBadgesPress }) => {
       Animated.timing(badgeScaleAnim, {
         toValue: 0.9,
         duration: 100,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
       Animated.timing(badgeScaleAnim, {
         toValue: 1,
         duration: 100,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
     ]).start();
 

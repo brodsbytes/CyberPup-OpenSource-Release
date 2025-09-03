@@ -1,5 +1,5 @@
 // Background task for fetching security alerts
-import * as BackgroundFetch from 'expo-background-fetch';
+import * as BackgroundTask from 'expo-background-task';
 import * as TaskManager from 'expo-task-manager';
 import { SecurityAlertsService } from './securityAlerts';
 
@@ -14,10 +14,10 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
     const alerts = await SecurityAlertsService.getSecurityAlerts('US', true);
     console.log(`✅ Background: Fetched ${alerts.length} alerts`);
     
-    return BackgroundFetch.BackgroundFetchResult.NewData;
+    return BackgroundTask.BackgroundTaskResult.NewData;
   } catch (error) {
     console.log('❌ Background fetch failed:', error);
-    return BackgroundFetch.BackgroundFetchResult.Failed;
+    return BackgroundTask.BackgroundTaskResult.Failed;
   }
 });
 
@@ -25,7 +25,14 @@ export const BackgroundAlertsService = {
   // Register background fetch
   async registerBackgroundFetch() {
     try {
-      await BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
+      // Check if background tasks are available
+      const isAvailable = await BackgroundTask.isAvailableAsync();
+      if (!isAvailable) {
+        console.log('⚠️ Background tasks not available on this platform');
+        return;
+      }
+
+      await BackgroundTask.registerTaskAsync(BACKGROUND_FETCH_TASK, {
         minimumInterval: 6 * 60 * 60, // 6 hours
         stopOnTerminate: false,
         startOnBoot: true,
@@ -39,7 +46,7 @@ export const BackgroundAlertsService = {
   // Unregister background fetch
   async unregisterBackgroundFetch() {
     try {
-      await BackgroundFetch.unregisterTaskAsync(BACKGROUND_FETCH_TASK);
+      await BackgroundTask.unregisterTaskAsync(BACKGROUND_FETCH_TASK);
       console.log('✅ Background fetch unregistered');
     } catch (error) {
       console.log('❌ Background fetch unregistration failed:', error);
@@ -48,6 +55,11 @@ export const BackgroundAlertsService = {
 
   // Check if background fetch is available
   async isAvailable() {
-    return await BackgroundFetch.getStatusAsync();
+    try {
+      return await BackgroundTask.isAvailableAsync();
+    } catch (error) {
+      console.log('❌ Error checking background task availability:', error);
+      return false;
+    }
   }
 };

@@ -115,9 +115,7 @@ const Badge = ({
               opacity: isEarned ? 1 : 0.5,
             },
             isEarned && {
-              shadowColor: badge.color,
-              shadowOpacity: glowOpacity,
-              shadowRadius: 10,
+              boxShadow: `0px 0px 10px ${badge.color}${Math.round(glowOpacity * 255).toString(16).padStart(2, '0')}`,
               elevation: 8,
             }
           ]}

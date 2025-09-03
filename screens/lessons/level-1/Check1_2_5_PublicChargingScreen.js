@@ -21,7 +21,7 @@ import { AppStorage } from '../../../utils/storage';
 import InteractiveChecklist from '../../../components/validation-steps/InteractiveChecklist';
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
-import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
+import { getCompletionMessage, getNextScreenName, getCompletionNavigation } from '../../../utils/completionMessages';
 
 const Check1_2_5_PublicChargingScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Standard state management
@@ -291,8 +291,9 @@ const Check1_2_5_PublicChargingScreen = ({ navigation, route }) => {
 
   // ✅ STANDARD: Completion celebration
   const celebrateCompletion = () => {
-    // The completion popup will be shown automatically when isCompleted is true
-    // No need to call it as a function
+    console.log('🎉 Celebrating completion of Check 1.2.5');
+    // Always show CompletionPopup first, let user click "Continue" to go to AreaCompletionScreen
+    setShowCompletionPopup(true);
   };
 
   // Calculate progress for the header

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Responsive } from '../../theme';
@@ -19,6 +20,7 @@ const { height } = Dimensions.get('window');
 const CatalogueModal = ({ visible, onClose, navigation, activeLevel = null }) => {
   const [expandedLevels, setExpandedLevels] = useState(new Set());
   const [checkProgress, setCheckProgress] = useState({});
+  const [slideAnim] = useState(new Animated.Value(0));
 
   useEffect(() => {
     if (visible) {
@@ -27,6 +29,20 @@ const CatalogueModal = ({ visible, onClose, navigation, activeLevel = null }) =>
       // Default behavior: expand current active level
       const defaultLevelId = activeLevel?.id || 1;
       setExpandedLevels(new Set([defaultLevelId]));
+      
+      // Start slide animation
+      Animated.timing(slideAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      // Reset slide animation
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
     }
   }, [visible, activeLevel]);
 
@@ -132,7 +148,21 @@ const CatalogueModal = ({ visible, onClose, navigation, activeLevel = null }) =>
           onPress={onClose}
         />
         
-        <View style={styles.catalogueContent}>
+        <Animated.View
+          style={[
+            styles.catalogueContent,
+            {
+              transform: [
+                {
+                  translateY: slideAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [height, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
           <View style={styles.catalogueHeader}>
             <View style={styles.catalogueHeaderContent}>
               <Text style={styles.catalogueTitle}>Security Check Catalogue</Text>
@@ -239,7 +269,7 @@ const CatalogueModal = ({ visible, onClose, navigation, activeLevel = null }) =>
               );
             })}
           </ScrollView>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );

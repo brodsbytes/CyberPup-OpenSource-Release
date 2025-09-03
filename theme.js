@@ -190,13 +190,7 @@ export const CommonStyles = {
     borderRadius: responsiveBorderRadius.medium,
     borderWidth: 1,
     borderColor: Colors.border,
-    shadowColor: Colors.shadowColor,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    boxShadow: '0px 2px 3.84px rgba(0, 0, 0, 0.25)',
     elevation: 5,
   },
   dropdownOption: {
@@ -245,13 +239,7 @@ export const CommonStyles = {
     borderRadius: responsiveBorderRadius.xlarge,
     padding: responsivePadding.card * 1.5,
     marginVertical: responsiveSpacing.lg,
-    shadowColor: Colors.shadowColor,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
+    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.15)',
     elevation: 6,
   },
 };

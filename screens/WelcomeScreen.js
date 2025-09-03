@@ -19,7 +19,7 @@ import CircularProgress from '../components/ui/CircularProgress';
 import ScoreBreakdownModal from '../components/gamification/ScoreBreakdownModal';
 import StreakDetailsModal from './StreakDetailsScreen';
 import BadgesModal from './BadgesScreen';
-import BottomNavigation from '../components/navigation/BottomNavigation';
+
 import CatalogueModal from '../components/navigation/CatalogueModal';
 import CategoryDetailModal from '../components/navigation/CategoryDetailModal';
 import { SCREEN_NAMES } from '../constants';
@@ -72,11 +72,78 @@ const WelcomeScreen = ({ navigation }) => {
     setShowCategoryDetail(true);
   };
 
+  // Calculate progress for each category
+  const calculateCategoryProgress = async (categoryId) => {
+    try {
+      // Map category IDs to area IDs
+      const categoryToAreaMap = {
+        '1.1': '1-1', // Protect Your Account
+        '1.2': '1-2', // Secure Your Devices  
+        '1.3': '1-3', // Keep Your Data Safe
+        '1.4': '1-4', // Avoid Scams & Fraud
+        '1.5': '1-5', // Protect Your Privacy
+      };
+      
+      const areaId = categoryToAreaMap[categoryId];
+      if (!areaId) return { completed: 0, total: 0 };
+      
+      // Get the area from course data
+      const level1 = levels.find(level => level.id === 1);
+      const area = level1?.areas.find(area => area.id === areaId);
+      
+      if (!area) return { completed: 0, total: 0 };
+      
+      let completedChecks = 0;
+      const totalChecks = area.checks.length;
+      
+      // Check completion status for each check in the area
+      for (const check of area.checks) {
+        const progressKey = `check_${check.id}_completed`;
+        const progressData = await AsyncStorage.getItem(progressKey);
+        
+        if (progressData === 'completed') {
+          completedChecks++;
+        }
+      }
+      
+      return { completed: completedChecks, total: totalChecks };
+    } catch (error) {
+      console.error('Error calculating category progress:', error);
+      return { completed: 0, total: 0 };
+    }
+  };
+
+  // State for category progress
+  const [categoryProgress, setCategoryProgress] = useState({
+    '1.1': { completed: 0, total: 5 },
+    '1.2': { completed: 0, total: 4 },
+    '1.3': { completed: 0, total: 4 },
+    '1.4': { completed: 0, total: 2 },
+    '1.5': { completed: 0, total: 3 },
+  });
+
+  // Load category progress
+  const loadCategoryProgress = async () => {
+    try {
+      const progress = {};
+      const categories = ['1.1', '1.2', '1.3', '1.4', '1.5'];
+      
+      for (const categoryId of categories) {
+        progress[categoryId] = await calculateCategoryProgress(categoryId);
+      }
+      
+      setCategoryProgress(progress);
+    } catch (error) {
+      console.error('Error loading category progress:', error);
+    }
+  };
+
   // Load progress on component mount
   useEffect(() => {
     setIsLoadingProgress(true);
     calculateOverallProgress();
     loadActiveLevelView();
+    loadCategoryProgress(); // Add this line
     updateStreak();
   }, []);
 
@@ -86,6 +153,7 @@ const WelcomeScreen = ({ navigation }) => {
       setIsLoadingProgress(true);
       calculateOverallProgress();
       loadActiveLevelView();
+      loadCategoryProgress(); // Add this line
       updateStreak();
       setForceAnimation(prev => prev + 1);
     }, [])
@@ -452,7 +520,7 @@ const WelcomeScreen = ({ navigation }) => {
               </View>
               <View style={styles.categoryInfo}>
                 <Text style={styles.categoryTitle}>Protect Your Account</Text>
-                <Text style={styles.categoryProgress}>3 of 5 Complete</Text>
+                <Text style={styles.categoryProgress}>{categoryProgress['1.1'].completed} of {categoryProgress['1.1'].total} Complete</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
             </View>
@@ -470,7 +538,7 @@ const WelcomeScreen = ({ navigation }) => {
               </View>
               <View style={styles.categoryInfo}>
                 <Text style={styles.categoryTitle}>Secure Your Devices</Text>
-                <Text style={styles.categoryProgress}>2 of 4 Complete</Text>
+                <Text style={styles.categoryProgress}>{categoryProgress['1.2'].completed} of {categoryProgress['1.2'].total} Complete</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
             </View>
@@ -488,7 +556,7 @@ const WelcomeScreen = ({ navigation }) => {
               </View>
               <View style={styles.categoryInfo}>
                 <Text style={styles.categoryTitle}>Keep Your Data Safe</Text>
-                <Text style={styles.categoryProgress}>2 of 4 Complete</Text>
+                <Text style={styles.categoryProgress}>{categoryProgress['1.3'].completed} of {categoryProgress['1.3'].total} Complete</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
             </View>
@@ -506,7 +574,7 @@ const WelcomeScreen = ({ navigation }) => {
               </View>
               <View style={styles.categoryInfo}>
                 <Text style={styles.categoryTitle}>Avoid Scams & Fraud</Text>
-                <Text style={styles.categoryProgress}>1 of 2 Complete</Text>
+                <Text style={styles.categoryProgress}>{categoryProgress['1.4'].completed} of {categoryProgress['1.4'].total} Complete</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
             </View>
@@ -524,7 +592,7 @@ const WelcomeScreen = ({ navigation }) => {
               </View>
               <View style={styles.categoryInfo}>
                 <Text style={styles.categoryTitle}>Protect Your Privacy</Text>
-                <Text style={styles.categoryProgress}>0 of 3 Complete</Text>
+                <Text style={styles.categoryProgress}>{categoryProgress['1.5'].completed} of {categoryProgress['1.5'].total} Complete</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
             </View>
@@ -575,18 +643,7 @@ const WelcomeScreen = ({ navigation }) => {
         <View style={styles.bottomSpacing} />
       </ScrollView>
 
-      {/* Bottom Navigation */}
-      <BottomNavigation 
-        activeTab="home"
-        onTabPress={(screen) => {
-          // Tab navigation handled
-          if (screen === 'InsightsScreen') {
-            navigation.navigate(SCREEN_NAMES.INSIGHTS);
-          } else if (screen === 'ProfileScreen') {
-            navigation.navigate(SCREEN_NAMES.PROFILE);
-          }
-        }}
-      />
+
 
       {/* Score Breakdown Modal */}
       <ScoreBreakdownModal

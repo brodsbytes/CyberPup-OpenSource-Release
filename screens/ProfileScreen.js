@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import BottomNavigation from '../components/navigation/BottomNavigation';
+
 import { Colors, Typography, Responsive, CommonStyles } from '../theme';
 import { getStreakStats } from '../utils/streakStorage';
 import { SCREEN_NAMES } from '../constants';
@@ -226,21 +226,7 @@ const ProfileScreen = ({ navigation }) => {
         </View>
       </ScrollView>
       
-      {/* Bottom Navigation */}
-      <BottomNavigation 
-        activeTab="profile"
-        onTabPress={(screen) => {
-          console.log('ProfileScreen - Tab pressed:', screen);
-          if (screen === SCREEN_NAMES.WELCOME) {
-            navigation.navigate(SCREEN_NAMES.WELCOME);
-          } else if (screen === SCREEN_NAMES.INSIGHTS) {
-            navigation.navigate(SCREEN_NAMES.INSIGHTS);
-          } else if (screen === SCREEN_NAMES.PROFILE) {
-            // Already on profile screen
-            console.log('Already on profile screen');
-          }
-        }}
-      />
+
 
       {/* Modal Components */}
       <StreakDetailsModal

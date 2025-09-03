@@ -73,13 +73,7 @@ const styles = StyleSheet.create({
     padding: Responsive.spacing.sm, // Reduced padding for more compact look
     minHeight: Responsive.buttonHeight.large, // Reduced height for more compact feel
     // Remove glass morphism effects - solid background
-    shadowColor: Colors.shadowColor,
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    boxShadow: '0px 1px 4px rgba(0, 0, 0, 0.05)',
     elevation: 2,
   },
   segment: {
@@ -105,13 +99,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accent,
     borderRadius: Responsive.borderRadius.large,
     // Enhanced shadow for depth
-    shadowColor: Colors.accent,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    boxShadow: `0px 4px 8px ${Colors.accent}4D`, // 4D = 30% opacity in hex
     elevation: 8,
   },
   segmentActive: {

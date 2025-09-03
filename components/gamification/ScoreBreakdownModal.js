@@ -27,13 +27,13 @@ const ScoreBreakdownModal = ({ visible, onClose, overallProgress }) => {
       Animated.timing(slideAnim, {
         toValue: 1,
         duration: 300,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }).start();
     } else {
       Animated.timing(slideAnim, {
         toValue: 0,
         duration: 300,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }).start();
     }
   }, [visible]);

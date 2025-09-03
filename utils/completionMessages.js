@@ -124,3 +124,75 @@ export const getAllCompletionMessages = () => {
 export const getAllNextScreenMappings = () => {
   return nextScreenMapping;
 };
+
+/**
+ * Check if a check is the last check in its area
+ * @param {string} checkId - The check identifier (e.g., '1-1-1', '1-2-1')
+ * @returns {boolean} True if this is the last check in the area
+ */
+export const isLastCheckInArea = (checkId) => {
+  // Define the last check in each area
+  const lastChecksInAreas = {
+    '1-1': '1-1-5', // Account Security - ends with breach check
+    '1-2': '1-2-5', // Device Security - ends with public charging
+    '1-3': '1-3-2', // Data Protection - ends with local backup
+    '1-4': '1-4-2', // Scam Defense - ends with scam reporting
+    '1-5': '1-5-2', // Privacy Protection - ends with privacy settings
+  };
+  
+  // Extract area ID from check ID (e.g., '1-1-1' -> '1-1')
+  const areaId = checkId.substring(0, 3);
+  const lastCheckInArea = lastChecksInAreas[areaId];
+  
+  return checkId === lastCheckInArea;
+};
+
+/**
+ * Get the area ID for a given check
+ * @param {string} checkId - The check identifier (e.g., '1-1-1', '1-2-1')
+ * @returns {string} The area ID (e.g., '1-1', '1-2')
+ */
+export const getAreaIdFromCheckId = (checkId) => {
+  // Extract area ID from check ID (e.g., '1-1-1' -> '1-1')
+  return checkId.substring(0, 3);
+};
+
+/**
+ * Get the next area ID after completing an area
+ * @param {string} areaId - The completed area ID (e.g., '1-1', '1-2')
+ * @returns {string|null} The next area ID or null if no next area
+ */
+export const getNextAreaId = (areaId) => {
+  const areaSequence = ['1-1', '1-2', '1-3', '1-4', '1-5'];
+  const currentIndex = areaSequence.indexOf(areaId);
+  
+  if (currentIndex === -1 || currentIndex === areaSequence.length - 1) {
+    return null; // No next area
+  }
+  
+  return areaSequence[currentIndex + 1];
+};
+
+/**
+ * Determine if navigation should go to AreaCompletionScreen or next check
+ * @param {string} checkId - The completed check ID
+ * @returns {Object} Navigation info with type and target
+ */
+export const getCompletionNavigation = (checkId) => {
+  if (isLastCheckInArea(checkId)) {
+    // This is the last check in the area, show area completion screen
+    const areaId = getAreaIdFromCheckId(checkId);
+    return {
+      type: 'area_completion',
+      target: SCREEN_NAMES.AREA_COMPLETION,
+      params: { completedAreaId: areaId }
+    };
+  } else {
+    // This is not the last check, go to next check
+    return {
+      type: 'next_check',
+      target: getNextScreenName(checkId),
+      params: {}
+    };
+  }
+};
