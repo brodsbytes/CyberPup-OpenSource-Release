@@ -22,6 +22,7 @@ import { AppStorage } from '../../../utils/storage';
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import { getCompletionMessage, getNextScreenName, getCompletionNavigation } from '../../../utils/completionMessages';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
+import ExitModal from '../../../components/common/ExitModal';
 
 import InteractiveChecklist from '../../../components/validation-steps/InteractiveChecklist';
 
@@ -727,51 +728,16 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
         navigation={navigation}
       />
       
-      {/* ✅ PRESERVE: Dynamic Exit Modal matching Check 1.4 pattern */}
-      <Modal
+      {/* ✅ STANDARDIZED: Exit Modal using common component */}
+      <ExitModal
         visible={showExitModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowExitModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setShowExitModal(false)}
-            >
-              <Ionicons name="close" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
-            </TouchableOpacity>
-
-            <View style={styles.modalCharacter}>
-              <Text style={styles.characterText}>💾</Text>
-            </View>
-
-            <Text style={styles.modalTitle}>Wait, don't go!</Text>
-            <Text style={styles.modalMessage}>
-              You're creating local backups to protect your data from ransomware and device failure. Don't risk losing your precious files!
-            </Text>
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.keepLearningButton}
-                onPress={handleKeepLearning}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.keepLearningButtonText}>Keep going</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.exitLessonButton}
-                onPress={handleExitLesson}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.exitLessonButtonText}>Exit</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowExitModal(false)}
+        onKeepLearning={handleKeepLearning}
+        onExit={handleExitLesson}
+        icon="💾"
+        title="Wait, don't go!"
+        message="You're creating local backups to protect your data from ransomware and device failure. Don't risk losing your precious files!"
+      />
       
       {/* 🎨 REVISED: InteractiveChecklist with backup tasks */}
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -930,74 +896,7 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
 
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.large,
-    padding: Responsive.padding.screen,
-    margin: Responsive.padding.screen,
-    alignItems: 'center',
-    position: 'relative',
-  },
-  modalCloseButton: {
-    position: 'absolute',
-    top: Responsive.spacing.md,
-    right: Responsive.spacing.md,
-    zIndex: 1,
-  },
-  modalCharacter: {
-    marginBottom: Responsive.spacing.md,
-  },
-  characterText: {
-    fontSize: 48,
-  },
-  modalTitle: {
-    fontSize: Typography.sizes.xl,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-    marginBottom: Responsive.spacing.sm,
-    textAlign: 'center',
-  },
-  modalMessage: {
-    fontSize: Typography.sizes.md,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: Typography.sizes.md * 1.5,
-    marginBottom: Responsive.spacing.lg,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    gap: Responsive.spacing.md,
-  },
-  keepLearningButton: {
-    backgroundColor: Colors.accent,
-    paddingVertical: Responsive.padding.button,
-    paddingHorizontal: Responsive.spacing.lg,
-    borderRadius: Responsive.borderRadius.medium,
-  },
-  keepLearningButtonText: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.medium,
-    color: Colors.textPrimary,
-  },
-  exitLessonButton: {
-    backgroundColor: Colors.surface,
-    paddingVertical: Responsive.padding.button,
-    paddingHorizontal: Responsive.spacing.lg,
-    borderRadius: Responsive.borderRadius.medium,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  exitLessonButtonText: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.medium,
-    color: Colors.textSecondary,
-  },
+
   
 });
 

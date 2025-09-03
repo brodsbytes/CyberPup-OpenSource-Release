@@ -19,29 +19,8 @@ const Badge = ({
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [scaleAnim] = useState(new Animated.Value(1));
-  const [glowAnim] = useState(new Animated.Value(0));
 
   const isEarned = badge.isEarned || badge.unlockedAt;
-
-  // Animate glow effect for earned badges
-  useEffect(() => {
-    if (isEarned) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(glowAnim, {
-            toValue: 1,
-            duration: 2000,
-            useNativeDriver: false,
-          }),
-          Animated.timing(glowAnim, {
-            toValue: 0,
-            duration: 2000,
-            useNativeDriver: false,
-          }),
-        ])
-      ).start();
-    }
-  }, [isEarned]);
 
   const handlePress = () => {
     if (onPress) {
@@ -90,10 +69,6 @@ const Badge = ({
   };
 
   const sizeStyles = getSizeStyles();
-  const glowOpacity = glowAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0.3, 0.8],
-  });
 
   return (
     <>
@@ -109,18 +84,19 @@ const Badge = ({
             styles.badgeContainer,
             sizeStyles.container,
             {
-              backgroundColor: isEarned ? badge.color : Colors.surface,
+              backgroundColor: isEarned ? `${badge.color}40` : Colors.surface, // 70% opacity for earned badges
               borderColor: isEarned ? badge.color : Colors.border,
               transform: [{ scale: scaleAnim }],
               opacity: isEarned ? 1 : 0.5,
-            },
-            isEarned && {
-              boxShadow: `0px 0px 10px ${badge.color}${Math.round(glowOpacity * 255).toString(16).padStart(2, '0')}`,
-              elevation: 8,
             }
           ]}
         >
-          <Text style={[styles.badgeIcon, sizeStyles.icon]}>
+          <Text 
+            style={[
+              styles.badgeIcon, 
+              sizeStyles.icon
+            ]}
+          >
             {badge.icon}
           </Text>
           {size !== 'small' && (
@@ -207,6 +183,7 @@ const styles = StyleSheet.create({
     padding: 8, // Reduced for compact layout
     position: 'relative',
   },
+
   badgeIcon: {
     marginBottom: 4,
   },

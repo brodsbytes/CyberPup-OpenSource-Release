@@ -2,15 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Animated, StyleSheet } from 'react-native';
 import { Colors, Typography, Responsive } from '../../theme';
 import * as Haptics from 'expo-haptics';
+import { ProgressIcon, FireIcon, TrophyIcon } from './icons';
 
 const AnimatedStatItem = ({ icon, count, type, label, onPress, accessibilityLabel, accessibilityHint }) => {
   const [pulseAnim] = useState(new Animated.Value(1));
   const [bounceAnim] = useState(new Animated.Value(0));
 
   useEffect(() => {
-    // Special animation for robot dog (more prominent)
-    if (type === 'dog' && count > 0) {
-      const dogAnimation = Animated.loop(
+    // Special animation for progress icon (more prominent)
+    if (type === 'progress' && count > 0) {
+      const progressAnimation = Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
             toValue: 1.15,
@@ -24,8 +25,8 @@ const AnimatedStatItem = ({ icon, count, type, label, onPress, accessibilityLabe
           }),
         ])
       );
-      dogAnimation.start();
-      return () => dogAnimation.stop();
+      progressAnimation.start();
+      return () => progressAnimation.stop();
     } else if (count > 0) {
       // Subtle animation for other icons
       const subtleAnimation = Animated.loop(

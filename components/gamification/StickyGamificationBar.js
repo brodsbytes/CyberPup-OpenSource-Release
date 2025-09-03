@@ -9,13 +9,13 @@ import {
 } from 'react-native';
 import { Colors, Typography, Responsive } from '../../theme';
 import { getStreakStats } from '../../utils/streakStorage';
-import { getEarnedBadgesCount } from '../../utils/badgeStorage';
+import { getEarnedBadgesCount, refreshBadges as refreshBadgesFromStorage } from '../../utils/badgeStorage';
 import { levels, getAllChecks, getAreasByLevel } from '../../data/courseData';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 
-// Import custom SVG icons
-import { RobotDogIcon, FireIcon, TrophyIcon } from './icons';
+// Import icons
+import { ProgressIcon, FireIcon, TrophyIcon } from './icons';
 import AnimatedStatItem from './AnimatedStatItem';
 
 const StickyGamificationBar = ({ 
@@ -26,11 +26,12 @@ const StickyGamificationBar = ({
   showStreak = true,
   showBadges = true,
   showLabels = false,
-  activeLevel = null
+  activeLevel = null,
+  onRefresh
 }) => {
   const [streakCount, setStreakCount] = useState(0);
   const [badgesCount, setBadgesCount] = useState(0);
-  const [robotDogs, setRobotDogs] = useState(1); // Default to 1 robot dog (the mascot)
+  const [currentLevel, setCurrentLevel] = useState(1); // Default to level 1
   const [currentActiveLevel, setCurrentActiveLevel] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -120,6 +121,32 @@ const StickyGamificationBar = ({
     }
   };
 
+  // Refresh badges and update count
+  const refreshBadges = async () => {
+    try {
+      const newUnlockedBadges = await refreshBadgesFromStorage();
+      const earnedBadges = await getEarnedBadgesCount();
+      setBadgesCount(earnedBadges || 0);
+      
+      // Notify parent component if callback provided
+      if (onRefresh) {
+        onRefresh(newUnlockedBadges);
+      }
+      
+      return newUnlockedBadges;
+    } catch (error) {
+      console.log('Error refreshing badges:', error);
+      return [];
+    }
+  };
+
+  // Expose refresh function to parent component
+  useEffect(() => {
+    if (onRefresh) {
+      onRefresh(refreshBadges);
+    }
+  }, []);
+
   // Animation and press handling now managed by AnimatedStatItem components
 
   // Don't return null when loading, just show the bar without counts
@@ -127,12 +154,12 @@ const StickyGamificationBar = ({
   return (
     <View style={styles.gamificationBar}>
       <View style={styles.gamificationContent}>
-        {/* CyberPup Mascot */}
+        {/* Progress/Levels */}
         {showMascot && (
           <AnimatedStatItem 
-            icon={<RobotDogIcon size={24} />} // Slightly larger for mascot
-            count={isLoading ? '-' : ((activeLevel || currentActiveLevel) ? (activeLevel || currentActiveLevel).id : robotDogs)}
-            type="dog"
+            icon={<ProgressIcon size={24} />}
+            count={isLoading ? '-' : ((activeLevel || currentActiveLevel) ? (activeLevel || currentActiveLevel).id : currentLevel)}
+            type="progress"
             label={showLabels ? "Level" : null}
             onPress={onMascotPress}
             accessibilityLabel="View level catalogue"

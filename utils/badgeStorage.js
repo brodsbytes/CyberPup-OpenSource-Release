@@ -66,24 +66,25 @@ export const BADGES = {
     color: '#5BA3F0',
     unlockedAt: null
   },
-  'level-2': {
-    id: 'level-2',
-    type: BADGE_TYPES.LEVEL,
-    name: 'CyberPup Watchdog',
-    description: 'Completed Level 2 - CyberPup Watchdog 👁️',
-    icon: '👁️',
-    color: '#27ae60',
-    unlockedAt: null
-  },
-  'level-3': {
-    id: 'level-3',
-    type: BADGE_TYPES.LEVEL,
-    name: 'CyberPup Guardian',
-    description: 'Completed Level 3 - CyberPup Guardian 🛡️',
-    icon: '🛡️',
-    color: '#e74c3c',
-    unlockedAt: null
-  },
+  // Level 2 and 3 badges are disabled until their content is implemented
+  // 'level-2': {
+  //   id: 'level-2',
+  //   type: BADGE_TYPES.LEVEL,
+  //   name: 'CyberPup Watchdog',
+  //   description: 'Completed Level 2 - CyberPup Watchdog 👁️',
+  //   icon: '👁️',
+  //   color: '#27ae60',
+  //   unlockedAt: null
+  // },
+  // 'level-3': {
+  //   id: 'level-3',
+  //   type: BADGE_TYPES.LEVEL,
+  //   name: 'CyberPup Guardian',
+  //   description: 'Completed Level 3 - CyberPup Guardian 🛡️',
+  //   icon: '🛡️',
+  //   color: '#e74c3c',
+  //   unlockedAt: null
+  // },
   
   // Special badges (earned for specific achievements)
   'first-check': {
@@ -295,6 +296,12 @@ export const checkAndUnlockLevelBadge = async (levelId) => {
   try {
     // Check if all areas in the level are completed
     const levelAreas = await getLevelAreas(levelId);
+    
+    // If no areas are defined for a level, it cannot be completed
+    if (levelAreas.length === 0) {
+      return null;
+    }
+    
     const allCompleted = levelAreas.every(area => area.isCompleted);
     
     if (allCompleted) {
@@ -326,7 +333,8 @@ const getAreaChecks = async (areaId) => {
     const checks = [];
     
     for (const checkId of checkIds) {
-      const completed = await AsyncStorage.getItem(`${checkId}_completed`);
+      // Use the correct key format that matches the progress management system
+      const completed = await AsyncStorage.getItem(`check_${checkId}_completed`);
       checks.push({
         id: checkId,
         isCompleted: completed === 'completed'
@@ -346,11 +354,18 @@ const getLevelAreas = async (levelId) => {
     // Define the areas for each level based on courseData.js
     const levelAreas = {
       '1': ['1-1', '1-2', '1-3', '1-4', '1-5'],
-      '2': [], // Level 2 areas not yet defined
-      '3': [], // Level 3 areas not yet defined
+      // Levels 2 and 3 are disabled until their content is implemented
+      // '2': [], // Level 2 areas not yet defined
+      // '3': [], // Level 3 areas not yet defined
     };
     
     const areaIds = levelAreas[levelId] || [];
+    
+    // If no areas are defined for a level, it cannot be completed
+    if (areaIds.length === 0) {
+      return [];
+    }
+    
     const areas = [];
     
     for (const areaId of areaIds) {
@@ -426,5 +441,54 @@ export const clearAllBadges = async () => {
     await AsyncStorage.removeItem(BADGES_HISTORY_KEY);
   } catch (error) {
     console.log('Error clearing badges:', error);
+  }
+};
+
+// Refresh badges and check for new unlocks
+export const refreshBadges = async () => {
+  try {
+    const unlockedBadges = [];
+    
+    // Check all area badges
+    const areaIds = ['1-1', '1-2', '1-3', '1-4', '1-5'];
+    for (const areaId of areaIds) {
+      const areaBadge = await checkAndUnlockAreaBadge(areaId);
+      if (areaBadge) {
+        unlockedBadges.push(areaBadge);
+      }
+    }
+    
+    // Check level badges (only level 1 is enabled for now)
+    const levelIds = ['1']; // Levels 2 and 3 are disabled until content is implemented
+    for (const levelId of levelIds) {
+      const levelBadge = await checkAndUnlockLevelBadge(levelId);
+      if (levelBadge) {
+        unlockedBadges.push(levelBadge);
+      }
+    }
+    
+    // Check special badges based on completed checks
+    const specialCheckIds = ['1-1-1', '1-1-3', '1-1-5'];
+    for (const checkId of specialCheckIds) {
+      const completed = await AsyncStorage.getItem(`check_${checkId}_completed`);
+      if (completed === 'completed') {
+        let badgeId = null;
+        if (checkId === '1-1-1') badgeId = 'first-check';
+        else if (checkId === '1-1-3') badgeId = 'password-manager';
+        else if (checkId === '1-1-5') badgeId = 'breach-checker';
+        
+        if (badgeId) {
+          const badge = await unlockBadge(badgeId);
+          if (badge) {
+            unlockedBadges.push(badge);
+          }
+        }
+      }
+    }
+    
+    return unlockedBadges;
+  } catch (error) {
+    console.log('Error refreshing badges:', error);
+    return [];
   }
 };

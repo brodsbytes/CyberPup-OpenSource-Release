@@ -35,6 +35,7 @@ const WelcomeScreen = ({ navigation }) => {
   const [showScoreBreakdown, setShowScoreBreakdown] = useState(false);
   const [showStreakDetails, setShowStreakDetails] = useState(false);
   const [showBadges, setShowBadges] = useState(false);
+  const [badgeRefreshFunction, setBadgeRefreshFunction] = useState(null);
   const [showCatalogue, setShowCatalogue] = useState(false);
   const [showCategoryDetail, setShowCategoryDetail] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -410,6 +411,28 @@ const WelcomeScreen = ({ navigation }) => {
       navigateToArea(targetArea);
     }
   };
+
+  // Refresh badges when returning from check screens
+  const refreshBadges = async () => {
+    if (badgeRefreshFunction) {
+      try {
+        const newUnlockedBadges = await badgeRefreshFunction();
+        if (newUnlockedBadges && newUnlockedBadges.length > 0) {
+          // Badges were unlocked, we could show a notification here
+          console.log('New badges unlocked:', newUnlockedBadges.length);
+        }
+      } catch (error) {
+        console.log('Error refreshing badges:', error);
+      }
+    }
+  };
+
+  // Refresh badges when screen is focused (returning from check screens)
+  useFocusEffect(
+    React.useCallback(() => {
+      refreshBadges();
+    }, [badgeRefreshFunction])
+  );
   
 
   return (
@@ -422,6 +445,7 @@ const WelcomeScreen = ({ navigation }) => {
         onStreakPress={() => setShowStreakDetails(true)}
         onBadgesPress={() => setShowBadges(true)}
         activeLevel={activeLevel}
+        onRefresh={setBadgeRefreshFunction}
       />
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>

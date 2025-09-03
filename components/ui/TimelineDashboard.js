@@ -23,7 +23,8 @@ const TimelineDashboard = ({
   variant = 'timeline',
   checkId,
   navigation,
-  showUnifiedView = false
+  showUnifiedView = false,
+  showProgressHeader = true
 }) => {
   // ✅ UPDATED: Timeline-specific state
   const [selectedMilestone, setSelectedMilestone] = useState(0);
@@ -212,21 +213,23 @@ const TimelineDashboard = ({
   return (
     <View style={styles.timelineContainer}>
       {/* Overall Progress Header */}
-      <View style={[styles.timelineHeader, styles[variant]]}>
-        <CircularProgress 
-          progress={timelineProgress} 
-          size={Responsive.iconSizes.xxlarge} 
-          strokeWidth={8}
-          color={CheckVariants.timeline.accent}
-          showText={false}
-        />
-        <Text style={styles.overallProgressText}>
-          Overall Progress: {Math.round(timelineProgress)}%
-        </Text>
-        <Text style={styles.milestoneCount}>
-          {milestones.filter(m => m.completed).length} of {totalMilestones} milestones completed
+      {showProgressHeader && (
+        <View style={[styles.timelineHeader, styles[variant]]}>
+          <CircularProgress 
+            progress={timelineProgress} 
+            size={Responsive.iconSizes.xxlarge} 
+            strokeWidth={8}
+            color={CheckVariants.timeline.accent}
+            showText={false}
+          />
+          <Text style={styles.overallProgressText}>
+            Overall Progress: {Math.round(timelineProgress)}%
           </Text>
-        </View>
+          <Text style={styles.milestoneCount}>
+            {milestones.filter(m => m.completed).length} of {totalMilestones} milestones completed
+            </Text>
+          </View>
+      )}
         
       {/* Timeline Overview */}
       <View style={styles.timelineOverview}>

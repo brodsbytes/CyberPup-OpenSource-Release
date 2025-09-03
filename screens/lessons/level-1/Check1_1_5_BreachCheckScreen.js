@@ -23,6 +23,7 @@ import BreachCheckStep from '../../../components/validation-steps/BreachCheckSte
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 import { getCompletionMessage, getNextScreenName, getCompletionNavigation } from '../../../utils/completionMessages';
+import ExitModal from '../../../components/common/ExitModal';
 
 const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
 
@@ -402,57 +403,16 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
         navigation={navigation}
       />
 
-      {/* Exit Modal */}
-      <Modal
+      {/* ✅ STANDARDIZED: Exit Modal using common component */}
+      <ExitModal
         visible={showExitModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowExitModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            {/* Close Button */}
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setShowExitModal(false)}
-            >
-              <Ionicons name="close" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
-            </TouchableOpacity>
-
-            {/* Sad Character */}
-            <View style={styles.modalCharacter}>
-              <Text style={styles.characterText}>😢</Text>
-            </View>
-
-            {/* Title */}
-            <Text style={styles.modalTitle}>Wait, don't go!</Text>
-
-            {/* Message */}
-            <Text style={styles.modalMessage}>
-              You're doing well! If you quit now, you'll lose your progress for this lesson.
-            </Text>
-
-            {/* Action Buttons */}
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.keepLearningButton}
-                onPress={handleKeepLearning}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.keepLearningButtonText}>Keep going</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.exitLessonButton}
-                onPress={handleExitLesson}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.exitLessonButtonText}>Exit</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowExitModal(false)}
+        onKeepLearning={handleKeepLearning}
+        onExit={handleExitLesson}
+        icon="😢"
+        title="Wait, don't go!"
+        message="You're doing well! If you quit now, you'll lose your progress for this lesson."
+      />
 
       {/* Breach Result Modal */}
       <Modal
@@ -881,21 +841,6 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
   // Modal Styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.xxlarge,
-    padding: Responsive.padding.modal,
-    marginHorizontal: Responsive.padding.screen,
-    alignItems: 'center',
-    position: 'relative',
-    minWidth: Responsive.spacing.xxl * 7,
-  },
   breachModalContent: {
     backgroundColor: Colors.surface,
     borderRadius: Responsive.borderRadius.xxlarge,
@@ -915,58 +860,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1,
-  },
-  modalCharacter: {
-    marginBottom: Responsive.spacing.md,
-  },
-  characterText: {
-    fontSize: Responsive.iconSizes.xxlarge,
-  },
-  modalTitle: {
-    fontSize: Typography.sizes.xxl,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: Responsive.spacing.sm,
-  },
-  modalMessage: {
-    fontSize: Typography.sizes.md,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: Typography.sizes.md * 1.4,
-    marginBottom: Responsive.spacing.lg,
-  },
-  modalButtons: {
-    width: '100%',
-    gap: Responsive.spacing.sm,
-  },
-  keepLearningButton: {
-    backgroundColor: Colors.accent,
-    borderRadius: Responsive.borderRadius.large,
-    paddingVertical: Responsive.padding.button,
-    paddingHorizontal: Responsive.spacing.lg,
-    alignItems: 'center',
-    minHeight: Responsive.buttonHeight.medium,
-  },
-  keepLearningButtonText: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
-  },
-  exitLessonButton: {
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.large,
-    paddingVertical: Responsive.padding.button,
-    paddingHorizontal: Responsive.spacing.lg,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.accent,
-    minHeight: Responsive.buttonHeight.medium,
-  },
-  exitLessonButtonText: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.accent,
   },
   // Breach Result Modal Styles
   breachResultHeader: {

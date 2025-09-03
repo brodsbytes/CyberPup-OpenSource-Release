@@ -150,19 +150,18 @@ Amazon Customer Service`,
     setUserChoices(newChoices);
     setShowFeedback(true);
     setScenarioComplete(true);
+  };
 
-    // Submit result after showing feedback
-    setTimeout(() => {
-      if (currentScenario < scenarios.length - 1) {
-        // Move to next scenario
-        setCurrentScenario(currentScenario + 1);
-        setShowFeedback(false);
-        setScenarioComplete(false);
-      } else {
-        // All scenarios complete, submit final result
-        submitFinalResult(newChoices);
-      }
-    }, 3000);
+  const handleContinue = () => {
+    if (currentScenario < scenarios.length - 1) {
+      // Move to next scenario
+      setCurrentScenario(currentScenario + 1);
+      setShowFeedback(false);
+      setScenarioComplete(false);
+    } else {
+      // All scenarios complete, submit final result
+      submitFinalResult(userChoices);
+    }
   };
 
   const submitFinalResult = (allChoices) => {
@@ -279,6 +278,14 @@ Amazon Customer Service`,
             Next scenario coming up...
           </Text>
         )}
+
+        <TouchableOpacity
+          style={styles.continueButton}
+          onPress={handleContinue}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.continueButtonText}>Continue</Text>
+        </TouchableOpacity>
       </View>
     );
   };
@@ -489,6 +496,20 @@ const styles = StyleSheet.create({
     color: Colors.accent,
     textAlign: 'center',
     fontStyle: 'italic',
+  },
+  continueButton: {
+    backgroundColor: Colors.accent,
+    paddingVertical: Responsive.padding.button,
+    paddingHorizontal: Responsive.spacing.lg,
+    borderRadius: Responsive.borderRadius.medium,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: Responsive.spacing.md,
+  },
+  continueButtonText: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
   },
 });
 

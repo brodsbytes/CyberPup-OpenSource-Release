@@ -19,6 +19,7 @@ import ScamRecognitionStep from '../../../components/validation-steps/ScamRecogn
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
+import ExitModal from '../../../components/common/ExitModal';
 
 const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
   const [checklistItems, setChecklistItems] = useState([
@@ -35,15 +36,14 @@ const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
       action: null,
     },
   ]);
-  const [showLearnMore, setShowLearnMore] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   
-  // Pattern C - Interactive flow state
-  const [useInteractiveFlow, setUseInteractiveFlow] = useState(true);
+  // Interactive flow state
   const [flowCompleted, setFlowCompleted] = useState(false);
   const [flowScore, setFlowScore] = useState(0);
+  const [userChoices, setUserChoices] = useState({});
 
   useEffect(() => {
     loadProgress();
@@ -75,9 +75,9 @@ const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
       if (completedData === 'completed') {
         console.log('✅ Check 1.4.1 is marked as completed in storage');
         setIsCompleted(true);
-        // Don't automatically show completion popup when loading progress
-        // Only show it when the user actually completes the check
         setFlowCompleted(true);
+        // Show completion popup when returning to completed check
+        setShowCompletionPopup(true);
       }
       
     } catch (error) {
@@ -185,8 +185,8 @@ const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
     // Save progress
     await saveProgress(updatedItems, newIsCompleted);
     
-    // Show completion celebration
-    celebrateCompletion();
+    // Show completion popup instead of celebration alert
+    setShowCompletionPopup(true);
   };
 
   const handleStepComplete = (stepId, validationResult) => {
@@ -213,52 +213,16 @@ const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
         navigation={navigation}
       />
 
-      {/* Exit Modal */}
-      <Modal
+      {/* ✅ STANDARDIZED: Exit Modal using common component */}
+      <ExitModal
         visible={showExitModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowExitModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setShowExitModal(false)}
-            >
-              <Ionicons name="close" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
-            </TouchableOpacity>
-
-            <View style={styles.modalCharacter}>
-              <Text style={styles.characterText}>😢</Text>
-            </View>
-
-            <Text style={styles.modalTitle}>Wait, don't go!</Text>
-
-            <Text style={styles.modalMessage}>
-              You're doing well! If you quit now, you'll lose your progress for this lesson.
-            </Text>
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.keepLearningButton}
-                onPress={handleKeepLearning}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.keepLearningButtonText}>Keep going</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.exitLessonButton}
-                onPress={handleExitLesson}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.exitLessonButtonText}>Exit</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowExitModal(false)}
+        onKeepLearning={handleKeepLearning}
+        onExit={handleExitLesson}
+        icon="😢"
+        title="Wait, don't go!"
+        message="You're doing well! If you quit now, you'll lose your progress for this lesson."
+      />
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
@@ -270,29 +234,8 @@ const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
             </Text>
           </View>
           
-          {/* Interactive Flow Toggle */}
-          <TouchableOpacity
-            style={styles.flowToggle}
-            onPress={() => setUseInteractiveFlow(!useInteractiveFlow)}
-            activeOpacity={0.8}
-          >
-            <Ionicons 
-              name={useInteractiveFlow ? "school" : "list"} 
-              size={Responsive.iconSizes.medium} 
-              color={Colors.accent} 
-            />
-            <Text style={styles.flowToggleText}>
-              {useInteractiveFlow ? 'Interactive Training' : 'Traditional Mode'}
-            </Text>
-            <Ionicons 
-              name="swap-horizontal" 
-              size={Responsive.iconSizes.small} 
-              color={Colors.accent} 
-            />
-          </TouchableOpacity>
-          
-          {/* Interactive Flow or Traditional Content */}
-          {useInteractiveFlow && !flowCompleted ? (
+          {/* Interactive Flow */}
+          {!flowCompleted ? (
             <View style={styles.interactiveFlowContainer}>
               <InteractiveValidationFlow
                 flowId="scam-recognition-1-4-1"
@@ -307,55 +250,23 @@ const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
               />
             </View>
           ) : (
-            <View style={styles.traditionalContent}>
-              {/* Learn More Section */}
+            <View style={styles.completedContainer}>
+              <Text style={styles.completedTitle}>Training Complete! 🎉</Text>
+              <Text style={styles.completedScore}>Your Score: {flowScore}%</Text>
+              <Text style={styles.completedMessage}>
+                Great job completing the scam recognition training! You can review your results or retake the training to improve your score.
+              </Text>
               <TouchableOpacity
-                style={styles.learnMoreButton}
-                onPress={() => setShowLearnMore(!showLearnMore)}
+                style={styles.retakeButton}
+                onPress={() => {
+                  setFlowCompleted(false);
+                  setFlowScore(0);
+                  setUserChoices({});
+                }}
                 activeOpacity={0.8}
               >
-                <Text style={styles.learnMoreText}>Why learn scam recognition?</Text>
-                <Ionicons
-                  name={showLearnMore ? 'chevron-up' : 'chevron-down'}
-                  size={Responsive.iconSizes.medium}
-                  color={Colors.accent}
-                />
+                <Text style={styles.retakeButtonText}>Retake Training</Text>
               </TouchableOpacity>
-
-              {showLearnMore && (
-                <View style={styles.learnMoreContent}>
-                  <Text style={styles.learnMoreTitle}>Common Scam Tactics</Text>
-                  <Text style={styles.learnMoreBody}>
-                    • Creating urgency with threats or time limits{'\n'}
-                    • Impersonating trusted organizations{'\n'}
-                    • Requesting personal information via email{'\n'}
-                    • Using suspicious links and attachments{'\n'}
-                    • Poor grammar and spelling errors{'\n'}
-                    • Promising unrealistic rewards or prizes
-                  </Text>
-                </View>
-              )}
-
-              {/* Tips Section */}
-              <View style={styles.tipsSection}>
-                <Text style={styles.tipsTitle}>🛡️ Protection Tips</Text>
-                <View style={styles.tipItem}>
-                  <Ionicons name="eye" size={Responsive.iconSizes.medium} color={Colors.accent} />
-                  <Text style={styles.tipText}>Always verify the sender's email address carefully</Text>
-                </View>
-                <View style={styles.tipItem}>
-                  <Ionicons name="link" size={Responsive.iconSizes.medium} color={Colors.accent} />
-                  <Text style={styles.tipText}>Hover over links to see the real destination</Text>
-                </View>
-                <View style={styles.tipItem}>
-                  <Ionicons name="call" size={Responsive.iconSizes.medium} color={Colors.accent} />
-                  <Text style={styles.tipText}>Contact organizations directly to verify suspicious messages</Text>
-                </View>
-                <View style={styles.tipItem}>
-                  <Ionicons name="time" size={Responsive.iconSizes.medium} color={Colors.accent} />
-                  <Text style={styles.tipText}>Take time to think - scammers use urgency as a pressure tactic</Text>
-                </View>
-              </View>
             </View>
           )}
           
@@ -427,196 +338,7 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     lineHeight: Typography.sizes.md * 1.5,
   },
-  learnMoreButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: Responsive.padding.button,
-    marginBottom: Responsive.spacing.md,
-  },
-  learnMoreText: {
-    fontSize: Typography.sizes.md,
-    color: Colors.accent,
-    fontWeight: Typography.weights.semibold,
-  },
-  learnMoreContent: {
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.large,
-    padding: Responsive.padding.card,
-    marginBottom: Responsive.spacing.lg,
-  },
-  learnMoreTitle: {
-    fontSize: Typography.sizes.lg,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
-    marginBottom: Responsive.spacing.sm,
-  },
-  learnMoreBody: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.textSecondary,
-    lineHeight: Typography.sizes.sm * 1.4,
-  },
-  tipsSection: {
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.large,
-    padding: Responsive.padding.card,
-    marginBottom: Responsive.spacing.lg,
-  },
-  tipsTitle: {
-    fontSize: Typography.sizes.lg,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
-    marginBottom: Responsive.spacing.sm,
-  },
-  tipItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Responsive.spacing.sm,
-  },
-  tipText: {
-    fontSize: Typography.sizes.sm,
-    color: Colors.textSecondary,
-    marginLeft: Responsive.spacing.sm,
-    flex: 1,
-    lineHeight: Typography.sizes.sm * 1.4,
-  },
-  completionCard: {
-    backgroundColor: Colors.accentSoft,
-    borderRadius: Responsive.borderRadius.xlarge,
-    padding: Responsive.padding.modal,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.accent,
-  },
-  completionTitle: {
-    fontSize: Typography.sizes.xl,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-    marginTop: Responsive.spacing.sm,
-    marginBottom: Responsive.spacing.sm,
-  },
-  completionText: {
-    fontSize: Typography.sizes.md,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: Typography.sizes.md * 1.4,
-    marginBottom: Responsive.spacing.lg,
-  },
-  continueButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.accent,
-    paddingVertical: Responsive.padding.button,
-    paddingHorizontal: Responsive.spacing.lg,
-    borderRadius: Responsive.borderRadius.medium,
-    gap: Responsive.spacing.sm,
-    minHeight: Responsive.buttonHeight.medium,
-  },
-  continueButtonText: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
-  },
-  // Modal Styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.xxlarge,
-    padding: Responsive.padding.modal,
-    marginHorizontal: Responsive.padding.screen,
-    alignItems: 'center',
-    position: 'relative',
-    minWidth: Responsive.spacing.xxl * 7,
-  },
-  modalCloseButton: {
-    position: 'absolute',
-    top: Responsive.padding.button,
-    right: Responsive.padding.button,
-    width: Responsive.iconSizes.xlarge,
-    height: Responsive.iconSizes.xlarge,
-    borderRadius: Responsive.iconSizes.xlarge / 2,
-    backgroundColor: Colors.border,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalCharacter: {
-    marginBottom: Responsive.spacing.md,
-  },
-  characterText: {
-    fontSize: Responsive.iconSizes.xxlarge,
-  },
-  modalTitle: {
-    fontSize: Typography.sizes.xxl,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: Responsive.spacing.sm,
-  },
-  modalMessage: {
-    fontSize: Typography.sizes.md,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: Typography.sizes.md * 1.4,
-    marginBottom: Responsive.spacing.lg,
-  },
-  modalButtons: {
-    width: '100%',
-    gap: Responsive.spacing.sm,
-  },
-  keepLearningButton: {
-    backgroundColor: Colors.accent,
-    borderRadius: Responsive.borderRadius.large,
-    paddingVertical: Responsive.padding.button,
-    paddingHorizontal: Responsive.spacing.lg,
-    alignItems: 'center',
-    minHeight: Responsive.buttonHeight.medium,
-  },
-  keepLearningButtonText: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
-  },
-  exitLessonButton: {
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.large,
-    paddingVertical: Responsive.padding.button,
-    paddingHorizontal: Responsive.spacing.lg,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.accent,
-    minHeight: Responsive.buttonHeight.medium,
-  },
-  exitLessonButtonText: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.accent,
-  },
-  
   // Interactive Flow Styles
-  flowToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.accentSoft,
-    borderRadius: Responsive.borderRadius.medium,
-    paddingVertical: Responsive.spacing.sm,
-    paddingHorizontal: Responsive.spacing.md,
-    marginBottom: Responsive.spacing.lg,
-    gap: Responsive.spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.accent,
-  },
-  flowToggleText: {
-    fontSize: Typography.sizes.sm,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.accent,
-  },
   interactiveFlowContainer: {
     flex: 1,
     backgroundColor: Colors.surface,
@@ -625,8 +347,47 @@ const styles = StyleSheet.create({
     marginBottom: Responsive.spacing.lg,
     minHeight: 500,
   },
-  traditionalContent: {
-    // Container for traditional content
+  completedContainer: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.xlarge,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+    alignItems: 'center',
+    minHeight: 300,
+  },
+  completedTitle: {
+    fontSize: Typography.sizes.xl,
+    fontWeight: Typography.weights.bold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.md,
+    textAlign: 'center',
+  },
+  completedScore: {
+    fontSize: Typography.sizes.lg,
+    color: Colors.accent,
+    fontWeight: Typography.weights.semibold,
+    marginBottom: Responsive.spacing.md,
+  },
+  completedMessage: {
+    fontSize: Typography.sizes.md,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: Typography.sizes.md * 1.5,
+    marginBottom: Responsive.spacing.lg,
+  },
+  retakeButton: {
+    backgroundColor: Colors.accent,
+    paddingVertical: Responsive.padding.button,
+    paddingHorizontal: Responsive.spacing.lg,
+    borderRadius: Responsive.borderRadius.medium,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: Responsive.buttonHeight.medium,
+  },
+  retakeButtonText: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
   },
 });
 

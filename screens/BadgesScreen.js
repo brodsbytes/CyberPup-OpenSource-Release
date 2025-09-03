@@ -12,7 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Responsive } from '../theme';
 import { isSmallScreen } from '../utils/responsive';
-import { loadUserBadges, getEarnedBadgesCount } from '../utils/badgeStorage';
+import { loadUserBadges, getEarnedBadgesCount, refreshBadges } from '../utils/badgeStorage';
 import Badge from '../components/ui/Badge';
 import * as Haptics from 'expo-haptics';
 
@@ -22,13 +22,12 @@ const BadgesModal = ({ visible, onClose }) => {
   const [badges, setBadges] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [earnedCount, setEarnedCount] = useState(0);
-  const [shineAnim] = useState(new Animated.Value(0));
+
   const [slideAnim] = useState(new Animated.Value(0));
 
   useEffect(() => {
     if (visible) {
-    loadBadges();
-    startShineAnimation();
+      loadBadges();
       // Haptic feedback on open
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       Animated.timing(slideAnim, {
@@ -47,10 +46,21 @@ const BadgesModal = ({ visible, onClose }) => {
 
   const loadBadges = async () => {
     try {
+      // First refresh badges to check for new unlocks
+      const newUnlockedBadges = await refreshBadges();
+      
+      // Then load the updated badge data
       const userBadges = await loadUserBadges();
       const earnedCount = await getEarnedBadgesCount();
+      
       setBadges(userBadges);
       setEarnedCount(earnedCount);
+      
+      // If new badges were unlocked, show a brief celebration
+      if (newUnlockedBadges.length > 0) {
+        // Haptic feedback for new badges
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
     } catch (error) {
       console.log('Error loading badges:', error);
     } finally {
@@ -58,22 +68,7 @@ const BadgesModal = ({ visible, onClose }) => {
     }
   };
 
-  const startShineAnimation = () => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(shineAnim, {
-          toValue: 1,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(shineAnim, {
-          toValue: 0,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-  };
+
 
   const handleClose = () => {
     // Haptic feedback on close
@@ -102,9 +97,6 @@ const BadgesModal = ({ visible, onClose }) => {
     <View style={styles.badgeSection}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>{title}</Text>
-        <Text style={styles.sectionCount}>
-          {badges.filter(b => b.isEarned).length} / {badges.length}
-        </Text>
       </View>
       <View style={styles.badgesGrid}>
         {badges.map((badge) => (
@@ -120,12 +112,7 @@ const BadgesModal = ({ visible, onClose }) => {
             ]}>
               {badge.name}
             </Text>
-            {badge.isEarned && (
-              <Animated.View style={[
-                styles.shineOverlay,
-                { opacity: shineAnim }
-              ]} />
-            )}
+
           </View>
         ))}
       </View>
@@ -176,23 +163,14 @@ const BadgesModal = ({ visible, onClose }) => {
               activeOpacity={0.7}
             >
               <Ionicons name="close" size={24} color={Colors.textPrimary} />
-        </TouchableOpacity>
-      </View>
+            </TouchableOpacity>
+          </View>
 
-          {/* Compact Stats Summary */}
+          {/* Stats Summary */}
           <View style={styles.statsSummary}>
-            <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Total Earned</Text>
-                <Text style={styles.statValue}>{earnedCount} / {badges.length}</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Area Badges</Text>
-                <Text style={styles.statValue}>
-                  {getBadgesByType('area').filter(b => b.isEarned).length} / {getBadgesByType('area').length}
-                </Text>
-              </View>
+            <View style={styles.statItem}>
+              <Text style={styles.statLabel}>Total Earned</Text>
+              <Text style={styles.statValue}>{earnedCount} / {badges.length}</Text>
             </View>
           </View>
 
@@ -296,6 +274,8 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.sm, // Reduced from md
     color: Colors.textSecondary,
   },
+
+
   closeButton: {
     width: 40,
     height: 40,
@@ -310,11 +290,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-  },
+
   statItem: {
     alignItems: 'center',
     flex: 1,
@@ -329,11 +305,7 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
   },
-  statDivider: {
-    width: 1,
-    height: 30,
-    backgroundColor: Colors.border,
-  },
+
   content: {
     flex: 1,
   },
@@ -355,9 +327,6 @@ const styles = StyleSheet.create({
     marginBottom: Responsive.spacing.lg, // Reduced from xl
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: Responsive.spacing.sm, // Reduced from lg
     paddingHorizontal: Responsive.spacing.xs,
   },
@@ -366,11 +335,7 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.bold,
     color: Colors.textPrimary,
   },
-  sectionCount: {
-    fontSize: Typography.sizes.xs, // Reduced from sm
-    color: Colors.textSecondary,
-    fontWeight: Typography.weights.medium,
-  },
+
   badgesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -396,15 +361,7 @@ const styles = StyleSheet.create({
   badgeNameEarned: {
     color: Colors.textPrimary,
   },
-  shineOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: Responsive.borderRadius.large,
-  },
+
 });
 
 export default BadgesModal;

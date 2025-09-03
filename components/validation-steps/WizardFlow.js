@@ -22,7 +22,8 @@ const WizardFlow = ({
   onStatusChange,
   variant = 'wizard',
   checkId,
-  navigation 
+  navigation,
+  showProgressHeader = true
 }) => {
   // ✅ UPDATED: Separate step tracking for each device
   const [deviceSteps, setDeviceSteps] = useState({});
@@ -158,18 +159,20 @@ const WizardFlow = ({
   return (
     <View style={styles.wizardContainer}>
       {/* Overall Progress Header */}
-      <View style={[styles.wizardHeader, styles[variant]]}>
-        <CircularProgress 
-          progress={wizardProgress} 
-          size={Responsive.iconSizes.xxlarge} 
-          strokeWidth={8}
-          color={CheckVariants.wizard.accent}
-          showText={false}
-        />
-        <Text style={styles.overallProgressText}>
-          Overall Progress: {Math.round(wizardProgress)}%
-        </Text>
-      </View>
+      {showProgressHeader && (
+        <View style={[styles.wizardHeader, styles[variant]]}>
+          <CircularProgress 
+            progress={wizardProgress} 
+            size={Responsive.iconSizes.xxlarge} 
+            strokeWidth={8}
+            color={CheckVariants.wizard.accent}
+            showText={false}
+          />
+          <Text style={styles.overallProgressText}>
+            Overall Progress: {Math.round(wizardProgress)}%
+          </Text>
+        </View>
+      )}
       
       {/* Individual Device Cards */}
       <ScrollView style={styles.stepContent} showsVerticalScrollIndicator={false}>
