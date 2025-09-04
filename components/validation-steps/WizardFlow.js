@@ -236,8 +236,8 @@ const WizardFlow = ({
                   
                   {/* Device-Specific Navigation */}
                   <View style={styles.deviceNavigation}>
-                    {/* Back Button */}
-                    {currentStep > 0 && (
+                    {/* Back Button - only show if current step is not completed */}
+                    {currentStep > 0 && !currentAction.completed && (
                       <TouchableOpacity 
                         style={styles.backButton}
                         onPress={() => handlePreviousStep(deviceIndex)}

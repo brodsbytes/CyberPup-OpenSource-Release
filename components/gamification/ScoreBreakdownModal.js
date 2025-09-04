@@ -51,15 +51,19 @@ const ScoreBreakdownModal = ({ visible, onClose, overallProgress }) => {
 
         for (const area of levelAreas) {
           let areaCompletedChecks = 0;
-          let areaTotalChecks = area.checks.length;
+          let areaTotalChecks = 0;
 
           for (const check of area.checks) {
-            const progressKey = `check_${check.id}_completed`;
-            const progressData = await AsyncStorage.getItem(progressKey);
-            
-            if (progressData === 'completed') {
-              areaCompletedChecks++;
-              levelCompletedChecks++;
+            // Filter out placeholder checks that are "Coming Soon!"
+            if (check.title !== 'Coming Soon!') {
+              areaTotalChecks++;
+              const progressKey = `check_${check.id}_completed`;
+              const progressData = await AsyncStorage.getItem(progressKey);
+              
+              if (progressData === 'completed') {
+                areaCompletedChecks++;
+                levelCompletedChecks++;
+              }
             }
           }
 

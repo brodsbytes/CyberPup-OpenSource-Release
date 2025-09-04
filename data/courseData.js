@@ -268,16 +268,19 @@ export const getAllChecks = () => {
   levels.forEach(level => {
     level.areas.forEach(area => {
       area.checks.forEach(check => {
-        allChecks.push({
-          ...check,
-          levelId: level.id,
-          levelTitle: level.title,
-          areaId: area.id,
-          areaTitle: area.title,
-          areaBadge: area.badge,
-          levelIcon: level.icon,
-          levelColor: level.color
-        });
+        // Filter out placeholder checks that are "Coming Soon!"
+        if (check.title !== 'Coming Soon!') {
+          allChecks.push({
+            ...check,
+            levelId: level.id,
+            levelTitle: level.title,
+            areaId: area.id,
+            areaTitle: area.title,
+            areaBadge: area.badge,
+            levelIcon: level.icon,
+            levelColor: level.color
+          });
+        }
       });
     });
   });

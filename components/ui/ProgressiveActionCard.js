@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -32,6 +32,11 @@ const ProgressiveActionCard = ({
   const [showVerification, setShowVerification] = useState(false);
   const animationValue = useRef(new Animated.Value(1)).current;
   const statusIconAnimation = useRef(new Animated.Value(0)).current;
+
+  // Update status when action.completed changes
+  useEffect(() => {
+    setStatus(action.completed ? 'completed' : 'pending');
+  }, [action.completed]);
 
   // Apply Phase 1 Lesson: User-controlled advancement
   const updateStatus = (newStatus) => {
@@ -166,7 +171,7 @@ const ProgressiveActionCard = ({
   const getStatusDescription = () => {
     switch (status) {
       case 'completed':
-        return 'Completed successfully';
+        return action.description;
       case 'verification':
         return 'Return when you\'ve completed the steps';
       case 'in-progress':
@@ -182,7 +187,9 @@ const ProgressiveActionCard = ({
     <Animated.View 
       style={[
         styles.card, 
-        styles[`status-${status}`], 
+        styles[`status-${status}${variant === 'wizard' ? '-wizard' : ''}`], 
+        // Fallback for wizard completed state
+        variant === 'wizard' && status === 'completed' && styles['status-completed-wizard'],
         { transform: [{ scale: animationValue }] },
         style
       ]}
@@ -388,6 +395,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.successSoft,
     opacity: 0.8,
   },
+  'status-completed-wizard': {
+    borderColor: Colors.success,
+    borderWidth: 2,
+    backgroundColor: Colors.successSoft,
+    opacity: 0.9,
+  },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -580,17 +593,17 @@ const styles = StyleSheet.create({
   },
   completedSection: {
     alignItems: 'center',
-    padding: Responsive.padding.card,
+    padding: Responsive.padding.xs,
   },
   completedIndicator: {
     alignItems: 'center',
-    marginBottom: Responsive.spacing.lg,
+    marginBottom: Responsive.spacing.sm,
   },
   completedText: {
-    fontSize: Typography.sizes.lg,
+    fontSize: Typography.sizes.md,
     fontWeight: Typography.weights.semibold,
     color: Colors.success,
-    marginTop: Responsive.spacing.sm,
+    marginTop: Responsive.spacing.xs,
   },
   resetButton: {
     paddingVertical: Responsive.spacing.sm,

@@ -95,15 +95,19 @@ const WelcomeScreen = ({ navigation }) => {
       if (!area) return { completed: 0, total: 0 };
       
       let completedChecks = 0;
-      const totalChecks = area.checks.length;
+      let totalChecks = 0;
       
       // Check completion status for each check in the area
       for (const check of area.checks) {
-        const progressKey = `check_${check.id}_completed`;
-        const progressData = await AsyncStorage.getItem(progressKey);
-        
-        if (progressData === 'completed') {
-          completedChecks++;
+        // Filter out placeholder checks that are "Coming Soon!"
+        if (check.title !== 'Coming Soon!') {
+          totalChecks++;
+          const progressKey = `check_${check.id}_completed`;
+          const progressData = await AsyncStorage.getItem(progressKey);
+          
+          if (progressData === 'completed') {
+            completedChecks++;
+          }
         }
       }
       
@@ -117,10 +121,10 @@ const WelcomeScreen = ({ navigation }) => {
   // State for category progress
   const [categoryProgress, setCategoryProgress] = useState({
     '1.1': { completed: 0, total: 5 },
-    '1.2': { completed: 0, total: 4 },
-    '1.3': { completed: 0, total: 4 },
+    '1.2': { completed: 0, total: 5 },
+    '1.3': { completed: 0, total: 2 },
     '1.4': { completed: 0, total: 2 },
-    '1.5': { completed: 0, total: 3 },
+    '1.5': { completed: 0, total: 2 },
   });
 
   // Load category progress
@@ -239,12 +243,16 @@ const WelcomeScreen = ({ navigation }) => {
       // Helper to compute area progress
       const getAreaProgress = async (area) => {
         let completedChecks = 0;
-        let totalChecks = area.checks.length;
+        let totalChecks = 0;
         
         for (const check of area.checks) {
-          const status = await getCheckStatus(check);
-          if (status.isCompleted) {
-            completedChecks++;
+          // Filter out placeholder checks that are "Coming Soon!"
+          if (check.title !== 'Coming Soon!') {
+            totalChecks++;
+            const status = await getCheckStatus(check);
+            if (status.isCompleted) {
+              completedChecks++;
+            }
           }
         }
         
