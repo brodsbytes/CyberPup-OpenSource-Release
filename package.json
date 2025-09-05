@@ -4,8 +4,8 @@
   "main": "index.js",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "debug:web": "expo start --web --dev-client",
     "debug:android": "expo start --android --dev-client",
@@ -13,7 +13,23 @@
     "cleanup": "./scripts/cleanup-dev-servers.sh",
     "kill-servers": "./scripts/cleanup-dev-servers.sh",
     "cleanup:progress": "node scripts/track-cleanup-progress.js",
-    "cleanup:import-map": "node scripts/generate-import-map.js"
+    "cleanup:import-map": "node scripts/generate-import-map.js",
+    "test:e2e": "echo '⚠️  E2E tests are currently DISABLED - see E2E_TESTING_STATUS.md' && exit 1",
+    "test:e2e:smoke": "echo '⚠️  E2E tests are currently DISABLED - see E2E_TESTING_STATUS.md' && exit 1",
+    "test:e2e:all": "echo '⚠️  E2E tests are currently DISABLED - see E2E_TESTING_STATUS.md' && exit 1",
+    "test:e2e:password": "echo '⚠️  E2E tests are currently DISABLED - see E2E_TESTING_STATUS.md' && exit 1",
+    "test:e2e:device": "echo '⚠️  E2E tests are currently DISABLED - see E2E_TESTING_STATUS.md' && exit 1",
+    "test:e2e:complete": "echo '⚠️  E2E tests are currently DISABLED - see E2E_TESTING_STATUS.md' && exit 1",
+    "test:e2e:ios": "echo '⚠️  E2E tests are currently DISABLED - see E2E_TESTING_STATUS.md' && exit 1",
+    "test:e2e:android": "echo '⚠️  E2E tests are currently DISABLED - see E2E_TESTING_STATUS.md' && exit 1",
+    "test:e2e:validate": "echo '⚠️  E2E tests are currently DISABLED - see E2E_TESTING_STATUS.md' && exit 1",
+    "test:automated": "echo '⚠️  E2E tests are currently DISABLED - see E2E_TESTING_STATUS.md' && exit 1",
+    "test:automated:smoke": "echo '⚠️  E2E tests are currently DISABLED - see E2E_TESTING_STATUS.md' && exit 1",
+    "test:automated:complete": "echo '⚠️  E2E tests are currently DISABLED - see E2E_TESTING_STATUS.md' && exit 1",
+    "emulator:start": "./scripts/setup-android-emulator.sh start",
+    "emulator:stop": "./scripts/setup-android-emulator.sh stop",
+    "emulator:restart": "./scripts/setup-android-emulator.sh restart",
+    "emulator:status": "./scripts/setup-android-emulator.sh status"
   },
   "dependencies": {
     "@expo/metro-runtime": "~5.0.4",
@@ -46,9 +62,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
-    "detox": "^20.40.2",
-    "jest": "~29.7.0",
-    "puppeteer": "^24.17.0"
+    "js-yaml": "^4.1.0"
   },
   "private": true
 }

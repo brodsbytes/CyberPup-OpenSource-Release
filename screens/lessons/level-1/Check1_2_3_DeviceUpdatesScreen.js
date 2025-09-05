@@ -16,6 +16,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 
 import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
+import ReferencesSection from '../../../components/ui/ReferencesSection';
+import { getReferencesForCheck } from '../../../data/references';
 import { SCREEN_NAMES } from '../../../constants';
 import { DeviceCapabilities } from '../../../utils/deviceCapabilities';
 import { SettingsGuide } from '../../../utils/settingsGuide';
@@ -584,6 +586,9 @@ const Check1_2_3_DeviceUpdatesScreen = ({ navigation, route }) => {
             onClose={() => setShowCompletionPopup(false)}
             checkId="1-2-3"
           />
+          {/* References Section */}
+          <ReferencesSection references={getReferencesForCheck('1-2-3')} />
+
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -1,0 +1,5 @@
+appId: com.anonymous.CyberPup
+---
+# Simple test to verify emulator connection
+- launchApp
+- assertVisible: "CyberPup"

@@ -1,0 +1,68 @@
+appId: host.exp.exponent
+---
+# Device Security Flow Test
+# Tests all device security checks (1-2-1 through 1-2-5)
+- launchApp
+- tapOn: "Get Started"
+- tapOn: "Start Level 1"
+- tapOn: "Secure Your Devices"
+- assertVisible: "Lock Your Device Automatically"
+- assertVisible: "Protect Your Device if Lost"
+- assertVisible: "Keep Your Device Updated"
+- assertVisible: "Manage Your Wireless Connections"
+- assertVisible: "Stay Safe When Charging"
+
+# Test 1-2-1: Lock Your Device Automatically
+- tapOn: "Lock Your Device Automatically"
+- assertVisible: "Screen Lock"
+- assertVisible: "Device Settings"
+- assertVisible: "Continue"
+- tapOn: "Continue"
+- assertVisible: "Lock Settings"
+- assertVisible: "Mark as Complete"
+- tapOn: "Mark as Complete"
+- assertVisible: "Check Complete"
+
+# Test 1-2-2: Protect Your Device if Lost
+- tapOn: "Protect Your Device if Lost"
+- assertVisible: "Remote Lock"
+- assertVisible: "Find My Device"
+- assertVisible: "Continue"
+- tapOn: "Continue"
+- assertVisible: "Remote Lock Setup"
+- assertVisible: "Mark as Complete"
+- tapOn: "Mark as Complete"
+- assertVisible: "Check Complete"
+
+# Test 1-2-3: Keep Your Device Updated
+- tapOn: "Keep Your Device Updated"
+- assertVisible: "Device Updates"
+- assertVisible: "Update Settings"
+- assertVisible: "Continue"
+- tapOn: "Continue"
+- assertVisible: "Update Guide"
+- assertVisible: "Mark as Complete"
+- tapOn: "Mark as Complete"
+- assertVisible: "Check Complete"
+
+# Test 1-2-4: Manage Your Wireless Connections
+- tapOn: "Manage Your Wireless Connections"
+- assertVisible: "Bluetooth/Wi-Fi"
+- assertVisible: "Connection Settings"
+- assertVisible: "Continue"
+- tapOn: "Continue"
+- assertVisible: "Wireless Security"
+- assertVisible: "Mark as Complete"
+- tapOn: "Mark as Complete"
+- assertVisible: "Check Complete"
+
+# Test 1-2-5: Stay Safe When Charging
+- tapOn: "Stay Safe When Charging"
+- assertVisible: "Public Charging"
+- assertVisible: "Charging Safety"
+- assertVisible: "Continue"
+- tapOn: "Continue"
+- assertVisible: "Safety Tips"
+- assertVisible: "Mark as Complete"
+- tapOn: "Mark as Complete"
+- assertVisible: "Check Complete"

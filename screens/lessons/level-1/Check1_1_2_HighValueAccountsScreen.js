@@ -15,6 +15,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
+import ReferencesSection from '../../../components/ui/ReferencesSection';
+import { getReferencesForCheck } from '../../../data/references';
 import { SCREEN_NAMES } from '../../../constants';
 import { DeviceCapabilities } from '../../../utils/deviceCapabilities';
 import { SettingsGuide } from '../../../utils/settingsGuide';
@@ -453,6 +455,9 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
               </TouchableOpacity>
             </View>
           )}
+          {/* References Section */}
+          <ReferencesSection references={getReferencesForCheck('1-1-2')} />
+
         </View>
       </ScrollView>
       

@@ -1,0 +1,32 @@
+appId: host.exp.exponent
+---
+# Data Protection Flow Test
+# Tests all data backup checks (1-3-1 through 1-3-2)
+- launchApp
+- tapOn: "Get Started"
+- tapOn: "Start Level 1"
+- tapOn: "Keep Your Data Safe"
+- assertVisible: "Back Up Your Data to the Cloud"
+- assertVisible: "Create Local Backups"
+
+# Test 1-3-1: Back Up Your Data to the Cloud
+- tapOn: "Back Up Your Data to the Cloud"
+- assertVisible: "Cloud Backup"
+- assertVisible: "Backup Services"
+- assertVisible: "Continue"
+- tapOn: "Continue"
+- assertVisible: "Backup Setup"
+- assertVisible: "Mark as Complete"
+- tapOn: "Mark as Complete"
+- assertVisible: "Check Complete"
+
+# Test 1-3-2: Create Local Backups
+- tapOn: "Create Local Backups"
+- assertVisible: "Local Backup"
+- assertVisible: "Backup Methods"
+- assertVisible: "Continue"
+- tapOn: "Continue"
+- assertVisible: "Backup Guide"
+- assertVisible: "Mark as Complete"
+- tapOn: "Mark as Complete"
+- assertVisible: "Check Complete"

@@ -287,10 +287,17 @@ const WelcomeScreen = ({ navigation }) => {
         }
       }
 
-      // If all levels are complete, show completion message
+      // If all levels are complete, check if there are more levels available
       if (!selectedLevel) {
         setActiveLevel(null);
-        setNextLevel(null);
+        // Check if there are more levels beyond the completed ones
+        const orderedLevels = getOrderedLevels();
+        if (orderedLevels.length > 1) {
+          // Show the next level (Level 2) even if Level 1 is complete
+          setNextLevel(orderedLevels[1]); // Level 2
+        } else {
+          setNextLevel(null);
+        }
         setIsLoadingActiveLevel(false);
         return;
       }
@@ -661,7 +668,7 @@ const WelcomeScreen = ({ navigation }) => {
           )}
         </View>
 
-        {!activeLevel && (
+        {!activeLevel && !nextLevel && (
           <View style={styles.allDoneCard}>
             <Text style={styles.allDoneTitle}>All levels complete 🎉</Text>
             <Text style={styles.allDoneSubtitle}>Review checks or explore topics from the Insights tab.</Text>

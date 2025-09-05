@@ -24,6 +24,8 @@ import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 import { getCompletionMessage, getNextScreenName, getCompletionNavigation } from '../../../utils/completionMessages';
 import ExitModal from '../../../components/common/ExitModal';
+import ReferencesSection from '../../../components/ui/ReferencesSection';
+import { getReferencesForCheck } from '../../../data/references';
 
 const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
 
@@ -551,6 +553,9 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
               </View>
             </View>
           )}
+          
+          {/* References Section */}
+          <ReferencesSection references={getReferencesForCheck('1-1-5')} />
           
           {/* Completion Status */}
           <CompletionPopup

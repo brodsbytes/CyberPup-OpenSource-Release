@@ -14,6 +14,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
+import ReferencesSection from '../../../components/ui/ReferencesSection';
+import { getReferencesForCheck } from '../../../data/references';
 import { DeviceCapabilities } from '../../../utils/deviceCapabilities';
 import CollapsibleDeviceSection from '../../../components/forms/CollapsibleDeviceSection';
 import { SettingsGuide } from '../../../utils/settingsGuide';
@@ -502,6 +504,9 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
             onClose={() => setShowCompletionPopup(false)}
             checkId="1-1-4"
           />
+          {/* References Section */}
+          <ReferencesSection references={getReferencesForCheck('1-1-4')} />
+
         </View>
       </ScrollView>
     </SafeAreaView>

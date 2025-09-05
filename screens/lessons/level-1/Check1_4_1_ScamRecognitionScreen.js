@@ -14,6 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
+import ReferencesSection from '../../../components/ui/ReferencesSection';
+import { getReferencesForCheck } from '../../../data/references';
 import InteractiveValidationFlow from '../../../components/validation-steps/InteractiveValidationFlow';
 import ScamRecognitionStep from '../../../components/validation-steps/ScamRecognitionStep';
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
@@ -281,6 +283,9 @@ const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
           onClose={() => setShowCompletionPopup(false)}
           checkId="1-4-1"
           />
+          {/* References Section */}
+          <ReferencesSection references={getReferencesForCheck('1-4-1')} />
+
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -6,3 +6,4 @@ export { default as CircularProgress } from './CircularProgress';
 export { default as Badge } from './Badge';
 export { default as ProgressiveActionCard } from './ProgressiveActionCard';
 export { default as TimelineDashboard } from './TimelineDashboard';
+export { default as ReferencesSection } from './ReferencesSection';

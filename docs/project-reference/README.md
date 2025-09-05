@@ -2,31 +2,15 @@
 
 This folder contains key project materials for easy reference during development.
 
-## 📋 What to Place Here
+## 📁 Contents
 
-### Level/Check Structure Documents
-- Complete Level 1-3 check specifications
-- Check-by-check content outlines
-- Security area breakdowns
-- Badge and progression requirements
+### **Reference Documents**
+- **`docs/project-reference/Core Mission & Values.txt`** - The projects core mission & values. Generalaised guidelines for the app's philosophy
+- **`docs/project-reference/Insights tab overview.txt`** - Overview of strategy and plan for insights tab (Now completed)
+- **`docs/project-reference/Levels & Checks structure.txt`** - Full level & check structure. Shows aim of each check and what needs to be actioned.
+- **`docs/project-reference/App content research paper 1.txt`** - Initial large research paper used to draft the levels & check structure above. provides a deep dive into all areas of personal cyber security.
+- **`docs/project-reference/App content research paper 2 (checklist).txt`** - Second, smaller research paper used to finalise the levels & check structure above. This one was solely based on the ACSC "personal cyber security" series.
 
-### Design Specifications
-- UI/UX design guidelines
-- Component specifications
-- Brand guidelines
-- Color schemes and typography
-
-### Content Guidelines
-- Copy and messaging standards
-- Technical writing guidelines
-- User journey documentation
-- Content strategy documents
-
-### Project Management Materials
-- Feature requirements
-- User stories
-- Acceptance criteria
-- Timeline and milestone documents
 
 ## 🔗 How This Helps Development
 

@@ -1,0 +1,23 @@
+appId: host.exp.exponent
+---
+# Device Audit Flow Test
+# Tests device setup and configuration
+- launchApp
+- tapOn: "Get Started"
+- assertVisible: "Device Audit"
+- tapOn: "Device Audit"
+- assertVisible: "Add Your Devices"
+- assertVisible: "iPhone"
+- assertVisible: "Android"
+- assertVisible: "Mac"
+- assertVisible: "Windows"
+- tapOn: "iPhone"
+- assertVisible: "iPhone Settings"
+- assertVisible: "Screen Lock"
+- assertVisible: "Device Updates"
+- tapOn: "Android"
+- assertVisible: "Android Settings"
+- assertVisible: "Screen Lock"
+- assertVisible: "Device Updates"
+- tapOn: "Continue"
+- assertVisible: "Level 1 - CyberPup Scout"

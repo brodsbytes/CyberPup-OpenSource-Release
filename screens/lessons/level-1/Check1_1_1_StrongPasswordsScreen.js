@@ -22,6 +22,8 @@ import { getCompletionMessage, getNextScreenName, getCompletionNavigation } from
 import InteractiveChecklist from '../../../components/validation-steps/InteractiveChecklist';
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
+import ReferencesSection from '../../../components/ui/ReferencesSection';
+import { getReferencesForCheck } from '../../../data/references';
 
 const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Standard state management
@@ -307,6 +309,9 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
               </TouchableOpacity>
             </View>
           )}
+          
+          {/* References Section */}
+          <ReferencesSection references={getReferencesForCheck('1-1-1')} />
         </View>
       </ScrollView>
 

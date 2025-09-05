@@ -1,0 +1,35 @@
+appId: host.exp.exponent
+---
+# Complete Level 1 Flow Test
+# Tests the entire Level 1 journey from start to finish
+- launchApp
+- assertVisible: "Welcome to CyberPup"
+- tapOn: "Get Started"
+- assertVisible: "Device Audit"
+- tapOn: "Device Audit"
+- assertVisible: "Add Your Devices"
+- tapOn: "iPhone"
+- tapOn: "Continue"
+- assertVisible: "Level 1 - CyberPup Scout"
+
+# Navigate through all 5 security areas
+- tapOn: "Protect Your Accounts"
+- assertVisible: "Create Strong Passwords"
+- tapOn: "Back"
+- tapOn: "Secure Your Devices"
+- assertVisible: "Lock Your Device Automatically"
+- tapOn: "Back"
+- tapOn: "Keep Your Data Safe"
+- assertVisible: "Back Up Your Data to the Cloud"
+- tapOn: "Back"
+- tapOn: "Avoid Scams & Fraud"
+- assertVisible: "Spot Scams Before They Happen"
+- tapOn: "Back"
+- tapOn: "Protect Your Privacy"
+- assertVisible: "Be Smart About What You Share"
+- tapOn: "Back"
+
+# Test progress tracking
+- assertVisible: "Level 1 - CyberPup Scout"
+- assertVisible: "Progress"
+- assertVisible: "0 of 15 checks completed"

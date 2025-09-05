@@ -22,6 +22,8 @@ import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 import ExitModal from '../../../components/common/ExitModal';
+import ReferencesSection from '../../../components/ui/ReferencesSection';
+import { getReferencesForCheck } from '../../../data/references';
 
 /**
  * Check1_2_1_ScreenLockScreen - Pattern B Implementation
@@ -511,6 +513,9 @@ const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
               <Text style={styles.tipText}>Avoid simple patterns that can be easily observed</Text>
             </View>
           </View>
+
+          {/* References Section */}
+          <ReferencesSection references={getReferencesForCheck('1-2-1')} />
 
           {/* Completion Status */}
           <CompletionPopup
