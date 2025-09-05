@@ -1,6 +1,8 @@
 // Guide Service - Provides enhanced guide content for detail screens
 // Similar structure to SecurityAlertsService but for educational guides
 
+import { CopywritingService } from './copywritingService';
+
 export class GuideService {
   
   // Get guide by ID with enhanced content

@@ -60,16 +60,24 @@ const StickyGamificationBar = ({
               let completedChecks = 0;
               
               for (const check of checks) {
-                const isCompleted = await getCheckStatus(check);
-                if (isCompleted) {
-                  completedChecks++;
+                // Filter out placeholder checks that are "Coming Soon!" or have "Coming Soon!" in title
+                if (check.title !== 'Coming Soon!' && !check.title.includes('Coming Soon!')) {
+                  const isCompleted = await getCheckStatus(check);
+                  if (isCompleted) {
+                    completedChecks++;
+                  }
                 }
               }
+              
+              // Count only non-placeholder checks for total
+              const totalChecks = checks.filter(check => 
+                check.title !== 'Coming Soon!' && !check.title.includes('Coming Soon!')
+              ).length;
               
               return {
                 ...area,
                 completedChecks,
-                totalChecks: checks.length
+                totalChecks
               };
             })
           );
@@ -158,7 +166,7 @@ const StickyGamificationBar = ({
         {showMascot && (
           <AnimatedStatItem 
             icon={<ProgressIcon size={24} />}
-            count={isLoading ? '-' : ((activeLevel || currentActiveLevel) ? (activeLevel || currentActiveLevel).id : currentLevel)}
+            count={isLoading ? '-' : 1}
             type="progress"
             label={showLabels ? "Level" : null}
             onPress={onMascotPress}

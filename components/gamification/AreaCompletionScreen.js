@@ -14,6 +14,7 @@ import * as Haptics from 'expo-haptics';
 import { Colors, Typography, Responsive } from '../../theme';
 import { levels, getAreasByLevel } from '../../data/courseData';
 import { SCREEN_NAMES } from '../../constants';
+import { CopywritingService } from '../../utils/copywritingService';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -312,39 +313,10 @@ const AreaCompletionScreen = ({
   const getAreaCompletionMessage = () => {
     if (!areaData) return { title: 'Area Complete!', subtitle: 'Great job!' };
     
-    const areaMessages = {
-      '1-1': {
-        title: 'Account Security Mastered! 🛡️',
-        subtitle: 'Your accounts are now fortress-strong!',
-        message: 'You\'ve built a solid foundation of account security with strong passwords, password managers, and multi-factor authentication. Your digital life is now much more secure!'
-      },
-      '1-2': {
-        title: 'Device Security Complete! 📱',
-        subtitle: 'Your devices are locked down tight!',
-        message: 'From screen locks to remote wiping, you\'ve secured every aspect of your devices. Your personal information stays private, even if your device is lost or stolen.'
-      },
-      '1-3': {
-        title: 'Data Protection Achieved! 💾',
-        subtitle: 'Your data is safe and backed up!',
-        message: 'With both cloud and local backups in place, your important files are protected against any disaster. You\'ve implemented the gold standard of data protection!'
-      },
-      '1-4': {
-        title: 'Scam Defense Complete! 🚫',
-        subtitle: 'You can spot scams from a mile away!',
-        message: 'Your scam detection skills are now razor-sharp. You can identify and avoid fraudulent attempts, and you know how to help others stay safe too.'
-      },
-      '1-5': {
-        title: 'Privacy Protection Mastered! 🔒',
-        subtitle: 'Your privacy is now under your control!',
-        message: 'You\'ve taken control of your digital footprint and configured your privacy settings across all platforms. Your personal information stays private!'
-      }
-    };
+    // Get copywriting content for area completion
+    const copywritingContent = CopywritingService.getAreaCompletionMessage(completedAreaId);
     
-    return areaMessages[completedAreaId] || {
-      title: 'Area Complete! 🎉',
-      subtitle: 'Excellent work!',
-      message: 'You\'ve successfully completed this security area. Your digital life is now more secure!'
-    };
+    return copywritingContent;
   };
 
   const getNextAreaPreview = () => {

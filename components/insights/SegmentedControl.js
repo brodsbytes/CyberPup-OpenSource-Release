@@ -98,9 +98,7 @@ const styles = StyleSheet.create({
     // Active button styling - strong blue background
     backgroundColor: Colors.accent,
     borderRadius: Responsive.borderRadius.large,
-    // Enhanced shadow for depth
-    boxShadow: `0px 4px 8px ${Colors.accent}4D`, // 4D = 30% opacity in hex
-    elevation: 8,
+    // Removed glow effect - no shadow or elevation
   },
   segmentActive: {
     // Active state is handled by the animated background

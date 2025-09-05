@@ -26,6 +26,7 @@ import { AppStorage } from '../../../utils/storage';
 import WizardFlow from '../../../components/validation-steps/WizardFlow';
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
+import { CopywritingService } from '../../../utils/copywritingService';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 import ExitModal from '../../../components/common/ExitModal';
 
@@ -37,6 +38,7 @@ const Check1_2_3_DeviceUpdatesScreen = ({ navigation, route }) => {
   const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [deviceCompletionStatus, setDeviceCompletionStatus] = useState({});
   const [showExitModal, setShowExitModal] = useState(false);
+  const [showLearnMore, setShowLearnMore] = useState(false);
 
   // ✅ PRESERVE: Exact same initialization logic
   const initializeDeviceContent = async () => {
@@ -239,6 +241,9 @@ const Check1_2_3_DeviceUpdatesScreen = ({ navigation, route }) => {
     const completedActions = Object.values(deviceActions).flat().filter(action => action.completed).length;
     return totalActions > 0 ? (completedActions / totalActions) * 100 : 0;
   };
+
+  // Get copywriting content for rendering
+  const copywritingContent = CopywritingService.getCheckContent('1-2-3');
 
   const handleExit = () => {
     setShowExitModal(true);
@@ -539,11 +544,34 @@ const Check1_2_3_DeviceUpdatesScreen = ({ navigation, route }) => {
       <View style={styles.content}>
           {/* Title and Description */}
           <View style={styles.titleSection}>
-            <Text style={styles.title}>Device Updates Setup</Text>
+            <Text style={styles.title}>{copywritingContent.title || 'Device Updates Setup'}</Text>
         <Text style={styles.description}>
-              Configure automatic security updates on all your devices. This ensures you're protected against the latest threats and vulnerabilities.
+              {copywritingContent.description || 'Configure automatic security updates on all your devices. This ensures you\'re protected against the latest threats and vulnerabilities.'}
         </Text>
       </View>
+
+      {/* Learn More Section */}
+      <TouchableOpacity
+        style={styles.learnMoreButton}
+        onPress={() => setShowLearnMore(!showLearnMore)}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.learnMoreText}>Why are device updates important?</Text>
+        <Ionicons
+          name={showLearnMore ? 'chevron-up' : 'chevron-down'}
+          size={Responsive.iconSizes.medium}
+          color={Colors.accent}
+        />
+      </TouchableOpacity>
+
+      {showLearnMore && (
+        <View style={styles.learnMoreContent}>
+          <Text style={styles.learnMoreTitle}>Security Update Benefits</Text>
+          <Text style={styles.learnMoreBody}>
+            Think of device updates as your digital immune system. Every day, security researchers discover new ways that hackers try to break into devices, and companies rush to create fixes called patches. When you keep your devices updated, you're essentially getting vaccinated against the latest digital threats. These updates don't just add new features – they close security holes that could let criminals access your photos, steal your passwords, or even take control of your device. It's like having a security guard who learns about new break-in techniques and immediately strengthens your defenses. The best part? Most updates happen automatically in the background, so you get protection without any effort.
+          </Text>
+        </View>
+      )}
 
           {/* Device Wizard Cards */}
           {userDevices.length > 0 && Object.keys(deviceActions).length > 0 ? (
@@ -586,6 +614,28 @@ const Check1_2_3_DeviceUpdatesScreen = ({ navigation, route }) => {
             onClose={() => setShowCompletionPopup(false)}
             checkId="1-2-3"
           />
+
+          {/* Security Best Practices */}
+          <View style={styles.tipsSection}>
+            <Text style={styles.tipsTitle}>🔄 Device Updates Best Practices</Text>
+            <View style={styles.tipItem}>
+              <Ionicons name="settings" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Enable automatic updates for operating systems and apps</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="notifications" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Check for updates regularly if automatic updates are disabled</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="wifi" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Update over Wi-Fi to avoid data charges</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="battery-charging" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Keep devices charged during major updates</Text>
+            </View>
+          </View>
+
           {/* References Section */}
           <ReferencesSection references={getReferencesForCheck('1-2-3')} />
 
@@ -678,7 +728,59 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.medium,
     color: Colors.textPrimary,
   },
-
+  learnMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Responsive.padding.button,
+    marginBottom: Responsive.spacing.md,
+  },
+  learnMoreText: {
+    fontSize: Typography.sizes.md,
+    color: Colors.accent,
+    fontWeight: Typography.weights.semibold,
+  },
+  learnMoreContent: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  learnMoreTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.sm,
+  },
+  learnMoreBody: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    lineHeight: Typography.sizes.sm * 1.4,
+  },
+  tipsSection: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  tipsTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.md,
+  },
+  tipItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Responsive.spacing.sm,
+  },
+  tipText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    marginLeft: Responsive.spacing.sm,
+    flex: 1,
+    lineHeight: Typography.sizes.sm * 1.4,
+  },
 });
 
 export default Check1_2_3_DeviceUpdatesScreen;

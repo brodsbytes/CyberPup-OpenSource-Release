@@ -203,7 +203,7 @@ export const levels = [
         checks: [
           {
             id: '2-1-1',
-            title: 'Coming Soon!',
+            title: 'Coming Soon! 🚀',
             description: 'Advanced security content is being developed.',
             duration: 'TBD',
             tasks: 0,
@@ -231,7 +231,7 @@ export const levels = [
         checks: [
           {
             id: '3-1-1',
-            title: 'Coming Soon!',
+            title: 'Coming Soon! 🚀',
             description: 'Expert security content is being developed.',
             duration: 'TBD',
             tasks: 0,
@@ -268,8 +268,8 @@ export const getAllChecks = () => {
   levels.forEach(level => {
     level.areas.forEach(area => {
       area.checks.forEach(check => {
-        // Filter out placeholder checks that are "Coming Soon!"
-        if (check.title !== 'Coming Soon!') {
+        // Filter out placeholder checks that are "Coming Soon!" or have "Coming Soon!" in title
+        if (check.title !== 'Coming Soon!' && !check.title.includes('Coming Soon!')) {
           allChecks.push({
             ...check,
             levelId: level.id,

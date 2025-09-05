@@ -20,6 +20,7 @@ import { SettingsGuide } from '../../../utils/settingsGuide';
 import * as Haptics from 'expo-haptics';
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
+import { CopywritingService } from '../../../utils/copywritingService';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 import ExitModal from '../../../components/common/ExitModal';
 import ReferencesSection from '../../../components/ui/ReferencesSection';
@@ -349,6 +350,9 @@ const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
     return totalActions > 0 ? (completedActions / totalActions) * 100 : 0;
   };
 
+  // Get copywriting content for rendering
+  const copywritingContent = CopywritingService.getCheckContent('1-2-1');
+
   const getSecurityLevel = () => {
     const progress = getOverallProgress();
     if (progress === 100) return { level: 'Excellent', color: Colors.success, icon: 'shield-checkmark' };
@@ -393,9 +397,9 @@ const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
         <View style={styles.content}>
           {/* Title and Description */}
           <View style={styles.titleSection}>
-            <Text style={styles.title}>Configure Screen Locks</Text>
+            <Text style={styles.title}>{copywritingContent.title || 'Configure Screen Locks'}</Text>
             <Text style={styles.description}>
-              Set up secure screen locks on all your devices to prevent unauthorized access. This is your first line of defense if a device is lost or stolen.
+              {copywritingContent.description || 'Set up secure screen locks on all your devices to prevent unauthorized access. This is your first line of defense if a device is lost or stolen.'}
             </Text>
             
             {/* Security Level Indicator */}
@@ -442,12 +446,7 @@ const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
             <View style={styles.learnMoreContent}>
               <Text style={styles.learnMoreTitle}>Screen Lock Security Benefits</Text>
               <Text style={styles.learnMoreBody}>
-                • Prevents unauthorized access to your device{'\n'}
-                • Protects your personal data and accounts{'\n'}
-                • Required for banking and secure apps{'\n'}
-                • Enables remote wipe if device is stolen{'\n'}
-                • Prevents shoulder surfing attacks{'\n'}
-                • Keeps your digital life private
+                Screen locks are like the front door to your digital home – without one, anyone can walk right in and help themselves to everything inside. Your phone contains your entire life: photos of your family, private messages, banking apps, work emails, and personal documents. When you leave your device unlocked, you're essentially leaving your house with the door wide open and a sign saying "help yourself." A screen lock acts as your digital bouncer, keeping out nosy coworkers, curious strangers, and potential thieves. It's especially crucial for banking and financial apps, which often require screen locks as a basic security requirement. Plus, if your device ever gets stolen, a screen lock gives you time to remotely wipe your data before thieves can access it. It's a simple step that provides massive protection for everything you hold dear on your device.
               </Text>
             </View>
           )}

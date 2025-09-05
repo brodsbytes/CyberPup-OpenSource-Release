@@ -99,8 +99,8 @@ const WelcomeScreen = ({ navigation }) => {
       
       // Check completion status for each check in the area
       for (const check of area.checks) {
-        // Filter out placeholder checks that are "Coming Soon!"
-        if (check.title !== 'Coming Soon!') {
+        // Filter out placeholder checks that are "Coming Soon!" or have "Coming Soon!" in title
+        if (check.title !== 'Coming Soon!' && !check.title.includes('Coming Soon!')) {
           totalChecks++;
           const progressKey = `check_${check.id}_completed`;
           const progressData = await AsyncStorage.getItem(progressKey);
@@ -246,8 +246,8 @@ const WelcomeScreen = ({ navigation }) => {
         let totalChecks = 0;
         
         for (const check of area.checks) {
-          // Filter out placeholder checks that are "Coming Soon!"
-          if (check.title !== 'Coming Soon!') {
+          // Filter out placeholder checks that are "Coming Soon!" or have "Coming Soon!" in title
+          if (check.title !== 'Coming Soon!' && !check.title.includes('Coming Soon!')) {
             totalChecks++;
             const status = await getCheckStatus(check);
             if (status.isCompleted) {

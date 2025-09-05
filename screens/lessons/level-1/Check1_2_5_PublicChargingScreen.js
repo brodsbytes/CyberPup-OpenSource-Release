@@ -25,6 +25,7 @@ import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 import ExitModal from '../../../components/common/ExitModal';
 import { getCompletionMessage, getNextScreenName, getCompletionNavigation } from '../../../utils/completionMessages';
+import { CopywritingService } from '../../../utils/copywritingService';
 
 const Check1_2_5_PublicChargingScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Standard state management
@@ -33,6 +34,7 @@ const Check1_2_5_PublicChargingScreen = ({ navigation, route }) => {
   const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showLearnMore, setShowLearnMore] = useState(false);
 
   // ✅ CRITICAL: Proper error handling for initialization
   const initializeChecklistContent = async () => {
@@ -335,6 +337,29 @@ const Check1_2_5_PublicChargingScreen = ({ navigation, route }) => {
               Learn to protect yourself from juice jacking attacks when charging in public places. This guide will teach you safe charging practices to keep your data secure.
             </Text>
           </View>
+
+          {/* Learn More Section */}
+          <TouchableOpacity
+            style={styles.learnMoreButton}
+            onPress={() => setShowLearnMore(!showLearnMore)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.learnMoreText}>Why is public charging safety important?</Text>
+            <Ionicons
+              name={showLearnMore ? 'chevron-up' : 'chevron-down'}
+              size={Responsive.iconSizes.medium}
+              color={Colors.accent}
+            />
+          </TouchableOpacity>
+
+          {showLearnMore && (
+            <View style={styles.learnMoreContent}>
+              <Text style={styles.learnMoreTitle}>Public Charging Security Risks</Text>
+              <Text style={styles.learnMoreBody}>
+                Public charging stations might seem like a lifesaver when your phone is dying, but they can be digital traps waiting to steal your information. When you plug into a compromised USB port, you're not just charging your device – you're potentially giving hackers direct access to everything on your phone or laptop. This attack, called "juice jacking," can happen in seconds and you might not even realize it's happening. The malicious USB port can install malware, steal your passwords, copy your photos and contacts, or even lock your device and demand a ransom. It's like giving a stranger the keys to your house just because they offered to help you carry groceries. The scary part is that these attacks are becoming more common in airports, hotels, and shopping centers where people are most likely to need a quick charge. A few minutes of convenience could cost you years of personal data and financial security.
+              </Text>
+            </View>
+          )}
           
           {/* ✅ CRITICAL: Conditional rendering with fallback */}
           {!isLoading && checklistItems.length > 0 ? (
@@ -359,6 +384,28 @@ const Check1_2_5_PublicChargingScreen = ({ navigation, route }) => {
               </TouchableOpacity>
             </View>
           )}
+
+          {/* Security Best Practices */}
+          <View style={styles.tipsSection}>
+            <Text style={styles.tipsTitle}>🔌 Public Charging Best Practices</Text>
+            <View style={styles.tipItem}>
+              <Ionicons name="cable" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Always bring your own USB cable and wall adapter</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="power" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Use wall outlets instead of USB ports when possible</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="battery-charging" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Carry a portable power bank for emergencies</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="shield-checkmark" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Use USB data blockers for extra protection</Text>
+            </View>
+          </View>
+
           {/* References Section */}
           <ReferencesSection references={getReferencesForCheck('1-2-5')} />
 
@@ -528,6 +575,59 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
     marginRight: Responsive.spacing.sm,
+  },
+  learnMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Responsive.padding.button,
+    marginBottom: Responsive.spacing.md,
+  },
+  learnMoreText: {
+    fontSize: Typography.sizes.md,
+    color: Colors.accent,
+    fontWeight: Typography.weights.semibold,
+  },
+  learnMoreContent: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  learnMoreTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.sm,
+  },
+  learnMoreBody: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    lineHeight: Typography.sizes.sm * 1.4,
+  },
+  tipsSection: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  tipsTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.md,
+  },
+  tipItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Responsive.spacing.sm,
+  },
+  tipText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    marginLeft: Responsive.spacing.sm,
+    flex: 1,
+    lineHeight: Typography.sizes.sm * 1.4,
   },
 });
 

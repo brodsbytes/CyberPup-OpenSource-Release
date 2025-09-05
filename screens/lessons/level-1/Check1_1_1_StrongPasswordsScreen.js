@@ -18,6 +18,7 @@ import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
 import { SCREEN_NAMES } from '../../../constants';
 import { AppStorage } from '../../../utils/storage';
 import { getCompletionMessage, getNextScreenName, getCompletionNavigation } from '../../../utils/completionMessages';
+import { CopywritingService } from '../../../utils/copywritingService';
 
 import InteractiveChecklist from '../../../components/validation-steps/InteractiveChecklist';
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
@@ -32,26 +33,31 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
   const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showLearnMore, setShowLearnMore] = useState(false);
 
   // ✅ CRITICAL: Proper error handling for initialization
   const initializeChecklistContent = async () => {
     try {
       setIsLoading(true);
       
+      // Get copywriting content for this check
+      const copywritingContent = CopywritingService.getCheckContent('1-1-1');
+      const checklistContent = copywritingContent.checklist || {};
+      
       const enhancedPasswordItems = [
         {
           id: 'password-length',
-          title: 'Use 12+ Characters',
-          description: 'Create passwords with at least 12 characters for better security',
+          title: checklistContent.length?.title || 'Use 12+ Characters',
+          description: checklistContent.length?.description || 'Create passwords with at least 12 characters for better security',
           completed: false,
           priority: 'high',
           category: 'password-strength',
-          tips: [
+          tips: checklistContent.length?.tips || [
             'Longer passwords are exponentially harder to crack',
             'Aim for 12-16 characters minimum',
             'Consider using passphrases for easier memorization'
           ],
-          steps: [
+          steps: checklistContent.length?.steps || [
             'Count your current password length',
             'Add more characters if under 12',
             'Consider using a memorable phrase'
@@ -59,18 +65,18 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
         },
         {
           id: 'password-complexity',
-          title: 'Include Mixed Characters',
-          description: 'Use uppercase, lowercase, numbers, and special characters',
+          title: checklistContent.complexity?.title || 'Include Mixed Characters',
+          description: checklistContent.complexity?.description || 'Use uppercase, lowercase, numbers, and special characters',
           completed: false,
           priority: 'high',
           category: 'password-strength',
-          tips: [
+          tips: checklistContent.complexity?.tips || [
             'Mix uppercase and lowercase letters',
             'Include numbers (0-9)',
             'Add special characters (!@#$%^&*)',
             'Avoid predictable patterns'
           ],
-          steps: [
+          steps: checklistContent.complexity?.steps || [
             'Check if your password has uppercase letters',
             'Check if your password has lowercase letters', 
             'Check if your password has numbers',
@@ -256,6 +262,9 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
     return (completedItems / checklistItems.length) * 100;
   };
 
+  // Get copywriting content for rendering
+  const copywritingContent = CopywritingService.getCheckContent('1-1-1');
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
@@ -280,11 +289,34 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
                 color={Colors.accent} 
               />
             </View>
-            <Text style={styles.title}>Strong Passwords</Text>
+            <Text style={styles.title}>{copywritingContent.title || 'Strong Passwords'}</Text>
             <Text style={styles.description}>
-              Master the art of creating and managing strong passwords. This checklist will help you build bulletproof password habits that protect all your accounts.
+              {copywritingContent.description || 'Master the art of creating and managing strong passwords. This checklist will help you build bulletproof password habits that protect all your accounts.'}
             </Text>
           </View>
+
+          {/* Learn More Section */}
+          <TouchableOpacity
+            style={styles.learnMoreButton}
+            onPress={() => setShowLearnMore(!showLearnMore)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.learnMoreText}>Why are strong passwords important?</Text>
+            <Ionicons
+              name={showLearnMore ? 'chevron-up' : 'chevron-down'}
+              size={Responsive.iconSizes.medium}
+              color={Colors.accent}
+            />
+          </TouchableOpacity>
+
+          {showLearnMore && (
+            <View style={styles.learnMoreContent}>
+              <Text style={styles.learnMoreTitle}>Password Security Benefits</Text>
+              <Text style={styles.learnMoreBody}>
+                Strong passwords are your first line of defense in the digital world. Think of them as the locks on your house – weak locks make it easy for burglars to break in, while strong locks keep your valuables safe. When you use simple passwords like "123456" or "password," you're essentially leaving your digital doors wide open. Hackers use automated tools that can try thousands of password combinations in seconds, and weak passwords are cracked almost instantly. A strong password, on the other hand, is like having a high-security lock that would take years to break. This protects everything from your bank accounts and social media to your work email and personal photos. Plus, strong passwords prevent "credential stuffing" attacks, where hackers use stolen passwords from one site to break into your other accounts. It's a small effort that provides massive protection for your entire digital life.
+              </Text>
+            </View>
+          )}
           
           {/* ✅ CRITICAL: Conditional rendering with fallback */}
           {!isLoading && checklistItems.length > 0 ? (
@@ -309,6 +341,27 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
               </TouchableOpacity>
             </View>
           )}
+
+          {/* Security Best Practices */}
+          <View style={styles.tipsSection}>
+            <Text style={styles.tipsTitle}>🔑 Strong Password Best Practices</Text>
+            <View style={styles.tipItem}>
+              <Ionicons name="resize" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Use 12+ characters - longer passwords are exponentially stronger</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="shuffle" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Mix uppercase, lowercase, numbers, and special characters</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="finger-print" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Make each password unique - never reuse across accounts</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="shield-checkmark" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Use a password manager to generate and store passwords securely</Text>
+            </View>
+          </View>
           
           {/* References Section */}
           <ReferencesSection references={getReferencesForCheck('1-1-1')} />
@@ -536,6 +589,59 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
     fontWeight: Typography.weights.semibold,
     color: Colors.textSecondary,
+  },
+  learnMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Responsive.padding.button,
+    marginBottom: Responsive.spacing.md,
+  },
+  learnMoreText: {
+    fontSize: Typography.sizes.md,
+    color: Colors.accent,
+    fontWeight: Typography.weights.semibold,
+  },
+  learnMoreContent: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  learnMoreTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.sm,
+  },
+  learnMoreBody: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    lineHeight: Typography.sizes.sm * 1.4,
+  },
+  tipsSection: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  tipsTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.md,
+  },
+  tipItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Responsive.spacing.sm,
+  },
+  tipText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    marginLeft: Responsive.spacing.sm,
+    flex: 1,
+    lineHeight: Typography.sizes.sm * 1.4,
   },
 });
 

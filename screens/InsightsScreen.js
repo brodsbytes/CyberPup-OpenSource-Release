@@ -69,7 +69,7 @@ const InsightsScreen = ({ navigation }) => {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Security Insights</Text>
           <Text style={styles.headerSubtitle}>
-            Tools, guides, and alerts to keep you protected
+            Tools, guides and alerts to keep you protected
           </Text>
         </View>
 

@@ -26,6 +26,7 @@ import { AppStorage } from '../../../utils/storage';
 import WizardFlow from '../../../components/validation-steps/WizardFlow';
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
+import { CopywritingService } from '../../../utils/copywritingService';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 import ExitModal from '../../../components/common/ExitModal';
 
@@ -37,6 +38,7 @@ const Check1_2_4_BluetoothWifiScreen = ({ navigation, route }) => {
   const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [deviceCompletionStatus, setDeviceCompletionStatus] = useState({});
   const [showExitModal, setShowExitModal] = useState(false);
+  const [showLearnMore, setShowLearnMore] = useState(false);
 
   // ✅ PRESERVE: Exact same initialization logic
   const initializeDeviceContent = async () => {
@@ -619,6 +621,29 @@ const Check1_2_4_BluetoothWifiScreen = ({ navigation, route }) => {
         </Text>
       </View>
 
+      {/* Learn More Section */}
+      <TouchableOpacity
+        style={styles.learnMoreButton}
+        onPress={() => setShowLearnMore(!showLearnMore)}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.learnMoreText}>Why is wireless security important?</Text>
+        <Ionicons
+          name={showLearnMore ? 'chevron-up' : 'chevron-down'}
+          size={Responsive.iconSizes.medium}
+          color={Colors.accent}
+        />
+      </TouchableOpacity>
+
+      {showLearnMore && (
+        <View style={styles.learnMoreContent}>
+          <Text style={styles.learnMoreTitle}>Wireless Security Benefits</Text>
+          <Text style={styles.learnMoreBody}>
+            Your devices are constantly broadcasting signals that can be intercepted by nearby attackers. When you connect to public Wi-Fi at coffee shops or airports, you're essentially sharing a digital highway with strangers who might be looking to steal your data. Bluetooth connections can also be hijacked, allowing criminals to access your devices or intercept your calls. By securing these wireless connections, you're putting up digital barriers that keep your personal information safe. Think of it like locking your car doors – you wouldn't leave your vehicle unlocked in a parking lot, so why leave your digital life open to anyone within range? Proper wireless security ensures that only you control who can access your devices and data.
+          </Text>
+        </View>
+      )}
+
           {/* Device Wizard Cards */}
           {userDevices.length > 0 && Object.keys(deviceActions).length > 0 ? (
             <WizardFlow
@@ -660,6 +685,28 @@ const Check1_2_4_BluetoothWifiScreen = ({ navigation, route }) => {
             onClose={() => setShowCompletionPopup(false)}
             checkId="1-2-4"
           />
+
+          {/* Security Best Practices */}
+          <View style={styles.tipsSection}>
+            <Text style={styles.tipsTitle}>📶 Wireless Security Best Practices</Text>
+            <View style={styles.tipItem}>
+              <Ionicons name="wifi" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Use WPA3 encryption for home Wi-Fi networks</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="bluetooth" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Turn off Bluetooth when not in use</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="shield-checkmark" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Avoid connecting to public Wi-Fi without VPN</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="eye-off" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Hide your Wi-Fi network name from public view</Text>
+            </View>
+          </View>
+
           {/* References Section */}
           <ReferencesSection references={getReferencesForCheck('1-2-4')} />
 
@@ -752,7 +799,59 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.medium,
     color: Colors.textPrimary,
   },
-
+  learnMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Responsive.padding.button,
+    marginBottom: Responsive.spacing.md,
+  },
+  learnMoreText: {
+    fontSize: Typography.sizes.md,
+    color: Colors.accent,
+    fontWeight: Typography.weights.semibold,
+  },
+  learnMoreContent: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  learnMoreTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.sm,
+  },
+  learnMoreBody: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    lineHeight: Typography.sizes.sm * 1.4,
+  },
+  tipsSection: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  tipsTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.md,
+  },
+  tipItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Responsive.spacing.sm,
+  },
+  tipText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    marginLeft: Responsive.spacing.sm,
+    flex: 1,
+    lineHeight: Typography.sizes.sm * 1.4,
+  },
 });
 
 export default Check1_2_4_BluetoothWifiScreen;

@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Responsive } from '../../theme';
+import { CopywritingService } from '../../utils/copywritingService';
 
 const ScamRecognitionStep = ({ 
   step, 
@@ -247,7 +248,7 @@ Amazon Customer Service`,
             color={isCorrect ? Colors.success : Colors.warning} 
           />
           <Text style={styles.feedbackTitle}>
-            {isCorrect ? 'Correct!' : 'Not quite right'}
+            {isCorrect ? CopywritingService.getValidationFeedback('scamRecognition', 'correct') : CopywritingService.getValidationFeedback('scamRecognition', 'incorrect')}
           </Text>
         </View>
 
@@ -257,7 +258,7 @@ Amazon Customer Service`,
 
         {currentScenarioData.type === 'phishing' && (
           <View style={styles.redFlagsContainer}>
-            <Text style={styles.redFlagsTitle}>🚩 Red Flags:</Text>
+            <Text style={styles.redFlagsTitle}>{CopywritingService.getValidationFeedback('scamRecognition', 'redFlags')}</Text>
             {currentScenarioData.redFlags.map((flag, index) => (
               <Text key={index} style={styles.redFlagItem}>• {flag}</Text>
             ))}
@@ -266,7 +267,7 @@ Amazon Customer Service`,
 
         {currentScenarioData.type === 'legitimate' && (
           <View style={styles.legitimateSignalsContainer}>
-            <Text style={styles.legitimateSignalsTitle}>✅ Legitimate Signals:</Text>
+            <Text style={styles.legitimateSignalsTitle}>{CopywritingService.getValidationFeedback('scamRecognition', 'legitimateSignals')}</Text>
             {currentScenarioData.legitimateSignals.map((signal, index) => (
               <Text key={index} style={styles.legitimateSignalItem}>• {signal}</Text>
             ))}
@@ -275,7 +276,7 @@ Amazon Customer Service`,
 
         {currentScenario < scenarios.length - 1 && (
           <Text style={styles.nextScenarioText}>
-            Next scenario coming up...
+            {CopywritingService.getValidationFeedback('scamRecognition', 'nextScenario')}
           </Text>
         )}
 
@@ -284,7 +285,7 @@ Amazon Customer Service`,
           onPress={handleContinue}
           activeOpacity={0.8}
         >
-          <Text style={styles.continueButtonText}>Continue</Text>
+          <Text style={styles.continueButtonText}>{CopywritingService.getValidationFeedback('scamRecognition', 'continue')}</Text>
         </TouchableOpacity>
       </View>
     );

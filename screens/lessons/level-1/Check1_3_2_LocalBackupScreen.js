@@ -23,6 +23,7 @@ import { SettingsGuide } from '../../../utils/settingsGuide';
 import { AppStorage } from '../../../utils/storage';
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import { getCompletionMessage, getNextScreenName, getCompletionNavigation } from '../../../utils/completionMessages';
+import { CopywritingService } from '../../../utils/copywritingService';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 import ExitModal from '../../../components/common/ExitModal';
 
@@ -36,6 +37,7 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
   const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [deviceCompletionStatus, setDeviceCompletionStatus] = useState({});
   const [showExitModal, setShowExitModal] = useState(false);
+  const [showLearnMore, setShowLearnMore] = useState(false);
 
   // 🎨 NEW: Checklist-specific state
   const [checklistItems, setChecklistItems] = useState([]);
@@ -752,6 +754,29 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
         </Text>
       </View>
 
+      {/* Learn More Section */}
+      <TouchableOpacity
+        style={styles.learnMoreButton}
+        onPress={() => setShowLearnMore(!showLearnMore)}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.learnMoreText}>Why is local backup important?</Text>
+        <Ionicons
+          name={showLearnMore ? 'chevron-up' : 'chevron-down'}
+          size={Responsive.iconSizes.medium}
+          color={Colors.accent}
+        />
+      </TouchableOpacity>
+
+      {showLearnMore && (
+        <View style={styles.learnMoreContent}>
+          <Text style={styles.learnMoreTitle}>Local Backup Benefits</Text>
+          <Text style={styles.learnMoreBody}>
+            Local backup is like having a safety deposit box in your own home. While cloud backup is great for convenience, local backup gives you complete control over your data and works even when the internet is down. Imagine your computer crashes right before an important presentation, or your phone gets stolen with all your vacation photos. With local backup, you can restore everything in minutes, not hours or days. It's also perfect for sensitive files you don't want stored online, like personal documents or work projects. Plus, local backup is often faster than downloading from the cloud, and you don't need to worry about monthly subscription fees or internet speed. It's your personal insurance policy against digital disasters.
+          </Text>
+        </View>
+      )}
+
           {/* Backup Checklist */}
           {isLoading ? (
             <View style={styles.fallbackContainer}>
@@ -785,6 +810,28 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
               </TouchableOpacity>
             </View>
           )}
+
+          {/* Security Best Practices */}
+          <View style={styles.tipsSection}>
+            <Text style={styles.tipsTitle}>💾 Local Backup Best Practices</Text>
+            <View style={styles.tipItem}>
+              <Ionicons name="refresh" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Back up important files regularly, at least weekly</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="shield-checkmark" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Use multiple backup locations for critical data</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="checkmark-circle" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Test your backups regularly to ensure they work</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="lock-closed" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Encrypt sensitive backup files for extra security</Text>
+            </View>
+          </View>
+
           {/* References Section */}
           <ReferencesSection references={getReferencesForCheck('1-3-2')} />
 
@@ -900,9 +947,59 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.medium,
     color: Colors.textPrimary,
   },
-
-
-  
+  learnMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Responsive.padding.button,
+    marginBottom: Responsive.spacing.md,
+  },
+  learnMoreText: {
+    fontSize: Typography.sizes.md,
+    color: Colors.accent,
+    fontWeight: Typography.weights.semibold,
+  },
+  learnMoreContent: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  learnMoreTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.sm,
+  },
+  learnMoreBody: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    lineHeight: Typography.sizes.sm * 1.4,
+  },
+  tipsSection: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  tipsTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.md,
+  },
+  tipItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Responsive.spacing.sm,
+  },
+  tipText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    marginLeft: Responsive.spacing.sm,
+    flex: 1,
+    lineHeight: Typography.sizes.sm * 1.4,
+  },
 });
 
 export default Check1_3_2_LocalBackupScreen;

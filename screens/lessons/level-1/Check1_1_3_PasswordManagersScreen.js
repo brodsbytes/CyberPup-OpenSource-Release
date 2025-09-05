@@ -23,6 +23,7 @@ import { SettingsGuide } from '../../../utils/settingsGuide';
 import * as Haptics from 'expo-haptics';
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
+import { CopywritingService } from '../../../utils/copywritingService';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 import ExitModal from '../../../components/common/ExitModal';
 
@@ -338,6 +339,9 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
     return totalActions > 0 ? (completedActions / totalActions) * 100 : 0;
   };
 
+  // Get copywriting content for rendering
+  const copywritingContent = CopywritingService.getCheckContent('1-1-3');
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
@@ -366,9 +370,9 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
         <View style={styles.content}>
           {/* Title and Description */}
           <View style={styles.titleSection}>
-            <Text style={styles.title}>Set Up Password Managers</Text>
+            <Text style={styles.title}>{copywritingContent.title || 'Set Up Password Managers'}</Text>
             <Text style={styles.description}>
-              Configure secure password managers on all your devices. This creates strong, unique passwords and makes login easier and safer.
+              {copywritingContent.description || 'Configure secure password managers on all your devices. This creates strong, unique passwords and makes login easier and safer.'}
             </Text>
             
             {/* Progress Indicator */}

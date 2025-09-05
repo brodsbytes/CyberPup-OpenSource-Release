@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Responsive } from '../../theme';
 import { levels, getAllChecks, getAreasByLevel } from '../../data/courseData';
 import { SCREEN_NAMES } from '../../constants';
+import { CopywritingService } from '../../utils/copywritingService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { height } = Dimensions.get('window');

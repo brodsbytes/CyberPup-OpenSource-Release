@@ -20,6 +20,7 @@ import { SCREEN_NAMES } from '../../../constants';
 import { AppStorage } from '../../../utils/storage';
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
+import { CopywritingService } from '../../../utils/copywritingService';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 import ExitModal from '../../../components/common/ExitModal';
 
@@ -32,6 +33,7 @@ const Check1_5_1_SharingAwarenessScreen = ({ navigation, route }) => {
   const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showLearnMore, setShowLearnMore] = useState(false);
 
   // ✅ CRITICAL: Proper error handling for initialization
   const initializeChecklistContent = async () => {
@@ -333,6 +335,29 @@ const Check1_5_1_SharingAwarenessScreen = ({ navigation, route }) => {
               Develop smart sharing habits to protect your privacy. Learn to share safely without putting yourself, your family, or your work at risk.
             </Text>
           </View>
+
+          {/* Learn More Section */}
+          <TouchableOpacity
+            style={styles.learnMoreButton}
+            onPress={() => setShowLearnMore(!showLearnMore)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.learnMoreText}>Why is sharing awareness important?</Text>
+            <Ionicons
+              name={showLearnMore ? 'chevron-up' : 'chevron-down'}
+              size={Responsive.iconSizes.medium}
+              color={Colors.accent}
+            />
+          </TouchableOpacity>
+
+          {showLearnMore && (
+            <View style={styles.learnMoreContent}>
+              <Text style={styles.learnMoreTitle}>Privacy Protection Benefits</Text>
+              <Text style={styles.learnMoreBody}>
+                In our connected world, every piece of information you share online becomes part of your permanent digital footprint. That innocent photo of your new car with the license plate visible, or the check-in at your favorite restaurant, might seem harmless, but it's giving strangers a detailed map of your life. Criminals use this information to build profiles for identity theft, social engineering attacks, or even physical stalking. When you share your location, you're telling the world exactly where you are and aren't – perfect for burglars planning a break-in. Personal details about your family, job, or daily routines can be used to craft convincing phishing emails or phone scams. It's like leaving your diary open in a public place – you never know who might be reading it or how they'll use that information. By being mindful about what you share, you're not just protecting yourself, but also your family and friends who might be mentioned in your posts.
+              </Text>
+            </View>
+          )}
           
           {/* ✅ CRITICAL: Conditional rendering with fallback */}
           {!isLoading && checklistItems.length > 0 ? (
@@ -357,6 +382,28 @@ const Check1_5_1_SharingAwarenessScreen = ({ navigation, route }) => {
               </TouchableOpacity>
             </View>
           )}
+
+          {/* Security Best Practices */}
+          <View style={styles.tipsSection}>
+            <Text style={styles.tipsTitle}>👁️ Sharing Awareness Best Practices</Text>
+            <View style={styles.tipItem}>
+              <Ionicons name="location-off" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Avoid sharing your location in real-time on social media</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="people" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Be cautious about sharing personal details about family members</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="briefcase" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Never share work-related information or company details</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="calendar" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Avoid posting about travel plans or being away from home</Text>
+            </View>
+          </View>
+
           {/* References Section */}
           <ReferencesSection references={getReferencesForCheck('1-5-1')} />
 
@@ -526,6 +573,59 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
     marginRight: Responsive.spacing.sm,
+  },
+  learnMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Responsive.padding.button,
+    marginBottom: Responsive.spacing.md,
+  },
+  learnMoreText: {
+    fontSize: Typography.sizes.md,
+    color: Colors.accent,
+    fontWeight: Typography.weights.semibold,
+  },
+  learnMoreContent: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  learnMoreTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.sm,
+  },
+  learnMoreBody: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    lineHeight: Typography.sizes.sm * 1.4,
+  },
+  tipsSection: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  tipsTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.md,
+  },
+  tipItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Responsive.spacing.sm,
+  },
+  tipText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    marginLeft: Responsive.spacing.sm,
+    flex: 1,
+    lineHeight: Typography.sizes.sm * 1.4,
   },
 });
 

@@ -1,6 +1,8 @@
 // Validation Engine for Interactive Validation Flows (Pattern C)
 // Handles real-time validation, scoring, and progress tracking
 
+import { CopywritingService } from './copywritingService';
+
 export class ValidationEngine {
   /**
    * Create a new validation flow
@@ -347,27 +349,29 @@ export class ValidationEngine {
       case 'email-breach-check':
         if (validation.isValid) {
           if (validation.details.hasBreaches) {
-            feedback.title = `⚠️ ${validation.details.breachCount} Breach${validation.details.breachCount > 1 ? 'es' : ''} Found`;
+            feedback.title = CopywritingService.getValidationFeedback('breachCheck', 'breachesFound') || `⚠️ ${validation.details.breachCount} Breach${validation.details.breachCount > 1 ? 'es' : ''} Found`;
             feedback.message = `Your email was found in ${validation.details.breachCount} data breach${validation.details.breachCount > 1 ? 'es' : ''}. Review the affected services and take action to secure your accounts.`;
             feedback.type = 'warning';
             feedback.color = 'warning';
             feedback.icon = 'warning';
           } else {
-            feedback.title = '✅ No Breaches Found';
+            feedback.title = CopywritingService.getValidationFeedback('breachCheck', 'noBreaches') || '✅ No Breaches Found';
             feedback.message = 'Great news! Your email was not found in any known data breaches. Your accounts appear to be secure.';
             feedback.type = 'success';
             feedback.color = 'success';
             feedback.icon = 'checkmark-circle';
           }
         } else {
-          feedback.title = 'Check Required';
+          feedback.title = CopywritingService.getValidationFeedback('breachCheck', 'error') || 'Check Required';
           feedback.message = validation.details.message;
         }
         break;
 
       case 'phishing-identification':
         const { isCorrect, explanation } = validation.details;
-        feedback.title = isCorrect ? 'Correct!' : 'Not quite right';
+        feedback.title = isCorrect ? 
+          CopywritingService.getValidationFeedback('scamRecognition', 'correct') || 'Correct!' : 
+          CopywritingService.getValidationFeedback('scamRecognition', 'incorrect') || 'Not quite right';
         feedback.message = explanation;
         feedback.type = isCorrect ? 'success' : 'info';
         feedback.color = isCorrect ? 'success' : 'accent';

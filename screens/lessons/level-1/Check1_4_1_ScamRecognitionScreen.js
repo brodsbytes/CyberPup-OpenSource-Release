@@ -21,6 +21,7 @@ import ScamRecognitionStep from '../../../components/validation-steps/ScamRecogn
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
+import { CopywritingService } from '../../../utils/copywritingService';
 import ExitModal from '../../../components/common/ExitModal';
 
 const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
@@ -41,6 +42,7 @@ const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
   const [isCompleted, setIsCompleted] = useState(false);
   const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
+  const [showLearnMore, setShowLearnMore] = useState(false);
   
   // Interactive flow state
   const [flowCompleted, setFlowCompleted] = useState(false);
@@ -235,6 +237,29 @@ const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
               Learn to identify common scams and phishing attempts through interactive scenarios.
             </Text>
           </View>
+
+          {/* Learn More Section */}
+          <TouchableOpacity
+            style={styles.learnMoreButton}
+            onPress={() => setShowLearnMore(!showLearnMore)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.learnMoreText}>Why is scam recognition important?</Text>
+            <Ionicons
+              name={showLearnMore ? 'chevron-up' : 'chevron-down'}
+              size={Responsive.iconSizes.medium}
+              color={Colors.accent}
+            />
+          </TouchableOpacity>
+
+          {showLearnMore && (
+            <View style={styles.learnMoreContent}>
+              <Text style={styles.learnMoreTitle}>Scam Recognition Benefits</Text>
+              <Text style={styles.learnMoreBody}>
+                Scammers are getting smarter every day, using sophisticated tactics to trick even the most cautious people. They create fake emails that look exactly like real ones from your bank, send text messages pretending to be delivery companies, or call claiming to be tech support. The scary part? These attacks work because they play on our natural trust and urgency. By learning to recognize the warning signs, you become your own best defense. It's like developing a sixth sense for danger – you'll spot red flags before they can harm you. This training gives you the confidence to question suspicious requests, verify information independently, and protect not just yourself but your family and friends too. Knowledge is power, and in this case, it's the power to keep your money and personal information safe.
+              </Text>
+            </View>
+          )}
           
           {/* Interactive Flow */}
           {!flowCompleted ? (
@@ -283,6 +308,28 @@ const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
           onClose={() => setShowCompletionPopup(false)}
           checkId="1-4-1"
           />
+
+          {/* Security Best Practices */}
+          <View style={styles.tipsSection}>
+            <Text style={styles.tipsTitle}>🎯 Scam Recognition Best Practices</Text>
+            <View style={styles.tipItem}>
+              <Ionicons name="eye" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Look for spelling errors and poor grammar in messages</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="time" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Be suspicious of urgent requests for immediate action</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="call" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Verify unexpected calls by hanging up and calling back</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="link" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Never click links in suspicious emails or messages</Text>
+            </View>
+          </View>
+
           {/* References Section */}
           <ReferencesSection references={getReferencesForCheck('1-4-1')} />
 
@@ -393,6 +440,59 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
+  },
+  learnMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Responsive.padding.button,
+    marginBottom: Responsive.spacing.md,
+  },
+  learnMoreText: {
+    fontSize: Typography.sizes.md,
+    color: Colors.accent,
+    fontWeight: Typography.weights.semibold,
+  },
+  learnMoreContent: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  learnMoreTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.sm,
+  },
+  learnMoreBody: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    lineHeight: Typography.sizes.sm * 1.4,
+  },
+  tipsSection: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  tipsTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.md,
+  },
+  tipItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Responsive.spacing.sm,
+  },
+  tipText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    marginLeft: Responsive.spacing.sm,
+    flex: 1,
+    lineHeight: Typography.sizes.sm * 1.4,
   },
 });
 

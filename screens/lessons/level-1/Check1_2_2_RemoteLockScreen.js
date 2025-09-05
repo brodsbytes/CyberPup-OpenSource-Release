@@ -24,6 +24,7 @@ import { AppStorage } from '../../../utils/storage';
 import WizardFlow from '../../../components/validation-steps/WizardFlow';
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
+import { CopywritingService } from '../../../utils/copywritingService';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 import ExitModal from '../../../components/common/ExitModal';
 
@@ -35,6 +36,7 @@ const Check1_2_2_RemoteLockScreen = ({ navigation, route }) => {
   const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [deviceCompletionStatus, setDeviceCompletionStatus] = useState({});
   const [showExitModal, setShowExitModal] = useState(false);
+  const [showLearnMore, setShowLearnMore] = useState(false);
 
   // ✅ PRESERVE: Exact same initialization logic
   const initializeDeviceContent = async () => {
@@ -178,6 +180,9 @@ const Check1_2_2_RemoteLockScreen = ({ navigation, route }) => {
     return totalActions > 0 ? (completedActions / totalActions) * 100 : 0;
   };
 
+  // Get copywriting content for rendering
+  const copywritingContent = CopywritingService.getCheckContent('1-2-2');
+
   const handleExit = () => {
     setShowExitModal(true);
   };
@@ -253,11 +258,34 @@ const Check1_2_2_RemoteLockScreen = ({ navigation, route }) => {
         <View style={styles.content}>
           {/* Title and Description */}
           <View style={styles.titleSection}>
-            <Text style={styles.title}>Remote Lock & Wipe Setup</Text>
+            <Text style={styles.title}>{copywritingContent.title || 'Remote Lock & Wipe Setup'}</Text>
             <Text style={styles.description}>
-              Configure remote security features on all your devices. This allows you to locate, lock, or wipe your device if it's lost or stolen.
+              {copywritingContent.description || 'Configure remote security features on all your devices. This allows you to locate, lock, or wipe your device if it\'s lost or stolen.'}
             </Text>
           </View>
+
+          {/* Learn More Section */}
+          <TouchableOpacity
+            style={styles.learnMoreButton}
+            onPress={() => setShowLearnMore(!showLearnMore)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.learnMoreText}>Why is remote lock important?</Text>
+            <Ionicons
+              name={showLearnMore ? 'chevron-up' : 'chevron-down'}
+              size={Responsive.iconSizes.medium}
+              color={Colors.accent}
+            />
+          </TouchableOpacity>
+
+          {showLearnMore && (
+            <View style={styles.learnMoreContent}>
+              <Text style={styles.learnMoreTitle}>Remote Security Benefits</Text>
+              <Text style={styles.learnMoreBody}>
+                Remote lock gives you peace of mind when your device goes missing. Whether it's lost in a taxi, stolen from your bag, or left behind at a coffee shop, you can instantly lock your device from anywhere in the world. This prevents strangers from accessing your personal photos, banking apps, work emails, and private messages. Plus, you can display a custom message with your contact information, making it easier for honest people to return your device. It's like having a digital security guard that works 24/7, even when you're not around.
+              </Text>
+            </View>
+          )}
           
           {/* Device Wizard Cards */}
           {userDevices.length > 0 && Object.keys(deviceActions).length > 0 ? (
@@ -293,6 +321,28 @@ const Check1_2_2_RemoteLockScreen = ({ navigation, route }) => {
               </TouchableOpacity>
             </View>
           )}
+
+          {/* Security Best Practices */}
+          <View style={styles.tipsSection}>
+            <Text style={styles.tipsTitle}>🔒 Remote Lock Best Practices</Text>
+            <View style={styles.tipItem}>
+              <Ionicons name="location" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Enable location services for device tracking</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="notifications" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Set up notifications for device location changes</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="shield-checkmark" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Test remote lock functionality regularly</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="trash" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Use remote wipe as a last resort for sensitive data</Text>
+            </View>
+          </View>
+
           {/* References Section */}
           <ReferencesSection references={getReferencesForCheck('1-2-2')} />
 
@@ -528,6 +578,59 @@ const styles = {
     fontSize: Typography.sizes.md,
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
+  },
+  learnMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Responsive.padding.button,
+    marginBottom: Responsive.spacing.md,
+  },
+  learnMoreText: {
+    fontSize: Typography.sizes.md,
+    color: Colors.accent,
+    fontWeight: Typography.weights.semibold,
+  },
+  learnMoreContent: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  learnMoreTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.sm,
+  },
+  learnMoreBody: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    lineHeight: Typography.sizes.sm * 1.4,
+  },
+  tipsSection: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  tipsTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.md,
+  },
+  tipItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Responsive.spacing.sm,
+  },
+  tipText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    marginLeft: Responsive.spacing.sm,
+    flex: 1,
+    lineHeight: Typography.sizes.sm * 1.4,
   },
 };
 

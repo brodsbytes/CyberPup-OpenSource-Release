@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { Colors, Typography, Responsive } from '../../theme';
+import { CopywritingService } from '../../utils/copywritingService';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -641,7 +642,9 @@ const CompletionPopup = ({
                 onPress={handleContinue}
                 activeOpacity={0.8}
               >
-                <Text style={styles.continueButtonText}>Continue to Next Check</Text>
+                <Text style={styles.continueButtonText}>
+                  {CopywritingService.getButtonText('completion', 'continueButton') || 'Continue to Next Check'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

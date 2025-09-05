@@ -12,6 +12,7 @@ import * as Haptics from 'expo-haptics';
 
 import { Colors, Typography, Responsive, CommonStyles, CheckVariants } from '../../theme';
 import ProgressiveActionCard from '../../components/ui/ProgressiveActionCard';
+import { CopywritingService } from '../../utils/copywritingService';
 
 const InteractiveChecklist = ({ 
   userDevices, 
@@ -403,7 +404,7 @@ const ChecklistItem = ({ item, onComplete, variant }) => {
           {/* Action Steps */}
           {item.steps && (
             <View style={styles.actionSteps}>
-              <Text style={styles.stepsTitle}>Steps to complete:</Text>
+              <Text style={styles.stepsTitle}>{CopywritingService.getValidationFeedback('interactiveChecklist', 'stepsTitle')}</Text>
               {item.steps.map((step, index) => (
                 <View key={index} style={styles.stepItem}>
                   <Text style={styles.stepNumber}>{index + 1}.</Text>
@@ -421,7 +422,7 @@ const ChecklistItem = ({ item, onComplete, variant }) => {
                 onPress={() => handleDeepLink(item.deepLink)}
               >
                 <Ionicons name="open-outline" size={16} color={CheckVariants.checklist.accent} />
-                <Text style={styles.actionButtonText}>Open Settings</Text>
+                <Text style={styles.actionButtonText}>{CopywritingService.getValidationFeedback('interactiveChecklist', 'openSettings')}</Text>
               </TouchableOpacity>
             )}
             
@@ -430,14 +431,14 @@ const ChecklistItem = ({ item, onComplete, variant }) => {
               onPress={() => handleLearnMore(item)}
             >
               <Ionicons name="information-circle-outline" size={16} color={CheckVariants.checklist.accent} />
-              <Text style={styles.actionButtonText}>Learn More</Text>
+              <Text style={styles.actionButtonText}>{CopywritingService.getValidationFeedback('interactiveChecklist', 'learnMore')}</Text>
             </TouchableOpacity>
           </View>
           
           {/* Tips */}
           {item.tips && (
             <View style={styles.itemTips}>
-              <Text style={styles.tipsTitle}>💡 Tips:</Text>
+              <Text style={styles.tipsTitle}>{CopywritingService.getValidationFeedback('interactiveChecklist', 'tipsTitle')}</Text>
               {item.tips.map((tip, index) => (
                 <Text key={index} style={styles.tipText}>• {tip}</Text>
               ))}

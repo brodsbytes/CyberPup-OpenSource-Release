@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Responsive } from '../../theme';
+import { CopywritingService } from '../../utils/copywritingService';
 import { BreachCheckService } from '../../utils/breachCheckService';
 
 const BreachCheckStep = ({ 
@@ -159,7 +160,7 @@ const BreachCheckStep = ({
       
     } catch (error) {
       console.error('Breach check error:', error);
-      Alert.alert('Error', error.message || 'Unable to check for breaches. Please try again.');
+      Alert.alert('Error', error.message || CopywritingService.getErrorMessage('breachCheck', 'error'));
     } finally {
       setIsCheckingBreach(false);
     }
@@ -186,7 +187,7 @@ const BreachCheckStep = ({
             color={breachResult.isBreached ? Colors.warning : Colors.success} 
           />
           <Text style={styles.resultTitle}>
-            {breachResult.isBreached ? 'Breaches Found' : 'No Breaches Found'}
+            {breachResult.isBreached ? CopywritingService.getValidationFeedback('breachCheck', 'breachesFound') : CopywritingService.getValidationFeedback('breachCheck', 'noBreaches')}
           </Text>
         </View>
 
@@ -263,7 +264,7 @@ const BreachCheckStep = ({
             activeOpacity={0.8}
           >
             <Ionicons name="refresh" size={Responsive.iconSizes.medium} color={Colors.accent} />
-            <Text style={styles.tryAgainButtonText}>Check Another Email</Text>
+            <Text style={styles.tryAgainButtonText}>{CopywritingService.getValidationFeedback('breachCheck', 'checkEmail')}</Text>
           </TouchableOpacity>
         </View>
       </View>

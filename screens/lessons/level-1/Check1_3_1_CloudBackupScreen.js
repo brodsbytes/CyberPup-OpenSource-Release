@@ -22,6 +22,7 @@ import { SettingsGuide } from '../../../utils/settingsGuide';
 import * as Haptics from 'expo-haptics';
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
+import { CopywritingService } from '../../../utils/copywritingService';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 
 /**
@@ -597,13 +598,7 @@ const Check1_3_1_CloudBackupScreen = ({ navigation, route }) => {
             <View style={styles.learnMoreContent}>
               <Text style={styles.learnMoreTitle}>Cloud Backup Benefits</Text>
               <Text style={styles.learnMoreBody}>
-                • Protects against device loss, theft, or damage{'\n'}
-                • Automatic backup keeps data current{'\n'}
-                • Access files from any device, anywhere{'\n'}
-                • Ransomware protection with version history{'\n'}
-                • Free up local storage space{'\n'}
-                • Peace of mind for irreplaceable memories{'\n'}
-                • Professional-grade data centers for security
+                Cloud backup is like having a safety deposit box in the sky that automatically protects your most precious digital memories and important documents. Imagine losing your phone with years of family photos, or your laptop crashing with all your work projects – without cloud backup, those memories and files could be gone forever. Cloud backup works silently in the background, constantly saving copies of your data to secure servers around the world. It's like having a personal assistant who never forgets to make copies of everything important. When disaster strikes – whether it's a stolen phone, a flooded laptop, or even ransomware that locks your files – you can restore everything in minutes, not months. Plus, you can access your files from any device, anywhere, making your digital life truly portable. It's the difference between losing everything and having a complete digital safety net.
               </Text>
             </View>
           )}

@@ -27,6 +27,7 @@ import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 import ExitModal from '../../../components/common/ExitModal';
 import { getCompletionMessage, getNextScreenName, getCompletionNavigation } from '../../../utils/completionMessages';
+import { CopywritingService } from '../../../utils/copywritingService';
 
 const Check1_5_2_PrivacySettingsScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Standard state management
@@ -37,6 +38,7 @@ const Check1_5_2_PrivacySettingsScreen = ({ navigation, route }) => {
   const [deviceCompletionStatus, setDeviceCompletionStatus] = useState({});
   const [showExitModal, setShowExitModal] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [showLearnMore, setShowLearnMore] = useState(false);
 
     // ✅ CRITICAL: Proper error handling for initialization
   const initializeDeviceContent = async () => {
@@ -758,6 +760,29 @@ const Check1_5_2_PrivacySettingsScreen = ({ navigation, route }) => {
               Take control of your digital privacy across all your devices and platforms. This timeline will guide you through configuring privacy settings to protect your personal information.
             </Text>
           </View>
+
+          {/* Learn More Section */}
+          <TouchableOpacity
+            style={styles.learnMoreButton}
+            onPress={() => setShowLearnMore(!showLearnMore)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.learnMoreText}>Why are privacy settings important?</Text>
+            <Ionicons
+              name={showLearnMore ? 'chevron-up' : 'chevron-down'}
+              size={Responsive.iconSizes.medium}
+              color={Colors.accent}
+            />
+          </TouchableOpacity>
+
+          {showLearnMore && (
+            <View style={styles.learnMoreContent}>
+              <Text style={styles.learnMoreTitle}>Privacy Control Benefits</Text>
+              <Text style={styles.learnMoreBody}>
+                Your devices and apps are constantly collecting information about you – where you go, what you search for, who you talk to, and even what you buy. This data creates a detailed digital profile that companies use to target ads, influence your decisions, and sometimes sell to third parties. By taking control of your privacy settings, you're essentially putting up digital curtains around your personal life. You decide what information gets shared, with whom, and for how long. It's like having a say in who gets to peek through your windows – you wouldn't let strangers look into your home, so why let companies peek into your digital life? Proper privacy settings give you the power to be selective about what you share, protecting not just your personal information but also your mental well-being from constant surveillance and manipulation.
+              </Text>
+            </View>
+          )}
           
           {/* ✅ CRITICAL: Conditional rendering with fallback */}
           {(() => {
@@ -806,6 +831,28 @@ const Check1_5_2_PrivacySettingsScreen = ({ navigation, route }) => {
               </View>
             );
           })()}
+
+          {/* Security Best Practices */}
+          <View style={styles.tipsSection}>
+            <Text style={styles.tipsTitle}>🔒 Privacy Settings Best Practices</Text>
+            <View style={styles.tipItem}>
+              <Ionicons name="location" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Limit location tracking to essential apps only</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="camera" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Review camera and microphone permissions regularly</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="analytics" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Disable ad personalization and data collection</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="people" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Control who can see your activity and profile</Text>
+            </View>
+          </View>
+
           {/* References Section */}
           <ReferencesSection references={getReferencesForCheck('1-5-2')} />
 
@@ -975,6 +1022,59 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
     marginRight: Responsive.spacing.sm,
+  },
+  learnMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Responsive.padding.button,
+    marginBottom: Responsive.spacing.md,
+  },
+  learnMoreText: {
+    fontSize: Typography.sizes.md,
+    color: Colors.accent,
+    fontWeight: Typography.weights.semibold,
+  },
+  learnMoreContent: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  learnMoreTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.sm,
+  },
+  learnMoreBody: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    lineHeight: Typography.sizes.sm * 1.4,
+  },
+  tipsSection: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  tipsTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.md,
+  },
+  tipItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Responsive.spacing.sm,
+  },
+  tipText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    marginLeft: Responsive.spacing.sm,
+    flex: 1,
+    lineHeight: Typography.sizes.sm * 1.4,
   },
 });
 

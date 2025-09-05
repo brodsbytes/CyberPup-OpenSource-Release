@@ -23,6 +23,7 @@ import BreachCheckStep from '../../../components/validation-steps/BreachCheckSte
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 import { getCompletionMessage, getNextScreenName, getCompletionNavigation } from '../../../utils/completionMessages';
+import { CopywritingService } from '../../../utils/copywritingService';
 import ExitModal from '../../../components/common/ExitModal';
 import ReferencesSection from '../../../components/ui/ReferencesSection';
 import { getReferencesForCheck } from '../../../data/references';

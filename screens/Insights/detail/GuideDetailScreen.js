@@ -118,39 +118,147 @@ const GuideDetailScreen = ({ navigation, route }) => {
   const renderHTMLContent = (htmlContent) => {
     if (!htmlContent) return null;
 
-    // Simple HTML to React Native Text conversion
-    const cleanContent = htmlContent
-      .replace(/<h1[^>]*>/gi, '\n\n')
-      .replace(/<\/h1>/gi, '\n')
-      .replace(/<h2[^>]*>/gi, '\n\n')
-      .replace(/<\/h2>/gi, '\n')
-      .replace(/<h3[^>]*>/gi, '\n')
-      .replace(/<\/h3>/gi, '\n')
-      .replace(/<p[^>]*>/gi, '\n')
-      .replace(/<\/p>/gi, '\n')
-      .replace(/<strong[^>]*>/gi, '')
-      .replace(/<\/strong>/gi, '')
-      .replace(/<em[^>]*>/gi, '')
-      .replace(/<\/em>/gi, '')
-      .replace(/<li[^>]*>/gi, '• ')
-      .replace(/<\/li>/gi, '\n')
-      .replace(/<ul[^>]*>|<\/ul>/gi, '\n')
-      .replace(/<ol[^>]*>/gi, '\n')
-      .replace(/<\/ol>/gi, '\n')
-      .replace(/<br\s*\/?>/gi, '\n')
-      .replace(/<[^>]*>/g, '') // Remove any remaining HTML tags
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&amp;/g, '&')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/\n\s*\n\s*\n/g, '\n\n') // Reduce multiple newlines
-      .trim();
+    // Parse HTML and render lists properly
+    const parseHTML = (html) => {
+      const elements = [];
+      let currentIndex = 0;
+      
+      // Find all <ul> and <ol> blocks
+      const listRegex = /<(ul|ol)[^>]*>(.*?)<\/\1>/gis;
+      let match;
+      
+      while ((match = listRegex.exec(html)) !== null) {
+        // Add text before the list
+        if (match.index > currentIndex) {
+          const beforeText = html.substring(currentIndex, match.index);
+          if (beforeText.trim()) {
+            elements.push({
+              type: 'text',
+              content: beforeText
+                .replace(/<h1[^>]*>/gi, '\n\n')
+                .replace(/<\/h1>/gi, '\n')
+                .replace(/<h2[^>]*>/gi, '\n\n')
+                .replace(/<\/h2>/gi, '\n')
+                .replace(/<h3[^>]*>/gi, '\n')
+                .replace(/<\/h3>/gi, '\n')
+                .replace(/<p[^>]*>/gi, '\n')
+                .replace(/<\/p>/gi, '\n')
+                .replace(/<strong[^>]*>/gi, '')
+                .replace(/<\/strong>/gi, '')
+                .replace(/<em[^>]*>/gi, '')
+                .replace(/<\/em>/gi, '')
+                .replace(/<br\s*\/?>/gi, '\n')
+                .replace(/<[^>]*>/g, '')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&amp;/g, '&')
+                .replace(/&quot;/g, '"')
+                .replace(/&#39;/g, "'")
+                .replace(/\n\s*\n\s*\n/g, '\n\n')
+                .trim()
+            });
+          }
+        }
+        
+        // Parse list items from the captured content (match[2] is the content between tags)
+        const liRegex = /<li[^>]*>(.*?)<\/li>/gis;
+        const listItems = [];
+        let liMatch;
+        
+        while ((liMatch = liRegex.exec(match[2])) !== null) {
+          const itemText = liMatch[1]
+            .replace(/<strong[^>]*>/gi, '')
+            .replace(/<\/strong>/gi, '')
+            .replace(/<em[^>]*>/gi, '')
+            .replace(/<\/em>/gi, '')
+            .replace(/<br\s*\/?>/gi, ' ')
+            .replace(/<[^>]*>/g, '')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&amp;/g, '&')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .trim();
+          
+          if (itemText) {
+            listItems.push(itemText);
+          }
+        }
+        
+        if (listItems.length > 0) {
+          elements.push({
+            type: 'list',
+            items: listItems,
+            isOrdered: match[1] === 'ol'
+          });
+        }
+        
+        currentIndex = match.index + match[0].length;
+      }
+      
+      // Add remaining text
+      if (currentIndex < html.length) {
+        const remainingText = html.substring(currentIndex);
+        if (remainingText.trim()) {
+          elements.push({
+            type: 'text',
+            content: remainingText
+              .replace(/<h1[^>]*>/gi, '\n\n')
+              .replace(/<\/h1>/gi, '\n')
+              .replace(/<h2[^>]*>/gi, '\n\n')
+              .replace(/<\/h2>/gi, '\n')
+              .replace(/<h3[^>]*>/gi, '\n')
+              .replace(/<\/h3>/gi, '\n')
+              .replace(/<p[^>]*>/gi, '\n')
+              .replace(/<\/p>/gi, '\n')
+              .replace(/<strong[^>]*>/gi, '')
+              .replace(/<\/strong>/gi, '')
+              .replace(/<em[^>]*>/gi, '')
+              .replace(/<\/em>/gi, '')
+              .replace(/<br\s*\/?>/gi, '\n')
+              .replace(/<[^>]*>/g, '')
+              .replace(/&lt;/g, '<')
+              .replace(/&gt;/g, '>')
+              .replace(/&amp;/g, '&')
+              .replace(/&quot;/g, '"')
+              .replace(/&#39;/g, "'")
+              .replace(/\n\s*\n\s*\n/g, '\n\n')
+              .trim()
+          });
+        }
+      }
+      
+      return elements;
+    };
 
+    const elements = parseHTML(htmlContent);
+    
     return (
-      <Text style={styles.contentText}>
-        {cleanContent}
-      </Text>
+      <View>
+        {elements.map((element, index) => {
+          if (element.type === 'text') {
+            return (
+              <Text key={index} style={styles.contentText}>
+                {element.content}
+              </Text>
+            );
+          } else if (element.type === 'list') {
+            return (
+              <View key={index} style={styles.listContainer}>
+                {element.items.map((item, itemIndex) => (
+                  <View key={itemIndex} style={styles.listItem}>
+                    <Text style={styles.bullet}>
+                      {element.isOrdered ? `${itemIndex + 1}.` : '•'}
+                    </Text>
+                    <Text style={styles.listItemText}>{item}</Text>
+                  </View>
+                ))}
+              </View>
+            );
+          }
+          return null;
+        })}
+      </View>
     );
   };
 
@@ -530,6 +638,26 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
     color: Colors.textPrimary,
     lineHeight: Typography.sizes.md * 1.6,
+  },
+  listContainer: {
+    marginVertical: Responsive.spacing.sm,
+  },
+  listItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: Responsive.spacing.xs,
+  },
+  bullet: {
+    fontSize: Typography.sizes.md,
+    color: Colors.textPrimary,
+    marginRight: Responsive.spacing.sm,
+    lineHeight: Typography.sizes.md * 1.6,
+  },
+  listItemText: {
+    fontSize: Typography.sizes.md,
+    color: Colors.textPrimary,
+    lineHeight: Typography.sizes.md * 1.6,
+    flex: 1,
   },
   takeawaysCard: {
     ...CommonStyles.premiumCard,

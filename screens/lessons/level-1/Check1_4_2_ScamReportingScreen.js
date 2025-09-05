@@ -20,6 +20,7 @@ import { SCREEN_NAMES } from '../../../constants';
 import { AppStorage } from '../../../utils/storage';
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import { getCompletionMessage, getNextScreenName, getCompletionNavigation } from '../../../utils/completionMessages';
+import { CopywritingService } from '../../../utils/copywritingService';
 
 import InteractiveChecklist from '../../../components/validation-steps/InteractiveChecklist';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
@@ -32,6 +33,7 @@ const Check1_4_2_ScamReportingScreen = ({ navigation, route }) => {
   const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showLearnMore, setShowLearnMore] = useState(false);
 
   // ✅ CRITICAL: Proper error handling for initialization
   const initializeChecklistContent = async () => {
@@ -334,6 +336,29 @@ const Check1_4_2_ScamReportingScreen = ({ navigation, route }) => {
               Learn how to report scams and fraud to protect yourself and others. This guide will teach you the proper channels and procedures for reporting cybercrime.
             </Text>
           </View>
+
+          {/* Learn More Section */}
+          <TouchableOpacity
+            style={styles.learnMoreButton}
+            onPress={() => setShowLearnMore(!showLearnMore)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.learnMoreText}>Why is scam reporting important?</Text>
+            <Ionicons
+              name={showLearnMore ? 'chevron-up' : 'chevron-down'}
+              size={Responsive.iconSizes.medium}
+              color={Colors.accent}
+            />
+          </TouchableOpacity>
+
+          {showLearnMore && (
+            <View style={styles.learnMoreContent}>
+              <Text style={styles.learnMoreTitle}>Scam Reporting Benefits</Text>
+              <Text style={styles.learnMoreBody}>
+                Reporting scams isn't just about getting justice for yourself – it's about protecting your community and making the internet safer for everyone. When you report a scam, you're providing law enforcement with crucial information that helps them track down criminals and shut down their operations. Your report might be the missing piece that helps authorities identify patterns, locate the scammers, and prevent them from victimizing hundreds or thousands of other people. Think of it like reporting a dangerous pothole in your neighborhood – you're not just helping yourself, you're protecting everyone who uses that road. Scammers rely on victims staying silent out of embarrassment or thinking it won't make a difference, but every report matters. Even if you didn't lose money, reporting the attempt helps authorities understand how scammers are evolving their tactics and can lead to warnings that protect others. It's your chance to turn a negative experience into something positive for your community.
+              </Text>
+            </View>
+          )}
           
           {/* ✅ CRITICAL: Conditional rendering with fallback */}
           {!isLoading && checklistItems.length > 0 ? (
@@ -358,6 +383,28 @@ const Check1_4_2_ScamReportingScreen = ({ navigation, route }) => {
               </TouchableOpacity>
             </View>
           )}
+
+          {/* Security Best Practices */}
+          <View style={styles.tipsSection}>
+            <Text style={styles.tipsTitle}>🚨 Scam Reporting Best Practices</Text>
+            <View style={styles.tipItem}>
+              <Ionicons name="time" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Report scams immediately - the sooner you report, the better</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="document-text" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Save all evidence including emails, messages, and screenshots</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="people" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Report to multiple authorities for maximum impact</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="shield-checkmark" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Follow up on your reports and stay informed about progress</Text>
+            </View>
+          </View>
+
           {/* References Section */}
           <ReferencesSection references={getReferencesForCheck('1-4-2')} />
 
@@ -527,6 +574,59 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
     marginRight: Responsive.spacing.sm,
+  },
+  learnMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Responsive.padding.button,
+    marginBottom: Responsive.spacing.md,
+  },
+  learnMoreText: {
+    fontSize: Typography.sizes.md,
+    color: Colors.accent,
+    fontWeight: Typography.weights.semibold,
+  },
+  learnMoreContent: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  learnMoreTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.sm,
+  },
+  learnMoreBody: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    lineHeight: Typography.sizes.sm * 1.4,
+  },
+  tipsSection: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  tipsTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.md,
+  },
+  tipItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Responsive.spacing.sm,
+  },
+  tipText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    marginLeft: Responsive.spacing.sm,
+    flex: 1,
+    lineHeight: Typography.sizes.sm * 1.4,
   },
 });
 

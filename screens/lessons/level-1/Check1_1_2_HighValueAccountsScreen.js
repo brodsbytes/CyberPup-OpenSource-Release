@@ -22,6 +22,7 @@ import { DeviceCapabilities } from '../../../utils/deviceCapabilities';
 import { SettingsGuide } from '../../../utils/settingsGuide';
 import { AppStorage } from '../../../utils/storage';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
+import { CopywritingService } from '../../../utils/copywritingService';
 
 import TimelineDashboard from '../../../components/ui/TimelineDashboard';
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
@@ -36,6 +37,7 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
   const [showCompletionPopup, setShowCompletionPopup] = useState(false);
   const [deviceCompletionStatus, setDeviceCompletionStatus] = useState({});
   const [showExitModal, setShowExitModal] = useState(false);
+  const [showLearnMore, setShowLearnMore] = useState(false);
 
   // ✅ PRESERVE: Exact same initialization logic
   const initializeDeviceContent = async () => {
@@ -273,6 +275,9 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
     setShowCompletionPopup(true);
   };
 
+  // Get copywriting content for rendering
+  const copywritingContent = CopywritingService.getCheckContent('1-1-2');
+
 
 
   // Helper function to get device icon
@@ -421,13 +426,34 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
       <View style={styles.content}>
           {/* Title and Description */}
           <View style={styles.titleSection}>
-            <Text style={styles.title}>High-Value Account Security</Text>
+            <Text style={styles.title}>{copywritingContent.title || 'High-Value Account Security'}</Text>
         <Text style={styles.description}>
-              Secure your most important accounts with advanced protection. Follow this timeline to build comprehensive security for your banking, email, and critical accounts.
+              {copywritingContent.description || 'Secure your most important accounts with advanced protection. Follow this timeline to build comprehensive security for your banking, email, and critical accounts.'}
         </Text>
-        
-
       </View>
+
+      {/* Learn More Section */}
+      <TouchableOpacity
+        style={styles.learnMoreButton}
+        onPress={() => setShowLearnMore(!showLearnMore)}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.learnMoreText}>Why are high-value accounts important?</Text>
+        <Ionicons
+          name={showLearnMore ? 'chevron-up' : 'chevron-down'}
+          size={Responsive.iconSizes.medium}
+          color={Colors.accent}
+        />
+      </TouchableOpacity>
+
+      {showLearnMore && (
+        <View style={styles.learnMoreContent}>
+          <Text style={styles.learnMoreTitle}>High-Value Account Protection Benefits</Text>
+          <Text style={styles.learnMoreBody}>
+            High-value accounts are like the crown jewels of your digital life – they contain your most sensitive information and provide access to everything else. Your email account, for example, is often the key to resetting passwords for all your other accounts. If a hacker gets into your email, they can potentially access your bank accounts, social media, and even your work systems. Your cloud storage might contain years of personal photos, important documents, and private conversations. And your financial accounts? Well, those are literally your money. By securing these high-value accounts with extra protection like two-factor authentication and strong passwords, you're building a fortress around your most important digital assets. It's like having a security guard specifically for your most valuable possessions – the extra effort is worth it because the stakes are so high.
+          </Text>
+        </View>
+      )}
 
           {/* Account Security Timeline */}
           {userDevices.length > 0 && Object.keys(deviceActions).length > 0 ? (
@@ -455,6 +481,28 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
               </TouchableOpacity>
             </View>
           )}
+
+          {/* Security Best Practices */}
+          <View style={styles.tipsSection}>
+            <Text style={styles.tipsTitle}>🛡️ High-Value Account Best Practices</Text>
+            <View style={styles.tipItem}>
+              <Ionicons name="shield-checkmark" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Enable two-factor authentication on all critical accounts</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="key" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Use unique, strong passwords for each high-value account</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="notifications" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Enable security alerts and login notifications</Text>
+            </View>
+            <View style={styles.tipItem}>
+              <Ionicons name="refresh" size={Responsive.iconSizes.medium} color={Colors.accent} />
+              <Text style={styles.tipText}>Regularly review account activity and access logs</Text>
+            </View>
+          </View>
+
           {/* References Section */}
           <ReferencesSection references={getReferencesForCheck('1-1-2')} />
 
@@ -559,8 +607,59 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.medium,
     color: Colors.textPrimary,
   },
-
-
+  learnMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Responsive.padding.button,
+    marginBottom: Responsive.spacing.md,
+  },
+  learnMoreText: {
+    fontSize: Typography.sizes.md,
+    color: Colors.accent,
+    fontWeight: Typography.weights.semibold,
+  },
+  learnMoreContent: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  learnMoreTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.sm,
+  },
+  learnMoreBody: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    lineHeight: Typography.sizes.sm * 1.4,
+  },
+  tipsSection: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  tipsTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.md,
+  },
+  tipItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Responsive.spacing.sm,
+  },
+  tipText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    marginLeft: Responsive.spacing.sm,
+    flex: 1,
+    lineHeight: Typography.sizes.sm * 1.4,
+  },
 });
 
 export default Check1_1_2_HighValueAccountsScreen;

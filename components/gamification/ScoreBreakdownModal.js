@@ -54,8 +54,8 @@ const ScoreBreakdownModal = ({ visible, onClose, overallProgress }) => {
           let areaTotalChecks = 0;
 
           for (const check of area.checks) {
-            // Filter out placeholder checks that are "Coming Soon!"
-            if (check.title !== 'Coming Soon!') {
+            // Filter out placeholder checks that are "Coming Soon!" or have "Coming Soon!" in title
+            if (check.title !== 'Coming Soon!' && !check.title.includes('Coming Soon!')) {
               areaTotalChecks++;
               const progressKey = `check_${check.id}_completed`;
               const progressData = await AsyncStorage.getItem(progressKey);
