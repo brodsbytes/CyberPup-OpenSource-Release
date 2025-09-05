@@ -120,57 +120,97 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
     const settingsGuide = SettingsGuide.createGuidance('password-manager', device);
     const recommendedApps = settingsGuide.getRecommendedApps('password-manager');
 
+    // Get copywriting content for device actions
+    const copywritingContent = CopywritingService.getCheckContent('1-1-3');
+    const deviceActionsContent = copywritingContent.deviceActions || {};
+
     const actions = [
       {
-        id: `${device.id}-install`,
-        title: 'Install Password Manager App',
-        description: 'Download a secure password manager from your device\'s app store',
+        id: `${device.id}-choose-manager`,
+        title: deviceActionsContent.chooseManager?.title || 'Choose Your Password Manager',
+        description: deviceActionsContent.chooseManager?.description || 'Select and install a trusted password manager that fits your devices',
         completed: false,
-        steps: [
-          'Open your device\'s app store',
-          'Search for a password manager app',
-          'Install your chosen password manager',
-          'Create an account with the app'
+        steps: deviceActionsContent.chooseManager?.steps || [
+          'Check if your device has a built-in password manager (iCloud Keychain, Google Password Manager)',
+          'For built-in managers: Go to Settings → Passwords → turn on AutoFill',
+          'For third-party apps: Choose from Bitwarden (free), 1Password, or Dashlane',
+          'Download your chosen app from the official app store (Apple App Store or Google Play)',
+          'Open the app and create an account using your secure email address',
+          'Verify your email address through the confirmation link'
+        ],
+        tips: deviceActionsContent.chooseManager?.tips || [
+          'Built-in managers are secure and convenient for single-platform users',
+          'Bitwarden is open-source and offers excellent free features',
+          'Premium managers offer advanced features like security monitoring',
+          'Never download password managers from unknown websites'
         ],
         deepLink: recommendedApps.length > 0 ? recommendedApps[0].url : null,
-        verification: 'app_installed',
-        priority: 'high',
+        verification: 'manual',
+        priority: 'critical',
         apps: recommendedApps
       },
       {
-        id: `${device.id}-setup`,
-        title: 'Complete Initial Setup',
-        description: 'Set up your master password and security settings',
+        id: `${device.id}-create-master-password`,
+        title: deviceActionsContent.createMasterPassword?.title || 'Create an Unbreakable Master Password',
+        description: deviceActionsContent.createMasterPassword?.description || 'Set up the one password that protects all your others',
         completed: false,
-        steps: [
-          'Open your password manager app',
-          'Create a strong master password',
-          'Complete the security setup wizard',
-          'Import existing passwords if available'
+        steps: deviceActionsContent.createMasterPassword?.steps || [
+          'Create a passphrase using 4-6 random words (like "Coffee Mountain Bicycle Purple 47")',
+          'Make it at least 16 characters long with numbers and symbols',
+          'Practice typing it 5 times to ensure you can remember it',
+          'Write it down on paper and store it securely (delete digital copies)',
+          'Set up account recovery options (backup email, security questions)',
+          'Test your master password by logging out and back in'
+        ],
+        tips: deviceActionsContent.createMasterPassword?.tips || [
+          'This is the ONLY password you\'ll need to remember - make it count',
+          'Use a method: song lyrics, book quotes, or random word combinations',
+          'Never use personal information (names, birthdays, addresses)',
+          'Consider a physical backup stored in a safe place'
+        ],
+        verification: 'manual',
+        priority: 'critical'
+      },
+      {
+        id: `${device.id}-import-passwords`,
+        title: deviceActionsContent.importPasswords?.title || 'Import and Generate New Passwords',
+        description: deviceActionsContent.importPasswords?.description || 'Move your existing passwords and create new strong ones',
+        completed: false,
+        steps: deviceActionsContent.importPasswords?.steps || [
+          'Import existing passwords: look for "Import" or "Add passwords" in settings',
+          'Upload from browser (Chrome: Settings → Passwords → Export)',
+          'Add your most important accounts manually if import doesn\'t work',
+          'Generate new strong passwords for each account (use the "Generate" button)',
+          'Update weak passwords: let the app identify and replace weak ones',
+          'Verify all critical accounts are saved and working'
+        ],
+        tips: deviceActionsContent.importPasswords?.tips || [
+          'Start with your most important accounts (email, banking, work)',
+          'Use the password generator for maximum strength',
+          'Update passwords one at a time to avoid lockouts',
+          'Test each new password immediately after saving'
         ],
         verification: 'manual',
         priority: 'high'
       },
       {
-        id: `${device.id}-biometric`,
-        title: 'Enable Biometric Unlock',
-        description: 'Set up fingerprint or face recognition for quick access',
+        id: `${device.id}-enable-biometrics`,
+        title: deviceActionsContent.enableBiometrics?.title || 'Set Up Quick and Secure Access',
+        description: deviceActionsContent.enableBiometrics?.description || 'Enable biometric unlock and auto-fill for seamless security',
         completed: false,
-        steps: platform === 'ios' ? [
-          'Open your password manager app',
-          'Go to Settings or Security',
-          'Enable Face ID or Touch ID',
-          'Test the biometric unlock'
-        ] : platform === 'android' ? [
-          'Open your password manager app',
-          'Go to Settings or Security',
-          'Enable Fingerprint or Face unlock',
-          'Test the biometric unlock'
-        ] : [
-          'Open your password manager app',
-          'Go to Settings or Security',
-          'Enable biometric unlock if available',
-          'Test the unlock method'
+        steps: deviceActionsContent.enableBiometrics?.steps || [
+          'Enable biometric unlock: go to app Settings → Security → Enable Face ID/Touch ID/Fingerprint',
+          'Test biometric unlock by closing and reopening the app',
+          'Turn on auto-fill: Settings → AutoFill → Enable for this app',
+          'Test auto-fill by visiting a website and logging in',
+          'Enable sync across devices if you use multiple devices',
+          'Set up the mobile app if you started on desktop (or vice versa)'
+        ],
+        tips: deviceActionsContent.enableBiometrics?.tips || [
+          'Biometrics are convenient and secure for quick access',
+          'Auto-fill makes using strong passwords effortless',
+          'Sync keeps your passwords updated across all devices',
+          'Keep the app updated for the latest security features'
         ],
         verification: 'manual',
         priority: 'medium'
@@ -410,12 +450,7 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
             <View style={styles.learnMoreContent}>
               <Text style={styles.learnMoreTitle}>Password Manager Benefits</Text>
               <Text style={styles.learnMoreBody}>
-                • Generate strong, unique passwords automatically{'\n'}
-                • Store all passwords securely in one place{'\n'}
-                • Auto-fill passwords on websites and apps{'\n'}
-                • Sync across all your devices{'\n'}
-                • Protect against password reuse attacks{'\n'}
-                • Alert you to compromised passwords
+                Password managers automatically generate strong, unique passwords for every account and store them securely in one encrypted vault. They seamlessly auto-fill your passwords on websites and apps, sync across all your devices, and protect you from password reuse attacks. Many also monitor for compromised passwords and alert you when it's time to change them.
               </Text>
             </View>
           )}

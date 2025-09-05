@@ -568,7 +568,7 @@ const Check1_2_3_DeviceUpdatesScreen = ({ navigation, route }) => {
         <View style={styles.learnMoreContent}>
           <Text style={styles.learnMoreTitle}>Security Update Benefits</Text>
           <Text style={styles.learnMoreBody}>
-            Think of device updates as your digital immune system. Every day, security researchers discover new ways that hackers try to break into devices, and companies rush to create fixes called patches. When you keep your devices updated, you're essentially getting vaccinated against the latest digital threats. These updates don't just add new features – they close security holes that could let criminals access your photos, steal your passwords, or even take control of your device. It's like having a security guard who learns about new break-in techniques and immediately strengthens your defenses. The best part? Most updates happen automatically in the background, so you get protection without any effort.
+            Think of device updates as your digital immune system. Every day, security researchers discover new ways that hackers try to break into devices, and companies rush to create fixes called patches. When you keep your devices updated, you're essentially getting vaccinated against the latest digital threats. These updates don't just add new features - they close security holes that could let criminals access your photos, steal your passwords, or even take control of your device. It's like having a security guard who learns about new break-in techniques and immediately strengthens your defenses. The best part? Most updates happen automatically in the background, so you get protection without any effort.
           </Text>
         </View>
       )}

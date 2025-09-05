@@ -300,96 +300,95 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
     const platform = device.platform || device.tier2;
     const type = device.type;
 
+    // Get copywriting content for device actions
+    const copywritingContent = CopywritingService.getCheckContent('1-1-2');
+    const deviceActionsContent = copywritingContent.deviceActions || {};
+
     // Universal high-value account actions (not device-specific)
     deviceActionsList.push(
       {
-        id: `${device.id}-identify-high-value-accounts`,
-        title: 'Identify High-Value Accounts',
-        description: 'List your most important accounts that need extra protection.',
+        id: `${device.id}-identify-accounts`,
+        title: deviceActionsContent.identifyAccounts?.title || 'Identify Your High-Value Accounts',
+        description: deviceActionsContent.identifyAccounts?.description || 'Make a list of accounts that could cause serious problems if compromised',
         completed: false,
-        steps: [
-          'Banking and financial accounts',
-          'Email accounts (especially recovery emails)',
-          'Social media accounts',
-          'Cloud storage accounts',
-          'Work or business accounts'
+        steps: deviceActionsContent.identifyAccounts?.steps || [
+          'Write down your primary email address (this controls everything else)',
+          'List all banking and credit card accounts you access online',
+          'Add cloud storage accounts (Google Drive, iCloud, Dropbox, OneDrive)',
+          'Include work email and any business accounts you manage',
+          'Add social media accounts with large followings or sensitive content',
+          'Verify each account: ask "would losing this cause major problems?"'
         ],
-        tips: [
-          'Focus on accounts that could cause financial loss',
-          'Include accounts that control access to other services',
-          'Consider accounts with sensitive personal information'
+        tips: deviceActionsContent.identifyAccounts?.tips || [
+          'Your email account can reset passwords for all other accounts',
+          'Financial accounts pose immediate monetary risk if compromised',
+          'Cloud accounts often contain personal photos, documents, and backups',
+          'Work accounts can affect your employment and colleagues\' security'
         ]
       },
       {
-        id: `${device.id}-enable-2fa-banking`,
-        title: 'Enable 2FA on Banking Accounts',
-        description: 'Add two-factor authentication to all your financial accounts.',
+        id: `${device.id}-enable-email-mfa`,
+        title: deviceActionsContent.enableEmailMFA?.title || 'Secure Your Email Account First',
+        description: deviceActionsContent.enableEmailMFA?.description || 'Enable two-factor authentication on your primary email account',
         completed: false,
-        steps: [
-          'Log into your banking app or website',
-          'Navigate to Security or Account Settings',
-          'Look for "Two-Factor Authentication" or "2FA"',
-          'Enable SMS, app-based, or hardware key authentication',
-          'Test the setup with a small transaction'
+        steps: deviceActionsContent.enableEmailMFA?.steps || [
+          'Open your email provider (Gmail, Outlook, Yahoo, etc.) in a web browser',
+          'Go to Account Settings → Security (or search "two-factor authentication")',
+          'Click "Set up 2-step verification" or similar option',
+          'Choose authenticator app method (better than SMS)',
+          'Download Google Authenticator, Microsoft Authenticator, or Authy app',
+          'Scan the QR code with your authenticator app',
+          'Enter the 6-digit code to confirm setup',
+          'Download and save backup codes in a secure location',
+          'Test by logging out and logging back in'
         ],
-        tips: [
-          'Use app-based 2FA (like Google Authenticator) when possible',
-          'Keep backup codes in a secure location',
-          'Consider using a hardware security key for maximum protection'
+        tips: deviceActionsContent.enableEmailMFA?.tips || [
+          'Email 2FA protects all accounts since most use email for password recovery',
+          'Authenticator apps are more secure than SMS text messages',
+          'Save backup codes in a password manager or secure physical location',
+          'If you only secure one account, make it your email'
         ]
       },
       {
-        id: `${device.id}-enable-2fa-email`,
-        title: 'Enable 2FA on Email Accounts',
-        description: 'Secure your email accounts with two-factor authentication.',
+        id: `${device.id}-enable-banking-mfa`,
+        title: deviceActionsContent.enableBankingMFA?.title || 'Secure Banking and Financial Accounts',
+        description: deviceActionsContent.enableBankingMFA?.description || 'Add two-factor authentication to all accounts that handle your money',
         completed: false,
-        steps: [
-          'Log into your email provider (Gmail, Outlook, etc.)',
-          'Go to Account Settings or Security',
-          'Find "Two-Step Verification" or "2FA"',
-          'Enable authentication method of your choice',
-          'Verify setup with a test login'
+        steps: deviceActionsContent.enableBankingMFA?.steps || [
+          'Log into your bank\'s website or mobile app',
+          'Look for "Security Settings", "Account Security", or "Two-Factor Authentication"',
+          'Enable 2FA using your bank\'s preferred method (SMS, app, or calls)',
+          'Test the setup by logging out and back in',
+          'Repeat for credit cards, investment accounts, and payment services (PayPal, Venmo)',
+          'Enable account alerts for logins and transactions over $50',
+          'Set up low-balance alerts to catch unauthorized transfers quickly'
         ],
-        tips: [
-          'Email accounts are often used for password recovery',
-          'Secure these first before other accounts',
-          'Use app-based 2FA instead of SMS when possible'
+        tips: deviceActionsContent.enableBankingMFA?.tips || [
+          'Banks often use SMS 2FA - it\'s better than no 2FA at all',
+          'Enable email AND text alerts for maximum monitoring',
+          'Check account activity weekly, even if you get alerts',
+          'Report suspicious activity immediately to your bank\'s fraud line'
         ]
       },
       {
-        id: `${device.id}-review-recovery-options`,
-        title: 'Review Recovery Options',
-        description: 'Set up secure recovery methods for your high-value accounts.',
+        id: `${device.id}-secure-recovery`,
+        title: deviceActionsContent.secureRecovery?.title || 'Set Up Secure Account Recovery',
+        description: deviceActionsContent.secureRecovery?.description || 'Ensure you can recover accounts safely if locked out',
         completed: false,
-        steps: [
-          'Check recovery email addresses',
-          'Verify phone numbers for SMS recovery',
-          'Set up security questions with unique answers',
-          'Download backup codes if available',
-          'Store recovery information securely'
+        steps: deviceActionsContent.secureRecovery?.steps || [
+          'Review recovery email addresses for each high-value account',
+          'Use a separate, secure email for recovery (not your daily email)',
+          'Update phone numbers and remove old, unused numbers',
+          'Set up security questions with answers only you would know',
+          'Download backup codes for accounts that provide them',
+          'Store all recovery information in a password manager or secure location',
+          'Test recovery process: try "forgot password" to see what information is required'
         ],
-        tips: [
-          'Use different recovery emails for different accounts',
-          'Don\'t use easily guessable security questions',
-          'Keep backup codes in a password manager or secure location'
-        ]
-      },
-      {
-        id: `${device.id}-monitor-account-activity`,
-        title: 'Set Up Account Monitoring',
-        description: 'Enable notifications for suspicious account activity.',
-        completed: false,
-        steps: [
-          'Enable login notifications',
-          'Set up transaction alerts',
-          'Review recent account activity',
-          'Enable suspicious activity alerts',
-          'Check for unrecognized devices'
-        ],
-        tips: [
-          'Review account activity regularly',
-          'Report suspicious activity immediately',
-          'Keep contact information updated for alerts'
+        tips: deviceActionsContent.secureRecovery?.tips || [
+          'Use nonsensical but memorable answers to security questions ("favorite pet" = "BlueCoffee42")',
+          'A dedicated recovery email adds an extra layer of security',
+          'Backup codes are like master keys - store them very securely',
+          'Update recovery info whenever you change phone numbers or emails'
         ]
       }
     );
@@ -450,7 +449,7 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
         <View style={styles.learnMoreContent}>
           <Text style={styles.learnMoreTitle}>High-Value Account Protection Benefits</Text>
           <Text style={styles.learnMoreBody}>
-            High-value accounts are like the crown jewels of your digital life – they contain your most sensitive information and provide access to everything else. Your email account, for example, is often the key to resetting passwords for all your other accounts. If a hacker gets into your email, they can potentially access your bank accounts, social media, and even your work systems. Your cloud storage might contain years of personal photos, important documents, and private conversations. And your financial accounts? Well, those are literally your money. By securing these high-value accounts with extra protection like two-factor authentication and strong passwords, you're building a fortress around your most important digital assets. It's like having a security guard specifically for your most valuable possessions – the extra effort is worth it because the stakes are so high.
+            High-value accounts are like the crown jewels of your digital life - they contain your most sensitive information and provide access to everything else. Your email account, for example, is often the key to resetting passwords for all your other accounts. If a hacker gets into your email, they can potentially access your bank accounts, social media, and even your work systems. Your cloud storage might contain years of personal photos, important documents, and private conversations. And your financial accounts? Well, those are literally your money. By securing these high-value accounts with extra protection like two-factor authentication and strong passwords, you're building a fortress around your most important digital assets. It's like having a security guard specifically for your most valuable possessions - the extra effort is worth it because the stakes are so high.
           </Text>
         </View>
       )}

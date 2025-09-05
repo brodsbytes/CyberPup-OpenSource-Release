@@ -119,69 +119,100 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
     const settingsGuide = SettingsGuide.createGuidance('security', device);
     const authenticatorApps = SettingsGuide.getRecommendedApps('authenticator', platform);
 
+    // Get copywriting content for device actions
+    const copywritingContent = CopywritingService.getCheckContent('1-1-4');
+    const deviceActionsContent = copywritingContent.deviceActions || {};
+
     const actions = [
       {
-        id: `${device.id}-authenticator`,
-        title: 'Install Authenticator App',
-        description: 'Download a secure authenticator app for 2FA codes',
+        id: `${device.id}-setup-authenticator`,
+        title: deviceActionsContent.setupAuthenticator?.title || 'Set Up Authenticator App',
+        description: deviceActionsContent.setupAuthenticator?.description || 'Install and configure an authenticator app for secure 2FA codes',
         completed: false,
-        steps: [
-          'Open your device\'s app store',
-          'Search for an authenticator app',
-          'Install your chosen authenticator app',
-          'Open the app and complete setup'
+        steps: deviceActionsContent.setupAuthenticator?.steps || [
+          'Download Google Authenticator, Microsoft Authenticator, or Authy from your app store',
+          'Open the authenticator app and tap "Add account" or "+" button',
+          'Choose "Scan QR code" when setting up 2FA on websites',
+          'Test by setting up 2FA on a less critical account first (like Reddit or Discord)',
+          'Verify the 6-digit codes work by logging out and back in',
+          'Enable app backup/sync if available (Authy auto-syncs, others may need setup)'
+        ],
+        tips: deviceActionsContent.setupAuthenticator?.tips || [
+          'Google Authenticator is simple but doesn\'t sync across devices',
+          'Microsoft Authenticator syncs with your Microsoft account',
+          'Authy automatically syncs across devices and has backup features',
+          'Test each setup immediately to ensure codes work'
         ],
         deepLink: authenticatorApps.length > 0 ? authenticatorApps[0].url : null,
-        verification: 'app_installed',
-        priority: 'high',
+        verification: 'manual',
+        priority: 'critical',
         apps: authenticatorApps
       },
       {
-        id: `${device.id}-biometric`,
-        title: `Set Up ${platform === 'ios' ? 'Face ID/Touch ID' : platform === 'android' ? 'Biometric Unlock' : 'Windows Hello/Biometric'}`,
-        description: 'Enable biometric authentication for quick and secure access',
+        id: `${device.id}-enable-email-mfa`,
+        title: deviceActionsContent.enableEmailMFA?.title || 'Secure Your Email with MFA',
+        description: deviceActionsContent.enableEmailMFA?.description || 'Enable two-factor authentication on your primary email account',
         completed: false,
-        steps: platform === 'ios' ? [
-          'Open Settings',
-          'Tap "Face ID & Passcode" (or "Touch ID & Passcode")',
-          'Enter your passcode',
-          'Set up Face ID or Touch ID if not already done',
-          'Enable Face ID/Touch ID for apps that support it'
-        ] : platform === 'android' ? [
-          'Open Settings',
-          'Tap "Security" or "Biometrics"',
-          'Tap "Fingerprint" or "Face unlock"',
-          'Follow setup instructions',
-          'Enable biometric unlock for apps'
-        ] : platform === 'windows' ? [
-          'Press Windows key + I to open Settings',
-          'Click "Accounts"',
-          'Click "Sign-in options"',
-          'Set up Windows Hello (Face, Fingerprint, or PIN)',
-          'Test the biometric authentication'
-        ] : [
-          'Open System Preferences/Settings',
-          'Navigate to Security settings',
-          'Look for biometric authentication options',
-          'Set up available biometric methods',
-          'Test the authentication'
+        steps: deviceActionsContent.enableEmailMFA?.steps || [
+          'Log into your email (Gmail, Outlook, Yahoo, etc.) on a computer',
+          'Go to Account Settings → Security (search for "2-step verification")',
+          'Click "Turn on 2-step verification" or similar',
+          'Choose "Authenticator app" method (not SMS)',
+          'Open your authenticator app and scan the QR code shown',
+          'Enter the 6-digit code to confirm setup',
+          'Download and securely save the backup codes provided',
+          'Test by logging out and back in using your phone for the code'
         ],
-        deepLink: platform === 'ios' ? 'App-Prefs:PASSCODE' : 
-                 platform === 'android' ? 'android.settings.FINGERPRINT_ENROLL' : null,
+        tips: deviceActionsContent.enableEmailMFA?.tips || [
+          'Email is the master key - secure this first above all others',
+          'Use authenticator apps instead of SMS to prevent SIM swapping',
+          'Print backup codes and store them in a safe place',
+          'Set up 2FA on your recovery email address too'
+        ],
         verification: 'manual',
-        priority: 'high'
+        priority: 'critical'
       },
       {
-        id: `${device.id}-enable-mfa`,
-        title: 'Enable MFA on Important Accounts',
-        description: 'Turn on 2FA for your banking, email, and social media accounts',
+        id: `${device.id}-enable-banking-mfa`,
+        title: deviceActionsContent.enableBankingMFA?.title || 'Secure Your Financial Accounts',
+        description: deviceActionsContent.enableBankingMFA?.description || 'Add MFA to all accounts that handle your money',
         completed: false,
-        steps: [
-          'Open your banking app or website',
-          'Go to Security or Account settings',
-          'Look for "Two-Factor Authentication" or "2FA"',
-          'Choose authenticator app or biometric method',
-          'Repeat for email, social media, and other important accounts'
+        steps: deviceActionsContent.enableBankingMFA?.steps || [
+          'Log into your bank\'s website or app',
+          'Look for "Security Settings", "Two-Factor Authentication", or "Additional Security"',
+          'Enable the strongest option available (app > SMS > calls)',
+          'If only SMS is available, enable it (better than nothing)',
+          'Test the setup by logging out and back in',
+          'Repeat for credit cards, investment accounts, and payment apps (PayPal, Venmo)',
+          'Enable account alerts for all login attempts and transactions'
+        ],
+        tips: deviceActionsContent.enableBankingMFA?.tips || [
+          'Banks often use SMS 2FA - accept this as it\'s still much better than passwords alone',
+          'Enable both login alerts and transaction notifications',
+          'Some banks offer hardware tokens - these are the most secure option',
+          'Report any unrecognized login alerts immediately'
+        ],
+        verification: 'manual',
+        priority: 'critical'
+      },
+      {
+        id: `${device.id}-enable-critical-mfa`,
+        title: deviceActionsContent.enableCriticalMFA?.title || 'Secure All Critical Accounts',
+        description: deviceActionsContent.enableCriticalMFA?.description || 'Enable MFA on cloud storage, social media, and work accounts',
+        completed: false,
+        steps: deviceActionsContent.enableCriticalMFA?.steps || [
+          'Cloud storage: Enable 2FA on Google Drive, iCloud, Dropbox, OneDrive',
+          'Social media: Enable 2FA on Facebook, Instagram, Twitter, LinkedIn',
+          'Work accounts: Enable 2FA on work email, Microsoft 365, Google Workspace',
+          'Shopping: Enable 2FA on Amazon, PayPal, and frequent shopping sites',
+          'For each account: use authenticator app method when available',
+          'Save backup codes for each account in your password manager'
+        ],
+        tips: deviceActionsContent.enableCriticalMFA?.tips || [
+          'Prioritize accounts that store personal data or have many contacts',
+          'Social media accounts are often targeted for scamming your contacts',
+          'Work accounts protect both personal and company information',
+          'Some services offer backup methods - enable multiple when available'
         ],
         verification: 'manual',
         priority: 'high'
@@ -418,12 +449,7 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
             <View style={styles.learnMoreContent}>
               <Text style={styles.learnMoreTitle}>Multi-Factor Authentication Benefits</Text>
               <Text style={styles.learnMoreBody}>
-                • Blocks 99.9% of automated attacks{'\n'}
-                • Protects even if passwords are compromised{'\n'}
-                • Works with banking, email, and social media{'\n'}
-                • Quick access with biometric verification{'\n'}
-                • Peace of mind knowing accounts are secure{'\n'}
-                • Required by many security frameworks
+                Multi-factor authentication blocks 99.9% of automated attacks and protects your accounts even if passwords are compromised. It works seamlessly with banking, email, and social media platforms, providing quick access through biometric verification while giving you peace of mind that your accounts are secure. Many security frameworks now require MFA as a standard protection measure.
               </Text>
             </View>
           )}

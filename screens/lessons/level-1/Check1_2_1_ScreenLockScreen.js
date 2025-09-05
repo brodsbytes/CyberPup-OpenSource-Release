@@ -122,42 +122,51 @@ const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
     const settingsGuide = SettingsGuide.createGuidance('security', device);
     const deviceContent = DeviceCapabilities.getDeviceContent('screen-lock', platform);
 
+    // Get copywriting content for device actions
+    const copywritingContent = CopywritingService.getCheckContent('1-2-1');
+    const deviceActionsContent = copywritingContent.deviceActions || {};
+
     const actions = [
       {
         id: `${device.id}-enable-lock`,
-        title: 'Enable Screen Lock',
-        description: 'Set up a secure screen lock (PIN, password, pattern, or biometric)',
+        title: deviceActionsContent.enableScreenLock?.title || 'Set Up Screen Lock',
+        description: deviceActionsContent.enableScreenLock?.description || 'Configure a secure lock method to protect your device when not in use',
         completed: false,
-        steps: deviceContent?.steps || [
-          'Open Settings',
-          'Navigate to Security settings',
-          'Set up screen lock method',
-          'Choose a strong PIN or password'
+        steps: deviceActionsContent.enableScreenLock?.steps || [
+          'Open your device Settings app',
+          'Look for "Security", "Lock Screen", or "Face ID & Passcode" (iOS)',
+          'Choose your lock method: PIN (6+ digits), Password, Pattern, or Biometric',
+          'For PINs: avoid obvious numbers (123456, birthdays, repeated digits)',
+          'For passwords: use something memorable but not easily guessed',
+          'Test your lock by turning off the screen and unlocking it'
+        ],
+        tips: deviceActionsContent.enableScreenLock?.tips || [
+          'Biometric locks (fingerprint/face) are convenient and secure',
+          'A 6-digit PIN is much more secure than 4 digits',
+          'Pattern locks can be seen through screen smudges - clean your screen',
+          'Don\'t use personal information (birthdates, addresses) for lock codes'
         ],
         deepLink: deviceContent?.deepLink || settingsGuide.deepLink.url,
         verification: 'settings_check',
-        priority: 'high'
+        priority: 'critical'
       },
       {
         id: `${device.id}-auto-lock`,
-        title: 'Configure Auto-Lock Timer',
-        description: 'Set device to lock automatically after a short period of inactivity',
+        title: deviceActionsContent.configureAutoLock?.title || 'Set Up Auto-Lock Timer',
+        description: deviceActionsContent.configureAutoLock?.description || 'Make your device lock automatically after a short period of inactivity',
         completed: false,
-        steps: platform === 'ios' ? [
-          'Open Settings',
-          'Tap Face ID & Passcode (or Touch ID & Passcode)',
-          'Tap Auto-Lock',
-          'Select "30 seconds" or "1 minute"'
-        ] : platform === 'android' ? [
-          'Open Settings',
-          'Tap Security & Privacy',
-          'Tap Screen Lock',
-          'Set Auto-lock to 30 seconds or 1 minute'
-        ] : [
-          'Open Settings or System Preferences',
-          'Navigate to security settings',
-          'Find sleep/lock timer settings',
-          'Set to lock after 1-5 minutes of inactivity'
+        steps: deviceActionsContent.configureAutoLock?.steps || [
+          'In Settings, find "Display", "Screen timeout", or "Auto-Lock"',
+          'Set the timer to 30 seconds or 1 minute (maximum security)',
+          'If using for work, 2-3 minutes may be acceptable for productivity',
+          'Test by leaving your device idle and confirming it locks automatically',
+          'Adjust if needed - balance security with your usage patterns'
+        ],
+        tips: deviceActionsContent.configureAutoLock?.tips || [
+          'Shorter auto-lock times mean better security',
+          'If you forget to lock manually, auto-lock is your safety net',
+          'Battery life impact is minimal with modern devices',
+          'Consider longer timeouts only if you\'re in a secure, private location'
         ],
         deepLink: deviceContent?.deepLink,
         verification: 'settings_check',
@@ -446,7 +455,7 @@ const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
             <View style={styles.learnMoreContent}>
               <Text style={styles.learnMoreTitle}>Screen Lock Security Benefits</Text>
               <Text style={styles.learnMoreBody}>
-                Screen locks are like the front door to your digital home – without one, anyone can walk right in and help themselves to everything inside. Your phone contains your entire life: photos of your family, private messages, banking apps, work emails, and personal documents. When you leave your device unlocked, you're essentially leaving your house with the door wide open and a sign saying "help yourself." A screen lock acts as your digital bouncer, keeping out nosy coworkers, curious strangers, and potential thieves. It's especially crucial for banking and financial apps, which often require screen locks as a basic security requirement. Plus, if your device ever gets stolen, a screen lock gives you time to remotely wipe your data before thieves can access it. It's a simple step that provides massive protection for everything you hold dear on your device.
+                Screen locks are like the front door to your digital home - without one, anyone can walk right in and help themselves to everything inside. Your phone contains your entire life: photos of your family, private messages, banking apps, work emails, and personal documents. When you leave your device unlocked, you're essentially leaving your house with the door wide open and a sign saying "help yourself." A screen lock acts as your digital bouncer, keeping out nosy coworkers, curious strangers, and potential thieves. It's especially crucial for banking and financial apps, which often require screen locks as a basic security requirement. Plus, if your device ever gets stolen, a screen lock gives you time to remotely wipe your data before thieves can access it. It's a simple step that provides massive protection for everything you hold dear on your device.
               </Text>
             </View>
           )}

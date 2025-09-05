@@ -46,118 +46,66 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
       
       const enhancedPasswordItems = [
         {
-          id: 'password-length',
-          title: checklistContent.length?.title || 'Use 12+ Characters',
-          description: checklistContent.length?.description || 'Create passwords with at least 12 characters for better security',
+          id: 'create-strong',
+          title: checklistContent.createStrong?.title || 'Create Strong Passphrases',
+          description: checklistContent.createStrong?.description || 'Build 12+ character passwords using memorable phrases or random words',
           completed: false,
-          priority: 'high',
-          category: 'password-strength',
-          tips: checklistContent.length?.tips || [
-            'Longer passwords are exponentially harder to crack',
-            'Aim for 12-16 characters minimum',
-            'Consider using passphrases for easier memorization'
+          priority: 'critical',
+          category: 'password-creation',
+          tips: checklistContent.createStrong?.tips || [
+            'Example: "Coffee#Bicycle&Mountain4" is both strong and memorable',
+            'Use 4+ random words with symbols between them',
+            'Longer beats complex - "my dog loves tennis balls!" is stronger than "P@ssw0rd1"',
+            'Avoid common phrases or song lyrics that others might guess'
           ],
-          steps: checklistContent.length?.steps || [
-            'Count your current password length',
-            'Add more characters if under 12',
-            'Consider using a memorable phrase'
+          steps: checklistContent.createStrong?.steps || [
+            'Choose 3-4 random, unrelated words (like "purple", "keyboard", "sandwich")',
+            'Add numbers and symbols between words (like "Purple7Keyboard&Sandwich!")',
+            'Test length: count characters to ensure 12+ total',
+            'Verify uniqueness: confirm this exact password isn\'t used anywhere else',
+            'Practice typing it 3 times to ensure you can remember it'
           ]
         },
         {
-          id: 'password-complexity',
-          title: checklistContent.complexity?.title || 'Include Mixed Characters',
-          description: checklistContent.complexity?.description || 'Use uppercase, lowercase, numbers, and special characters',
+          id: 'avoid-weak',
+          title: checklistContent.avoidWeak?.title || 'Avoid Weak Password Patterns',
+          description: checklistContent.avoidWeak?.description || 'Stay away from easily guessable passwords and personal information',
           completed: false,
           priority: 'high',
-          category: 'password-strength',
-          tips: checklistContent.complexity?.tips || [
-            'Mix uppercase and lowercase letters',
-            'Include numbers (0-9)',
-            'Add special characters (!@#$%^&*)',
-            'Avoid predictable patterns'
+          category: 'password-security',
+          tips: checklistContent.avoidWeak?.tips || [
+            'Never use birthdays, names, addresses, or phone numbers',
+            'Avoid common patterns like "123456" or "qwerty"',
+            'Don\'t use single words found in dictionaries',
+            'Reject passwords with obvious substitutions like "P@ssword"'
           ],
-          steps: checklistContent.complexity?.steps || [
-            'Check if your password has uppercase letters',
-            'Check if your password has lowercase letters', 
-            'Check if your password has numbers',
-            'Check if your password has special characters'
+          steps: checklistContent.avoidWeak?.steps || [
+            'Check existing passwords for personal information (name, birthday, pet names)',
+            'Look for sequential patterns (123456, abcdef, qwerty)',
+            'Identify dictionary words or common phrases in current passwords',
+            'Replace any weak passwords immediately with strong passphrases',
+            'Test new passwords: ask yourself "could someone who knows me guess this?"'
           ]
         },
         {
-          id: 'password-uniqueness',
-          title: 'Unique for Each Account',
-          description: 'Never reuse passwords across different accounts',
+          id: 'unique-everywhere',
+          title: checklistContent.uniqueEverywhere?.title || 'Use Unique Passwords Everywhere',
+          description: checklistContent.uniqueEverywhere?.description || 'Every account gets its own password - no exceptions',
           completed: false,
           priority: 'critical',
           category: 'password-security',
-          tips: [
-            'Each account should have a completely different password',
-            'If one account is compromised, others remain safe',
-            'Consider using a password manager to generate unique passwords'
+          tips: checklistContent.uniqueEverywhere?.tips || [
+            'If one account is breached, unique passwords keep others safe',
+            'Password managers make unique passwords effortless to manage',
+            'Even similar accounts (work email vs personal email) need different passwords',
+            'This single habit prevents 81% of security breaches'
           ],
-          steps: [
-            'List all your important accounts',
-            'Verify each has a unique password',
-            'Change any reused passwords immediately'
-          ]
-        },
-        {
-          id: 'password-avoidance',
-          title: 'Avoid Common Patterns',
-          description: 'Don\'t use personal information or common patterns',
-          completed: false,
-          priority: 'medium',
-          category: 'password-security',
-          tips: [
-            'Avoid birthdays, names, or addresses',
-            'Don\'t use sequential numbers (123456)',
-            'Avoid keyboard patterns (qwerty)',
-            'Don\'t use common words or phrases'
-          ],
-          steps: [
-            'Check if your password contains personal info',
-            'Avoid common sequences and patterns',
-            'Use random or pseudo-random combinations'
-          ]
-        },
-        {
-          id: 'password-storage',
-          title: 'Secure Password Storage',
-          description: 'Store passwords securely, not in plain text files',
-          completed: false,
-          priority: 'high',
-          category: 'password-management',
-          tips: [
-            'Use a reputable password manager',
-            'Never store passwords in text files or notes',
-            'Avoid writing passwords on paper',
-            'Enable two-factor authentication where possible'
-          ],
-          steps: [
-            'Choose a password manager (Bitwarden, 1Password, etc.)',
-            'Import your existing passwords',
-            'Generate new strong passwords for each account',
-            'Enable 2FA on your password manager'
-          ]
-        },
-        {
-          id: 'password-rotation',
-          title: 'Regular Password Updates',
-          description: 'Update passwords regularly, especially for critical accounts',
-          completed: false,
-          priority: 'medium',
-          category: 'password-management',
-          tips: [
-            'Update banking and email passwords every 3-6 months',
-            'Change passwords immediately after security incidents',
-            'Use password managers to track when passwords were last changed',
-            'Consider using passphrases for easier updates'
-          ],
-          steps: [
-            'Identify your most critical accounts (banking, email)',
-            'Set reminders for password updates',
-            'Update passwords for accounts over 6 months old',
-            'Enable security notifications where available'
+          steps: checklistContent.uniqueEverywhere?.steps || [
+            'List your most important accounts (email, banking, social media, work)',
+            'Check each account for password reuse by comparing them mentally',
+            'Identify any shared passwords and mark accounts for updating',
+            'Create new unique passphrases for accounts sharing passwords',
+            'Verify uniqueness: write down the first 3 characters of each new password to confirm no duplicates'
           ]
         }
       ];
@@ -313,7 +261,7 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
             <View style={styles.learnMoreContent}>
               <Text style={styles.learnMoreTitle}>Password Security Benefits</Text>
               <Text style={styles.learnMoreBody}>
-                Strong passwords are your first line of defense in the digital world. Think of them as the locks on your house – weak locks make it easy for burglars to break in, while strong locks keep your valuables safe. When you use simple passwords like "123456" or "password," you're essentially leaving your digital doors wide open. Hackers use automated tools that can try thousands of password combinations in seconds, and weak passwords are cracked almost instantly. A strong password, on the other hand, is like having a high-security lock that would take years to break. This protects everything from your bank accounts and social media to your work email and personal photos. Plus, strong passwords prevent "credential stuffing" attacks, where hackers use stolen passwords from one site to break into your other accounts. It's a small effort that provides massive protection for your entire digital life.
+                Strong passwords are your first line of defense in the digital world. Think of them as the locks on your house - weak locks make it easy for burglars to break in, while strong locks keep your valuables safe. When you use simple passwords like "123456" or "password," you're essentially leaving your digital doors wide open. Hackers use automated tools that can try thousands of password combinations in seconds, and weak passwords are cracked almost instantly. A strong password, on the other hand, is like having a high-security lock that would take years to break. This protects everything from your bank accounts and social media to your work email and personal photos. Plus, strong passwords prevent "credential stuffing" attacks, where hackers use stolen passwords from one site to break into your other accounts. It's a small effort that provides massive protection for your entire digital life.
               </Text>
             </View>
           )}

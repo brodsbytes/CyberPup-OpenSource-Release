@@ -58,10 +58,10 @@ export const REFERENCES = {
       url: "https://haveibeenpwned.com/"
     },
     {
-      title: "Data Breach Response Guide",
-      source: "Federal Trade Commission (FTC)",
-      description: "Official guidance on responding to data breaches and identity theft",
-      url: "https://www.identitytheft.gov/"
+      title: "XposedOrNot",
+      source: "XposedOrNot Community Edition",
+      description: "Free service to check if your email has been exposed in data breaches with comprehensive breach details and security insights",
+      url: "https://xposedornot.com/"
     }
   ],
   
