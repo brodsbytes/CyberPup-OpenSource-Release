@@ -43,67 +43,52 @@ const StickyGamificationBar = ({
 
   const loadActiveLevel = async () => {
     try {
-      // Helper to compute if a check is completed
-      const getCheckStatus = async (check) => {
-        const progressKey = `check_${check.id}_completed`;
-        const progressData = await AsyncStorage.getItem(progressKey);
-        return progressData === 'completed';
-      };
-
-      // Load all levels with progress
-      const levelsWithProgress = await Promise.all(
-        levels.map(async (level) => {
-          const areas = getAreasByLevel(level.id);
-          const areasWithProgress = await Promise.all(
-            areas.map(async (area) => {
-              const checks = area.checks || [];
-              let completedChecks = 0;
-              
-              for (const check of checks) {
-                // Filter out placeholder checks that are "Coming Soon!" or have "Coming Soon!" in title
-                if (check.title !== 'Coming Soon!' && !check.title.includes('Coming Soon!')) {
-                  const isCompleted = await getCheckStatus(check);
-                  if (isCompleted) {
-                    completedChecks++;
-                  }
-                }
-              }
-              
-              // Count only non-placeholder checks for total
-              const totalChecks = checks.filter(check => 
-                check.title !== 'Coming Soon!' && !check.title.includes('Coming Soon!')
-              ).length;
-              
-              return {
-                ...area,
-                completedChecks,
-                totalChecks
-              };
-            })
-          );
-          
-          return {
-            ...level,
-            areas: areasWithProgress
-          };
-        })
-      );
+      // Get all check completion data in parallel
+      const allChecks = getAllChecks();
+      const progressKeys = allChecks.map(check => `check_${check.id}_completed`);
+      const progressData = await AsyncStorage.multiGet(progressKeys);
+      
+      // Create completion map for quick lookup
+      const completionMap = new Map();
+      progressData.forEach(([key, value]) => {
+        const checkId = key.replace('check_', '').replace('_completed', '');
+        completionMap.set(checkId, value === 'completed');
+      });
 
       // Find the first level that is not fully complete
       let activeLevel = null;
-      for (const level of levelsWithProgress) {
-        const totalChecks = level.areas.reduce((sum, area) => sum + area.totalChecks, 0);
-        const completedChecks = level.areas.reduce((sum, area) => sum + area.completedChecks, 0);
+      for (const level of levels) {
+        const areas = getAreasByLevel(level.id);
+        let allComplete = true;
         
-        if (completedChecks < totalChecks) {
+        for (const area of areas) {
+          let completedChecks = 0;
+          let totalChecks = 0;
+          
+          for (const check of area.checks) {
+            if (check.title !== 'Coming Soon!' && !check.title.includes('Coming Soon!')) {
+              totalChecks++;
+              if (completionMap.get(check.id)) {
+                completedChecks++;
+              }
+            }
+          }
+          
+          if (completedChecks < totalChecks) {
+            allComplete = false;
+            break;
+          }
+        }
+        
+        if (!allComplete) {
           activeLevel = level;
           break;
         }
       }
 
       // If all levels are complete, use the last level
-      if (!activeLevel && levelsWithProgress.length > 0) {
-        activeLevel = levelsWithProgress[levelsWithProgress.length - 1];
+      if (!activeLevel && levels.length > 0) {
+        activeLevel = levels[levels.length - 1];
       }
 
       setCurrentActiveLevel(activeLevel);

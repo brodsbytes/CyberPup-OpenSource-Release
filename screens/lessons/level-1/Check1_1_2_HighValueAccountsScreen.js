@@ -39,30 +39,11 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
   const [showExitModal, setShowExitModal] = useState(false);
   const [showLearnMore, setShowLearnMore] = useState(false);
 
-  // ✅ PRESERVE: Exact same initialization logic
+  // ✅ PRESERVE: Exact same initialization logic with smart deduplication
   const initializeDeviceContent = async () => {
     try {
-      const devices = await DeviceCapabilities.getUserDevices();
-      const currentDevice = DeviceCapabilities.getCurrentDevice();
-      
-      let allDevices = [...devices];
-      const hasCurrentDevice = devices.some(d => 
-        d.platform === currentDevice.platform && d.type === currentDevice.type
-      );
-      
-      if (!hasCurrentDevice) {
-        allDevices.unshift({
-          id: 'current-device',
-          name: currentDevice.type,
-          type: currentDevice.platform === 'ios' || currentDevice.platform === 'android' ? 'mobile' : 'computer',
-          platform: currentDevice.platform,
-          tier2: currentDevice.platform,
-          autoDetected: true,
-          supportsDeepLinks: currentDevice.supportsDeepLinks,
-          icon: getDeviceIcon(currentDevice)
-        });
-      }
-
+      // Use the new smart deduplication method to prevent device duplicates
+      const allDevices = await DeviceCapabilities.getUserDevicesWithCurrentDevice();
       setUserDevices(allDevices);
 
       // Only create new actions if we don't have existing progress
@@ -303,15 +284,26 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
     // Get copywriting content for device actions
     const copywritingContent = CopywritingService.getCheckContent('1-1-2');
     const deviceActionsContent = copywritingContent.deviceActions || {};
+    
+    // Ensure all content is properly formatted as strings
+    const safeGetString = (obj, key, fallback = '') => {
+      const value = obj?.[key];
+      if (typeof value === 'string') return value;
+      if (typeof value === 'object' && value !== null) {
+        console.warn(`Expected string for ${key}, got object:`, value);
+        return fallback;
+      }
+      return fallback;
+    };
 
     // Universal high-value account actions (not device-specific)
     deviceActionsList.push(
       {
         id: `${device.id}-identify-accounts`,
-        title: deviceActionsContent.identifyAccounts?.title || 'Identify Your High-Value Accounts',
-        description: deviceActionsContent.identifyAccounts?.description || 'Make a list of accounts that could cause serious problems if compromised',
+        title: safeGetString(deviceActionsContent.identifyAccounts, 'title', 'Identify Your High-Value Accounts'),
+        description: safeGetString(deviceActionsContent.identifyAccounts, 'description', 'Make a list of accounts that could cause serious problems if compromised'),
         completed: false,
-        steps: deviceActionsContent.identifyAccounts?.steps || [
+        steps: Array.isArray(deviceActionsContent.identifyAccounts?.steps) ? deviceActionsContent.identifyAccounts.steps : [
           'Write down your primary email address (this controls everything else)',
           'List all banking and credit card accounts you access online',
           'Add cloud storage accounts (Google Drive, iCloud, Dropbox, OneDrive)',
@@ -319,7 +311,7 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
           'Add social media accounts with large followings or sensitive content',
           'Verify each account: ask "would losing this cause major problems?"'
         ],
-        tips: deviceActionsContent.identifyAccounts?.tips || [
+        tips: Array.isArray(deviceActionsContent.identifyAccounts?.tips) ? deviceActionsContent.identifyAccounts.tips : [
           'Your email account can reset passwords for all other accounts',
           'Financial accounts pose immediate monetary risk if compromised',
           'Cloud accounts often contain personal photos, documents, and backups',
@@ -328,10 +320,10 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
       },
       {
         id: `${device.id}-enable-email-mfa`,
-        title: deviceActionsContent.enableEmailMFA?.title || 'Secure Your Email Account First',
-        description: deviceActionsContent.enableEmailMFA?.description || 'Enable two-factor authentication on your primary email account',
+        title: safeGetString(deviceActionsContent.enableEmailMFA, 'title', 'Secure Your Email Account First'),
+        description: safeGetString(deviceActionsContent.enableEmailMFA, 'description', 'Enable two-factor authentication on your primary email account'),
         completed: false,
-        steps: deviceActionsContent.enableEmailMFA?.steps || [
+        steps: Array.isArray(deviceActionsContent.enableEmailMFA?.steps) ? deviceActionsContent.enableEmailMFA.steps : [
           'Open your email provider (Gmail, Outlook, Yahoo, etc.) in a web browser',
           'Go to Account Settings → Security (or search "two-factor authentication")',
           'Click "Set up 2-step verification" or similar option',
@@ -342,7 +334,7 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
           'Download and save backup codes in a secure location',
           'Test by logging out and logging back in'
         ],
-        tips: deviceActionsContent.enableEmailMFA?.tips || [
+        tips: Array.isArray(deviceActionsContent.enableEmailMFA?.tips) ? deviceActionsContent.enableEmailMFA.tips : [
           'Email 2FA protects all accounts since most use email for password recovery',
           'Authenticator apps are more secure than SMS text messages',
           'Save backup codes in a password manager or secure physical location',
@@ -351,10 +343,10 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
       },
       {
         id: `${device.id}-enable-banking-mfa`,
-        title: deviceActionsContent.enableBankingMFA?.title || 'Secure Banking and Financial Accounts',
-        description: deviceActionsContent.enableBankingMFA?.description || 'Add two-factor authentication to all accounts that handle your money',
+        title: safeGetString(deviceActionsContent.enableBankingMFA, 'title', 'Secure Banking and Financial Accounts'),
+        description: safeGetString(deviceActionsContent.enableBankingMFA, 'description', 'Add two-factor authentication to all accounts that handle your money'),
         completed: false,
-        steps: deviceActionsContent.enableBankingMFA?.steps || [
+        steps: Array.isArray(deviceActionsContent.enableBankingMFA?.steps) ? deviceActionsContent.enableBankingMFA.steps : [
           'Log into your bank\'s website or mobile app',
           'Look for "Security Settings", "Account Security", or "Two-Factor Authentication"',
           'Enable 2FA using your bank\'s preferred method (SMS, app, or calls)',
@@ -363,7 +355,7 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
           'Enable account alerts for logins and transactions over $50',
           'Set up low-balance alerts to catch unauthorized transfers quickly'
         ],
-        tips: deviceActionsContent.enableBankingMFA?.tips || [
+        tips: Array.isArray(deviceActionsContent.enableBankingMFA?.tips) ? deviceActionsContent.enableBankingMFA.tips : [
           'Banks often use SMS 2FA - it\'s better than no 2FA at all',
           'Enable email AND text alerts for maximum monitoring',
           'Check account activity weekly, even if you get alerts',
@@ -372,10 +364,10 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
       },
       {
         id: `${device.id}-secure-recovery`,
-        title: deviceActionsContent.secureRecovery?.title || 'Set Up Secure Account Recovery',
-        description: deviceActionsContent.secureRecovery?.description || 'Ensure you can recover accounts safely if locked out',
+        title: safeGetString(deviceActionsContent.secureRecovery, 'title', 'Set Up Secure Account Recovery'),
+        description: safeGetString(deviceActionsContent.secureRecovery, 'description', 'Ensure you can recover accounts safely if locked out'),
         completed: false,
-        steps: deviceActionsContent.secureRecovery?.steps || [
+        steps: Array.isArray(deviceActionsContent.secureRecovery?.steps) ? deviceActionsContent.secureRecovery.steps : [
           'Review recovery email addresses for each high-value account',
           'Use a separate, secure email for recovery (not your daily email)',
           'Update phone numbers and remove old, unused numbers',
@@ -384,7 +376,7 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
           'Store all recovery information in a password manager or secure location',
           'Test recovery process: try "forgot password" to see what information is required'
         ],
-        tips: deviceActionsContent.secureRecovery?.tips || [
+        tips: Array.isArray(deviceActionsContent.secureRecovery?.tips) ? deviceActionsContent.secureRecovery.tips : [
           'Use nonsensical but memorable answers to security questions ("favorite pet" = "BlueCoffee42")',
           'A dedicated recovery email adds an extra layer of security',
           'Backup codes are like master keys - store them very securely',

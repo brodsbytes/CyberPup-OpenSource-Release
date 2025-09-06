@@ -8,24 +8,30 @@ export class LocationUtils {
   // Get user's country with multiple detection methods
   static async getUserCountry() {
     try {
+      console.log('🌍 LocationUtils: Starting country detection...');
+      
       // First, check if user has manually set their country
       const userPreference = await StorageUtils.getItem(USER_COUNTRY_KEY);
       if (userPreference) {
+        console.log(`📍 LocationUtils: Found user preference: ${userPreference}`);
         return userPreference;
       }
 
       // Then try to detect from device locale
+      console.log('🔍 LocationUtils: Detecting from device locale...');
       const deviceCountry = this.getCountryFromLocale();
       if (deviceCountry) {
+        console.log(`📍 LocationUtils: Detected country from locale: ${deviceCountry}`);
         // Save as preference for future use
         await this.setUserCountry(deviceCountry);
         return deviceCountry;
       }
 
       // Default fallback
+      console.log('📍 LocationUtils: Using default fallback: US');
       return 'US';
     } catch (error) {
-      console.log('Error detecting user country:', error);
+      console.log('❌ LocationUtils: Error detecting user country:', error);
       return 'US'; // Safe fallback
     }
   }

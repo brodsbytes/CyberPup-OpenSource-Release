@@ -56,6 +56,71 @@ export class SettingsGuide {
   }
 
   /**
+   * Open Android Password Manager with fallback options
+   * @param {Object} device - Device information
+   * @returns {Promise<Object>} Result of the operation
+   */
+  static async openAndroidPasswordManager(device) {
+    const result = {
+      success: false,
+      method: null,
+      error: null,
+      needsManualGuidance: false
+    };
+
+    // Try multiple approaches for Android Password Manager
+    const approaches = [
+      // Try direct settings deep link
+      'android.settings.SECURITY_SETTINGS',
+      // Try general settings as fallback
+      'android.settings.SETTINGS',
+      // Try web interface as final fallback
+      'https://passwords.google.com/'
+    ];
+
+    for (let i = 0; i < approaches.length; i++) {
+      const approach = approaches[i];
+      
+      try {
+        console.log(`🔗 Trying approach ${i + 1}: ${approach}`);
+        
+        if (approach.startsWith('http')) {
+          // Web interface approach
+          const canOpen = await Linking.canOpenURL(approach);
+          if (canOpen) {
+            await Linking.openURL(approach);
+            result.success = true;
+            result.method = 'web';
+            console.log('✅ Opened Google Password Manager via web');
+            return result;
+          }
+        } else {
+          // Android settings approach
+          const canOpen = await Linking.canOpenURL(approach);
+          if (canOpen) {
+            await Linking.openURL(approach);
+            result.success = true;
+            result.method = 'deeplink';
+            console.log(`✅ Opened Android settings via deep link: ${approach}`);
+            return result;
+          }
+        }
+      } catch (error) {
+        console.log(`❌ Approach ${i + 1} failed:`, error.message);
+        if (i === approaches.length - 1) {
+          result.error = error.message;
+        }
+      }
+    }
+
+    // All approaches failed
+    result.needsManualGuidance = true;
+    result.method = 'manual';
+    result.error = 'All deep link approaches failed';
+    return result;
+  }
+
+  /**
    * Get platform-specific settings URLs
    * @param {string} settingType - Type of setting (e.g., 'security', 'privacy', 'notifications')
    * @param {string} platform - Target platform (defaults to current platform)
@@ -88,7 +153,8 @@ export class SettingsGuide {
         biometric: 'android.settings.FINGERPRINT_ENROLL',
         apps: 'android.settings.APPLICATION_SETTINGS',
         accounts: 'android.settings.SYNC_SETTINGS',
-        location: 'android.settings.LOCATION_SOURCE_SETTINGS'
+        location: 'android.settings.LOCATION_SOURCE_SETTINGS',
+        passwords: 'android.settings.SECURITY_SETTINGS'
       }
     };
 
@@ -235,6 +301,16 @@ export class SettingsGuide {
             'Follow setup instructions'
           ],
           icon: 'finger-print'
+        },
+        passwords: {
+          title: 'Password Manager Settings',
+          steps: [
+            'Open the Settings app',
+            'Search for "Password manager" or scroll to find it',
+            'Tap "Password manager"',
+            'Manage your saved passwords and passkeys'
+          ],
+          icon: 'key'
         }
       },
       windows: {
@@ -294,6 +370,129 @@ export class SettingsGuide {
   }
 
   /**
+   * Get device-specific password manager recommendations based on user's device ecosystem
+   * @param {Array} userDevices - Array of user's devices
+   * @returns {Object} Tailored recommendations with explanations
+   */
+  static getPasswordManagerRecommendations(userDevices) {
+    const devicePlatforms = userDevices.map(device => device.platform || device.tier2);
+    const hasApple = devicePlatforms.includes('ios') || devicePlatforms.includes('macos');
+    const hasAndroid = devicePlatforms.includes('android');
+    const hasWindows = devicePlatforms.includes('windows');
+    const hasMixedPlatforms = new Set(devicePlatforms).size > 1;
+
+    // Determine recommendation strategy
+    if (hasApple && !hasAndroid && !hasWindows) {
+      // Pure Apple ecosystem
+      return {
+        primary: {
+          name: 'Apple Passwords (Built-in)',
+          type: 'built-in',
+          platforms: ['ios', 'macos'],
+          description: 'iCloud Keychain with Passwords app',
+          whyRecommended: 'Seamlessly integrated across all your Apple devices with end-to-end encryption. No additional apps needed.',
+          setupSteps: [
+            'Go to Settings → Passwords on your iPhone/iPad',
+            'Turn on "AutoFill Passwords"',
+            'On Mac: System Preferences → Apple ID → iCloud → Keychain',
+            'Enable "Keychain" sync across devices'
+          ],
+          pros: ['Free', 'Native integration', 'Automatic sync', 'Biometric unlock'],
+          cons: ['Apple devices only', 'Limited sharing options']
+        },
+        alternatives: [
+          {
+            name: '1Password',
+            type: 'premium',
+            description: 'Best premium option for Apple users',
+            whyConsider: 'Advanced features like secure sharing and family plans'
+          }
+        ]
+      };
+    } else if (hasAndroid && !hasApple && !hasWindows) {
+      // Pure Android ecosystem
+      return {
+        primary: {
+          name: 'Google Password Manager (Built-in)',
+          type: 'built-in',
+          platforms: ['android'],
+          description: 'Google\'s integrated password manager',
+          whyRecommended: 'Built into Android and Chrome, automatically saves and fills passwords across your Google account.',
+          setupSteps: [
+            'Open Settings on your Android device',
+            'Search for "Password manager" or scroll to find it',
+            'Tap "Password manager" to access Google Password Manager',
+            'Turn on "Offer to save passwords" in Chrome settings'
+          ],
+          pros: ['Free', 'Automatic sync', 'Chrome integration', 'Google account integration'],
+          cons: ['Google ecosystem only', 'Limited advanced features']
+        },
+        alternatives: [
+          {
+            name: 'Bitwarden',
+            type: 'free',
+            description: 'Best free cross-platform option',
+            whyConsider: 'Open-source, unlimited passwords, works everywhere'
+          }
+        ]
+      };
+    } else if (hasMixedPlatforms) {
+      // Mixed device ecosystem - recommend cross-platform solution
+      return {
+        primary: {
+          name: 'Bitwarden',
+          type: 'free',
+          platforms: ['ios', 'android', 'windows', 'macos', 'web'],
+          description: 'Open-source password manager',
+          whyRecommended: 'Works seamlessly across all your devices (iPhone, Android, Windows, Mac) with unlimited free storage and strong security.',
+          setupSteps: [
+            'Download Bitwarden from your device\'s app store',
+            'Create a free account with a strong master password',
+            'Install browser extensions for easy access',
+            'Enable biometric unlock on mobile devices'
+          ],
+          pros: ['Free', 'Cross-platform', 'Open-source', 'Unlimited passwords', 'Strong security'],
+          cons: ['Requires account setup', 'Free version has some limitations']
+        },
+        alternatives: [
+          {
+            name: '1Password',
+            type: 'premium',
+            description: 'Premium cross-platform solution',
+            whyConsider: 'Advanced features, excellent UX, family sharing'
+          },
+          {
+            name: 'Proton Pass',
+            type: 'free',
+            description: 'Privacy-focused alternative',
+            whyConsider: 'From Proton team, strong privacy focus, free tier available'
+          }
+        ]
+      };
+    } else {
+      // Fallback for unknown scenarios
+      return {
+        primary: {
+          name: 'Bitwarden',
+          type: 'free',
+          platforms: ['ios', 'android', 'windows', 'macos', 'web'],
+          description: 'Open-source password manager',
+          whyRecommended: 'The most versatile and secure free option that works on any device you might use.',
+          setupSteps: [
+            'Download Bitwarden from your device\'s app store',
+            'Create a free account with a strong master password',
+            'Install browser extensions for easy access',
+            'Enable biometric unlock on mobile devices'
+          ],
+          pros: ['Free', 'Cross-platform', 'Open-source', 'Unlimited passwords', 'Strong security'],
+          cons: ['Requires account setup', 'Free version has some limitations']
+        },
+        alternatives: []
+      };
+    }
+  }
+
+  /**
    * Get recommended apps for a specific platform and purpose
    * @param {string} purpose - Purpose (e.g., 'password-manager', 'authenticator')
    * @param {string} platform - Target platform
@@ -308,21 +507,24 @@ export class SettingsGuide {
             identifier: 'id1136318669',
             url: 'itms-apps://itunes.apple.com/app/id1136318669',
             description: 'Complete password management solution',
-            rating: 4.8
+            rating: 4.8,
+            type: 'premium'
           },
           {
             name: 'Bitwarden',
             identifier: 'id1137397744',
             url: 'itms-apps://itunes.apple.com/app/id1137397744',
             description: 'Open-source password manager',
-            rating: 4.7
+            rating: 4.7,
+            type: 'free'
           },
           {
-            name: 'LastPass',
-            identifier: 'id324613447',
-            url: 'itms-apps://itunes.apple.com/app/id324613447',
-            description: 'Popular password manager',
-            rating: 4.5
+            name: 'Proton Pass',
+            identifier: 'id6443490629',
+            url: 'itms-apps://itunes.apple.com/app/id6443490629',
+            description: 'Privacy-focused password manager',
+            rating: 4.6,
+            type: 'free'
           }
         ],
         android: [
@@ -331,21 +533,24 @@ export class SettingsGuide {
             identifier: 'com.onepassword.android',
             url: 'market://details?id=com.onepassword.android',
             description: 'Complete password management solution',
-            rating: 4.6
+            rating: 4.6,
+            type: 'premium'
           },
           {
             name: 'Bitwarden',
             identifier: 'com.x8bit.bitwarden',
             url: 'market://details?id=com.x8bit.bitwarden',
             description: 'Open-source password manager',
-            rating: 4.5
+            rating: 4.5,
+            type: 'free'
           },
           {
-            name: 'LastPass',
-            identifier: 'com.lastpass.lpandroid',
-            url: 'market://details?id=com.lastpass.lpandroid',
-            description: 'Popular password manager',
-            rating: 4.3
+            name: 'Proton Pass',
+            identifier: 'proton.android.pass',
+            url: 'market://details?id=proton.android.pass',
+            description: 'Privacy-focused password manager',
+            rating: 4.4,
+            type: 'free'
           }
         ]
       },

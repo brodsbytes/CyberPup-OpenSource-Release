@@ -11,22 +11,17 @@ export class SecurityAlertsService {
   // Main method to get alerts with caching
   static async getSecurityAlerts(userCountry = 'US', forceRefresh = false) {
     try {
-      // Check cache first unless force refresh
-      if (!forceRefresh) {
-        const cachedAlerts = await this.getCachedAlerts();
-        if (cachedAlerts) {
-          return cachedAlerts;
-        }
-      }
-
+      // For insights tab, always fetch fresh data to avoid showing cached mock data
+      console.log(`🔄 getSecurityAlerts: forceRefresh=${forceRefresh}, always fetching fresh data for insights`);
+      
       const alerts = await this.fetchFreshAlerts(userCountry);
       await this.cacheAlerts(alerts);
       return alerts;
     } catch (error) {
       console.log('⚠️ Error fetching security alerts:', error.message);
-      // Return cached alerts as fallback, or generate realistic alerts
+      // Return cached alerts as fallback, or empty array
       const fallback = await this.getCachedAlerts();
-      return fallback || this.getRealisticMockAlerts();
+      return fallback || [];
     }
   }
 
@@ -35,18 +30,27 @@ export class SecurityAlertsService {
     // Detect if running in browser (for development/testing)
     const isBrowser = typeof window !== 'undefined';
     
+    console.log(`🔄 SecurityAlertsService: Starting fetchFreshAlerts for ${userCountry}`);
+    console.log(`🌐 Browser detected: ${isBrowser}`);
+    
     if (isBrowser) {
       console.log('🌐 Browser detected - RSS feeds may have CORS limitations');
     }
     
     try {
       // Try to fetch real RSS feeds first
+      console.log(`🔄 Attempting to fetch real RSS feeds for ${userCountry}...`);
       const realAlerts = await this.fetchRealRSSFeeds(userCountry);
+      console.log(`📊 RSS fetch result: ${realAlerts ? realAlerts.length : 0} alerts`);
+      
       if (realAlerts && realAlerts.length > 0) {
-        console.log(`✅ Fetched ${realAlerts.length} real alerts from RSS feeds`);
+        console.log(`✅ Successfully fetched ${realAlerts.length} real alerts from RSS feeds`);
         return realAlerts;
+      } else {
+        console.log('⚠️ No real alerts found, falling back to mock data');
       }
     } catch (error) {
+      console.log(`❌ RSS feed fetch failed with error: ${error.message}`);
       if (isBrowser) {
         console.log('⚠️ RSS feeds blocked by browser CORS policy (expected in development)');
         console.log('   Real RSS feeds will work properly in mobile app environment');
@@ -55,10 +59,9 @@ export class SecurityAlertsService {
       }
     }
     
-    // Fallback to enhanced mock data (especially detailed for browser testing)
-    console.log('📡 Using enhanced mock alerts for browser development');
-    const mockAlerts = this.getEnhancedMockAlerts(userCountry);
-    return mockAlerts;
+    // No mock data fallback - return empty array if RSS feeds fail
+    console.log('⚠️ RSS feeds unavailable - returning empty alerts array');
+    return [];
   }
 
   // Generate realistic mock alerts based on current security landscape
@@ -381,12 +384,15 @@ export class SecurityAlertsService {
 
   // Process and filter alerts for consumer audience
   static processAlerts(alerts) {
-    return alerts
-      .filter(alert => alert.consumerRelevant) // Only consumer-relevant alerts
-      .filter(alert => this.isRecent(alert.publishedDate)) // Only recent alerts
+    const consumerRelevant = alerts.filter(alert => alert.consumerRelevant);
+    
+    // Remove the isRecent filter to show all consumer-relevant alerts
+    const processed = consumerRelevant
       .map(alert => this.transformToAppFormat(alert))
       .sort((a, b) => this.getSeverityWeight(b.tag) - this.getSeverityWeight(a.tag))
       .slice(0, 8); // Limit to 8 most important alerts
+    
+    return processed;
   }
 
   // Transform government alert to app format
@@ -512,6 +518,40 @@ export class SecurityAlertsService {
     return await this.getSecurityAlerts(userCountry, true);
   }
 
+  // Method to clear cache and ensure fresh data
+  static async clearCacheAndRefresh(userCountry = 'US') {
+    console.log('🧹 Clearing cache and fetching fresh alerts...');
+    await this.clearCache();
+    return await this.getSecurityAlerts(userCountry, true);
+  }
+
+  // Method to clear any existing mock data from cache (call this on app startup)
+  static async clearMockDataFromCache() {
+    try {
+      console.log('🧹 Clearing any existing mock data from cache...');
+      const cachedAlerts = await this.getCachedAlerts();
+      if (cachedAlerts && cachedAlerts.length > 0) {
+        // Check if cached alerts are mock data (they won't have real RSS feed characteristics)
+        const hasRealAlerts = cachedAlerts.some(alert => 
+          alert.originalUrl && 
+          (alert.originalUrl.includes('cisa.gov') || 
+           alert.originalUrl.includes('cyber.gov.au') || 
+           alert.originalUrl.includes('ncsc.gov.uk') || 
+           alert.originalUrl.includes('cyber.gc.ca'))
+        );
+        
+        if (!hasRealAlerts) {
+          console.log('🧹 Found mock data in cache, clearing it...');
+          await this.clearCache();
+        } else {
+          console.log('✅ Cache contains real RSS alerts, keeping it');
+        }
+      }
+    } catch (error) {
+      console.log('Error clearing mock data from cache:', error);
+    }
+  }
+
   // Get individual alert details for detail screen
   static async getAlertById(alertId, userCountry = 'US') {
     try {
@@ -542,12 +582,16 @@ export class SecurityAlertsService {
 
   // Secure RSS feed integration with multiple fallback strategies
   static async fetchRealRSSFeeds(userCountry) {
+    console.log(`🔄 fetchRealRSSFeeds: Starting for ${userCountry}`);
     const feedUrls = this.getSecureRSSFeeds(userCountry);
+    console.log(`📡 Found ${feedUrls.length} RSS feeds for ${userCountry}:`, feedUrls.map(f => f.name));
     const allAlerts = [];
     
     for (const feed of feedUrls) {
       try {
+        console.log(`🔄 Processing feed: ${feed.name} (${feed.url})`);
         const alerts = await this.fetchFromSecureRSSFeed(feed);
+        console.log(`✅ Feed ${feed.name} returned ${alerts.length} alerts`);
         allAlerts.push(...alerts);
       } catch (error) {
         console.log(`❌ Failed to fetch from ${feed.name}:`, error.message);
@@ -555,7 +599,10 @@ export class SecurityAlertsService {
       }
     }
     
-    return this.processAlerts(allAlerts);
+    console.log(`📊 Total alerts collected: ${allAlerts.length}`);
+    const processedAlerts = this.processAlerts(allAlerts);
+    console.log(`📊 Processed alerts: ${processedAlerts.length}`);
+    return processedAlerts;
   }
 
   // Get whitelisted, secure RSS feed URLs for each country
@@ -609,29 +656,37 @@ export class SecurityAlertsService {
       throw new Error(`Untrusted or invalid feed URL: ${feed.url}`);
     }
 
+    console.log(`🔄 Attempting to fetch RSS feed: ${feed.name} (${feed.url})`);
+
     // Strategy 1: Try RSS-to-JSON API (most secure, no CORS issues)
     try {
-      return await this.fetchViaRSSToJSON(feed);
+      console.log(`📡 Trying RSS-to-JSON for ${feed.name}...`);
+      const result = await this.fetchViaRSSToJSON(feed);
+      console.log(`✅ RSS-to-JSON succeeded for ${feed.name}: ${result.length} alerts`);
+      return result;
     } catch (error) {
-      console.log(`RSS-to-JSON failed for ${feed.name}, trying fallback:`, error.message);
+      console.log(`❌ RSS-to-JSON failed for ${feed.name}: ${error.message}`);
     }
 
     // Strategy 2: Try secure CORS proxy (as fallback)
     try {
-      return await this.fetchViaSecureCORSProxy(feed);
+      console.log(`🌐 Trying CORS proxy for ${feed.name}...`);
+      const result = await this.fetchViaSecureCORSProxy(feed);
+      console.log(`✅ CORS proxy succeeded for ${feed.name}: ${result.length} alerts`);
+      return result;
     } catch (error) {
-      console.log(`CORS proxy failed for ${feed.name}:`, error.message);
+      console.log(`❌ CORS proxy failed for ${feed.name}: ${error.message}`);
     }
 
     // Strategy 3: Return empty array (graceful degradation)
-    console.log(`All methods failed for ${feed.name}, skipping`);
+    console.log(`⚠️ All methods failed for ${feed.name}, skipping`);
     return [];
   }
 
   // Strategy 1: Use RSS-to-JSON API (most secure)
   static async fetchViaRSSToJSON(feed) {
     // Using rss2json.com API (free tier, no API key required for basic usage)
-    const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}&count=20`;
+    const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}&count=20&api_key=null`;
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -641,7 +696,8 @@ export class SecurityAlertsService {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
-          'User-Agent': 'CyberPup-Security-App/1.0'
+          'User-Agent': 'CyberPup-Security-App/1.0',
+          'Origin': (typeof window !== 'undefined' && window.location?.origin) || 'https://cyberpup.app'
         },
         signal: controller.signal
       });
@@ -655,7 +711,7 @@ export class SecurityAlertsService {
       const data = await response.json();
       
       if (data.status !== 'ok') {
-        throw new Error(`RSS API error: ${data.message}`);
+        throw new Error(`RSS API error: ${data.message || 'Unknown error'}`);
       }
 
       return this.parseRSSJSONResponse(data, feed);
@@ -671,15 +727,15 @@ export class SecurityAlertsService {
     const rssServices = [
       {
         name: 'RSS2JSON Alternative',
-        url: `https://rss2json.com/api.json?rss_url=${encodeURIComponent(feed.url)}`
+        url: `https://rss2json.com/api.json?rss_url=${encodeURIComponent(feed.url)}&api_key=null`
       },
       {
         name: 'AllOrigins',
         url: `https://api.allorigins.win/get?url=${encodeURIComponent(feed.url)}`
       },
       {
-        name: 'CORS Anywhere (if available)',
-        url: `https://cors-anywhere.herokuapp.com/${feed.url}`
+        name: 'CORS Proxy',
+        url: `https://corsproxy.io/?${encodeURIComponent(feed.url)}`
       }
     ];
 
@@ -694,7 +750,7 @@ export class SecurityAlertsService {
           method: 'GET',
           headers: {
             'Accept': 'application/json',
-            'Origin': window.location.origin || 'https://cyberpup.app'
+            'Origin': (typeof window !== 'undefined' && window.location?.origin) || 'https://cyberpup.app'
           },
           signal: controller.signal
         });
@@ -705,18 +761,25 @@ export class SecurityAlertsService {
           throw new Error(`${service.name} HTTP ${response.status}: ${response.statusText}`);
         }
 
-        const data = await response.json();
-        
-        // Handle different response formats
-        if (service.name.includes('AllOrigins') && data.contents) {
-          return this.parseRSSXML(data.contents, feed);
-        } else if (data.items) {
-          return this.parseRSSJSONResponse(data, feed);
-        } else if (data.contents) {
-          return this.parseRSSXML(data.contents, feed);
+        // Handle different response formats based on service
+        if (service.name.includes('CORS Proxy')) {
+          // CORS Proxy returns raw XML text
+          const xmlData = await response.text();
+          return this.parseRSSXML(xmlData, feed);
+        } else {
+          // Other services return JSON
+          const data = await response.json();
+          
+          if (service.name.includes('AllOrigins') && data.contents) {
+            return this.parseRSSXML(data.contents, feed);
+          } else if (data.items) {
+            return this.parseRSSJSONResponse(data, feed);
+          } else if (data.contents) {
+            return this.parseRSSXML(data.contents, feed);
+          }
+          
+          throw new Error(`Unexpected response format from ${service.name}`);
         }
-        
-        throw new Error(`Unexpected response format from ${service.name}`);
       } catch (error) {
         console.log(`${service.name} failed: ${error.message}`);
         // Continue to next service

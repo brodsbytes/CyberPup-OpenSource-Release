@@ -40,9 +40,11 @@ const WelcomeScreen = ({ navigation }) => {
   const [showCategoryDetail, setShowCategoryDetail] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
+  // Track if any modal is open to enable static mode for CircularProgress
+  const isAnyModalOpen = showScoreBreakdown || showStreakDetails || showBadges || showCatalogue || showCategoryDetail;
 
-  const [isLoadingActiveLevel, setIsLoadingActiveLevel] = useState(true);
-  const [isLoadingProgress, setIsLoadingProgress] = useState(true);
+
+  const [isLoading, setIsLoading] = useState(true);
   const [nextLevel, setNextLevel] = useState(null);
   const [nextArea, setNextArea] = useState(null);
   const [forceAnimation, setForceAnimation] = useState(0);
@@ -73,8 +75,8 @@ const WelcomeScreen = ({ navigation }) => {
     setShowCategoryDetail(true);
   };
 
-  // Calculate progress for each category
-  const calculateCategoryProgress = async (categoryId) => {
+  // Optimized: Calculate progress for all categories in parallel
+  const calculateAllCategoryProgress = async () => {
     try {
       // Map category IDs to area IDs
       const categoryToAreaMap = {
@@ -85,36 +87,54 @@ const WelcomeScreen = ({ navigation }) => {
         '1.5': '1-5', // Protect Your Privacy
       };
       
-      const areaId = categoryToAreaMap[categoryId];
-      if (!areaId) return { completed: 0, total: 0 };
+      // Get all check completion data in parallel
+      const allChecks = getAllChecks();
+      const progressKeys = allChecks.map(check => `check_${check.id}_completed`);
+      const progressData = await AsyncStorage.multiGet(progressKeys);
       
-      // Get the area from course data
+      // Create a map for quick lookup
+      const completionMap = new Map();
+      progressData.forEach(([key, value]) => {
+        const checkId = key.replace('check_', '').replace('_completed', '');
+        completionMap.set(checkId, value === 'completed');
+      });
+      
+      // Calculate progress for each category
+      const progress = {};
       const level1 = levels.find(level => level.id === 1);
-      const area = level1?.areas.find(area => area.id === areaId);
       
-      if (!area) return { completed: 0, total: 0 };
-      
-      let completedChecks = 0;
-      let totalChecks = 0;
-      
-      // Check completion status for each check in the area
-      for (const check of area.checks) {
-        // Filter out placeholder checks that are "Coming Soon!" or have "Coming Soon!" in title
-        if (check.title !== 'Coming Soon!' && !check.title.includes('Coming Soon!')) {
-          totalChecks++;
-          const progressKey = `check_${check.id}_completed`;
-          const progressData = await AsyncStorage.getItem(progressKey);
-          
-          if (progressData === 'completed') {
-            completedChecks++;
+      for (const [categoryId, areaId] of Object.entries(categoryToAreaMap)) {
+        const area = level1?.areas.find(area => area.id === areaId);
+        if (!area) {
+          progress[categoryId] = { completed: 0, total: 0 };
+          continue;
+        }
+        
+        let completedChecks = 0;
+        let totalChecks = 0;
+        
+        for (const check of area.checks) {
+          if (check.title !== 'Coming Soon!' && !check.title.includes('Coming Soon!')) {
+            totalChecks++;
+            if (completionMap.get(check.id)) {
+              completedChecks++;
+            }
           }
         }
+        
+        progress[categoryId] = { completed: completedChecks, total: totalChecks };
       }
       
-      return { completed: completedChecks, total: totalChecks };
+      return progress;
     } catch (error) {
       console.error('Error calculating category progress:', error);
-      return { completed: 0, total: 0 };
+      return {
+        '1.1': { completed: 0, total: 5 },
+        '1.2': { completed: 0, total: 5 },
+        '1.3': { completed: 0, total: 2 },
+        '1.4': { completed: 0, total: 2 },
+        '1.5': { completed: 0, total: 2 },
+      };
     }
   };
 
@@ -127,39 +147,44 @@ const WelcomeScreen = ({ navigation }) => {
     '1.5': { completed: 0, total: 2 },
   });
 
-  // Load category progress
-  const loadCategoryProgress = async () => {
+  // Optimized: Load all data in parallel
+  const loadAllData = async () => {
     try {
-      const progress = {};
-      const categories = ['1.1', '1.2', '1.3', '1.4', '1.5'];
+      setIsLoading(true);
       
-      for (const categoryId of categories) {
-        progress[categoryId] = await calculateCategoryProgress(categoryId);
-      }
+      // Load all data in parallel
+      const [overallProgress, categoryProgress, activeLevelData, nextAreaData] = await Promise.all([
+        calculateOverallProgress(),
+        calculateAllCategoryProgress(),
+        loadActiveLevelView(),
+        getNextIncompleteArea()
+      ]);
       
-      setCategoryProgress(progress);
+      // Update all state at once
+      setOverallProgress(overallProgress);
+      setCategoryProgress(categoryProgress);
+      setActiveLevel(activeLevelData);
+      setNextArea(nextAreaData);
+      
+      // Update streak in background (non-blocking)
+      updateStreak();
+      
     } catch (error) {
-      console.error('Error loading category progress:', error);
+      console.error('Error loading data:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Load progress on component mount
   useEffect(() => {
-    setIsLoadingProgress(true);
-    calculateOverallProgress();
-    loadActiveLevelView();
-    loadCategoryProgress(); // Add this line
-    updateStreak();
+    loadAllData();
   }, []);
 
   // Load progress when component mounts or screen is focused
   useFocusEffect(
     React.useCallback(() => {
-      setIsLoadingProgress(true);
-      calculateOverallProgress();
-      loadActiveLevelView();
-      loadCategoryProgress(); // Add this line
-      updateStreak();
+      loadAllData();
       setForceAnimation(prev => prev + 1);
     }, [])
   );
@@ -174,90 +199,37 @@ const WelcomeScreen = ({ navigation }) => {
     try {
       const allChecks = getCheckData();
       
-      let completedCount = 0;
-
-      // Check each check for completion
-      for (const check of allChecks) {
-        const progressKey = `check_${check.id}_completed`;
-        const progressData = await AsyncStorage.getItem(progressKey);
-        
-        if (progressData === 'completed') {
-          completedCount++;
-        }
-      }
+      // Get all completion data in parallel
+      const progressKeys = allChecks.map(check => `check_${check.id}_completed`);
+      const progressData = await AsyncStorage.multiGet(progressKeys);
+      
+      // Count completed checks
+      const completedCount = progressData.filter(([key, value]) => value === 'completed').length;
       
       // Calculate overall progress as percentage of completed checks
       const progress = allChecks.length > 0 ? Math.round((completedCount / allChecks.length) * 100) : 0;
-      setOverallProgress(progress);
-      setIsLoadingProgress(false);
       
-      const nextIncompleteArea = await getNextIncompleteArea();
-      setNextArea(nextIncompleteArea);
+      return progress;
     } catch (error) {
       console.error('Error calculating progress:', error);
-      setIsLoadingProgress(false);
+      return 0;
     }
   };
 
-  // Determine active level (first by id that is not fully complete) and load its checks with progress
+  // Optimized: Determine active level with parallel data loading
   const loadActiveLevelView = async () => {
     try {
-      setIsLoadingActiveLevel(true);
+      // Get all check completion data in parallel
+      const allChecks = getAllChecks();
+      const progressKeys = allChecks.map(check => `check_${check.id}_completed`);
+      const progressData = await AsyncStorage.multiGet(progressKeys);
       
-      // Helper to compute if a check is completed
-      const getCheckStatus = async (check) => {
-        let isCompleted = false;
-        let progressPercentage = 0;
-
-        // Check for completion using check keys with dash format
-        const progressKey = `check_${check.id}_completed`;
-        const progressData = await AsyncStorage.getItem(progressKey);
-        
-
-        
-        if (progressData === 'completed') {
-          isCompleted = true;
-          progressPercentage = 100;
-        } else {
-          // Check for partial progress
-          const partialProgressKey = `check_${check.id}_progress`;
-          const partialProgressData = await AsyncStorage.getItem(partialProgressKey);
-          
-          if (partialProgressData) {
-            try {
-              const data = JSON.parse(partialProgressData);
-              if (data.checklistItems) {
-                const completedItems = data.checklistItems.filter(item => item.completed).length;
-                const totalItems = data.checklistItems.length;
-                progressPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
-              }
-            } catch (error) {
-              console.error('Error parsing progress data:', error);
-            }
-          }
-        }
-
-        return { isCompleted, progressPercentage };
-      };
-
-      // Helper to compute area progress
-      const getAreaProgress = async (area) => {
-        let completedChecks = 0;
-        let totalChecks = 0;
-        
-        for (const check of area.checks) {
-          // Filter out placeholder checks that are "Coming Soon!" or have "Coming Soon!" in title
-          if (check.title !== 'Coming Soon!' && !check.title.includes('Coming Soon!')) {
-            totalChecks++;
-            const status = await getCheckStatus(check);
-            if (status.isCompleted) {
-              completedChecks++;
-            }
-          }
-        }
-        
-        return { completedChecks, totalChecks };
-      };
+      // Create completion map for quick lookup
+      const completionMap = new Map();
+      progressData.forEach(([key, value]) => {
+        const checkId = key.replace('check_', '').replace('_completed', '');
+        completionMap.set(checkId, value === 'completed');
+      });
 
       // Find first incomplete level by display order
       let selectedLevel = null;
@@ -270,8 +242,19 @@ const WelcomeScreen = ({ navigation }) => {
         let allComplete = true;
         
         for (const area of levelAreas) {
-          const areaProgress = await getAreaProgress(area);
-          if (areaProgress.completedChecks < areaProgress.totalChecks) {
+          let completedChecks = 0;
+          let totalChecks = 0;
+          
+          for (const check of area.checks) {
+            if (check.title !== 'Coming Soon!' && !check.title.includes('Coming Soon!')) {
+              totalChecks++;
+              if (completionMap.get(check.id)) {
+                completedChecks++;
+              }
+            }
+          }
+          
+          if (completedChecks < totalChecks) {
             allComplete = false;
             break;
           }
@@ -279,7 +262,6 @@ const WelcomeScreen = ({ navigation }) => {
         
         if (!allComplete) {
           selectedLevel = level;
-          // Check if there's a next level
           if (i + 1 < orderedLevels.length) {
             nextLevelInfo = orderedLevels[i + 1];
           }
@@ -289,17 +271,8 @@ const WelcomeScreen = ({ navigation }) => {
 
       // If all levels are complete, check if there are more levels available
       if (!selectedLevel) {
-        setActiveLevel(null);
-        // Check if there are more levels beyond the completed ones
-        const orderedLevels = getOrderedLevels();
-        if (orderedLevels.length > 1) {
-          // Show the next level (Level 2) even if Level 1 is complete
-          setNextLevel(orderedLevels[1]); // Level 2
-        } else {
-          setNextLevel(null);
-        }
-        setIsLoadingActiveLevel(false);
-        return;
+        setNextLevel(orderedLevels.length > 1 ? orderedLevels[1] : null);
+        return null;
       }
 
       // Load areas for the selected level with their progress
@@ -307,35 +280,52 @@ const WelcomeScreen = ({ navigation }) => {
       const areasWithProgress = [];
 
       for (const area of levelAreas) {
-        const areaProgress = await getAreaProgress(area);
+        let completedChecks = 0;
+        let totalChecks = 0;
+        
+        for (const check of area.checks) {
+          if (check.title !== 'Coming Soon!' && !check.title.includes('Coming Soon!')) {
+            totalChecks++;
+            if (completionMap.get(check.id)) {
+              completedChecks++;
+            }
+          }
+        }
+        
         areasWithProgress.push({
           ...area,
-          completedChecks: areaProgress.completedChecks,
-          totalChecks: areaProgress.totalChecks,
+          completedChecks,
+          totalChecks,
         });
       }
 
-      setActiveLevel({
-        ...selectedLevel,
-        areas: areasWithProgress,
-      });
-      
       setNextLevel(nextLevelInfo);
       
-      // Find and set the next incomplete area
-      const nextIncompleteArea = await getNextIncompleteArea();
-      setNextArea(nextIncompleteArea);
-      
-      setIsLoadingActiveLevel(false);
+      return {
+        ...selectedLevel,
+        areas: areasWithProgress,
+      };
     } catch (error) {
       console.error('Error loading active level view:', error);
-      setIsLoadingActiveLevel(false);
+      return null;
     }
   };
 
-  // Find the next incomplete area across all levels
+  // Optimized: Find the next incomplete area using existing completion data
   const getNextIncompleteArea = async () => {
     try {
+      // Get all check completion data in parallel
+      const allChecks = getAllChecks();
+      const progressKeys = allChecks.map(check => `check_${check.id}_completed`);
+      const progressData = await AsyncStorage.multiGet(progressKeys);
+      
+      // Create completion map for quick lookup
+      const completionMap = new Map();
+      progressData.forEach(([key, value]) => {
+        const checkId = key.replace('check_', '').replace('_completed', '');
+        completionMap.set(checkId, value === 'completed');
+      });
+      
       const allLevels = levels;
       
       for (const level of allLevels) {
@@ -344,10 +334,7 @@ const WelcomeScreen = ({ navigation }) => {
           let hasIncompleteCheck = false;
           
           for (const check of area.checks) {
-            const progressKey = `check_${check.id}_completed`;
-            const progressData = await AsyncStorage.getItem(progressKey);
-            
-            if (progressData !== 'completed') {
+            if (!completionMap.get(check.id)) {
               hasIncompleteCheck = true;
               break;
             }
@@ -471,7 +458,7 @@ const WelcomeScreen = ({ navigation }) => {
           
           <View style={styles.overallProgressCard}>
             <View style={styles.circularProgressContainer}>
-              {isLoadingProgress ? (
+              {isLoading ? (
                 <View style={[styles.loadingContainer, { width: scale(200), height: scale(200) }]}>
                   <Text style={styles.loadingText}>Loading...</Text>
                 </View>
@@ -486,6 +473,7 @@ const WelcomeScreen = ({ navigation }) => {
                   interactive={true}
                   onPress={() => setShowScoreBreakdown(true)}
                   forceAnimation={forceAnimation}
+                  staticMode={isAnyModalOpen} // Enable static mode when any modal is open
                 />
               )}
             </View>
@@ -493,7 +481,7 @@ const WelcomeScreen = ({ navigation }) => {
         </View>
 
                   {/* Level Progress Card */}
-          {activeLevel && (
+          {!isLoading && activeLevel && (
             <View style={styles.levelProgressCard}>
               <View style={styles.pawPrintIcon}>
                 <Ionicons name="paw" size={24} color={Colors.accent} />
@@ -532,7 +520,7 @@ const WelcomeScreen = ({ navigation }) => {
           )}
 
           {/* CTA Button Card */}
-          {activeLevel && (
+          {!isLoading && activeLevel && (
             <TouchableOpacity
               style={styles.ctaButtonCard}
               onPress={handleContinueSecurityCheck}

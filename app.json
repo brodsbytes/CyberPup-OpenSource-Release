@@ -21,7 +21,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.CyberPup"
+      "package": "com.cyberpup.security"
     },
     "web": {
       "favicon": "./assets/favicon.png"

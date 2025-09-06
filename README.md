@@ -60,7 +60,6 @@ CyberPup helps users complete a comprehensive cybersecurity health check with an
 - Node.js (v14 or higher)
 - npm or yarn
 - Expo CLI (optional, but recommended)
-- Maestro (for e2e testing)
 
 ### Installation
 
@@ -92,26 +91,6 @@ npm run ios
 npm run web
 ```
 
-### Testing
-
-CyberPup includes comprehensive native e2e testing using Maestro:
-
-```bash
-# Quick smoke test
-npm run test:e2e:smoke
-
-# Full Level 1 flow test
-npm run test:e2e:complete
-
-# All tests
-npm run test:e2e:all
-
-# Platform-specific tests
-npm run test:e2e:ios
-npm run test:e2e:android
-```
-
-See [Native E2E Testing Guide](docs/active/development/NATIVE_E2E_TESTING.md) for detailed testing information.
 
 ## Project Structure
 

@@ -25,25 +25,35 @@ const ToolsTabContent = ({ query, navigation }) => {
   const [userCountry, setUserCountry] = useState('US');
 
   useEffect(() => {
-    loadSecurityAlerts();
+    console.log('🔍 ToolsTabContent: Component mounted, loading security alerts...');
+    // Clear any existing mock data from cache first
+    SecurityAlertsService.clearMockDataFromCache().then(() => {
+      loadSecurityAlerts();
+    });
   }, []);
 
   const loadSecurityAlerts = async () => {
     try {
+      console.log('🔄 ToolsTabContent: Starting to load security alerts...');
       setAlertsLoading(true);
       setAlertsError(null);
 
+      console.log('🌍 ToolsTabContent: Getting user country...');
       const detectedCountry = await LocationUtils.getUserCountry();
+      console.log(`📍 ToolsTabContent: Detected country: ${detectedCountry}`);
       setUserCountry(detectedCountry);
 
-      const securityAlerts = await SecurityAlertsService.getSecurityAlerts(detectedCountry);
+      console.log('📡 ToolsTabContent: Fetching fresh security alerts (clearing cache)...');
+      const securityAlerts = await SecurityAlertsService.clearCacheAndRefresh(detectedCountry);
+      console.log(`✅ ToolsTabContent: Successfully loaded ${securityAlerts.length} alerts`);
       setAlerts(securityAlerts);
     } catch (error) {
-      console.log('Error loading security alerts:', error);
+      console.log('❌ ToolsTabContent: Error loading security alerts:', error);
       setAlertsError(error.message);
       setAlerts([]);
     } finally {
       setAlertsLoading(false);
+      console.log('🏁 ToolsTabContent: Security alerts loading completed');
     }
   };
 
@@ -52,7 +62,7 @@ const ToolsTabContent = ({ query, navigation }) => {
       setAlertsError(null);
       const detectedCountry = await LocationUtils.getUserCountry();
       setUserCountry(detectedCountry);
-      const freshAlerts = await SecurityAlertsService.refreshAlerts(detectedCountry);
+      const freshAlerts = await SecurityAlertsService.clearCacheAndRefresh(detectedCountry);
       setAlerts(freshAlerts);
     } catch (error) {
       console.log('Error refreshing alerts:', error);
@@ -115,7 +125,8 @@ const ToolsTabContent = ({ query, navigation }) => {
     if (alerts.length === 0) {
       return (
         <View style={styles.alertsEmptyContainer}>
-          <Text style={styles.emptyText}>No security alerts available</Text>
+          <Text style={styles.emptyText}>Live security alerts cannot be loaded</Text>
+          <Text style={styles.emptySubtext}>Please refresh or try again later</Text>
         </View>
       );
     }

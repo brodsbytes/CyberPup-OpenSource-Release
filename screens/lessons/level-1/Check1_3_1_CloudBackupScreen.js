@@ -465,8 +465,8 @@ const Check1_3_1_CloudBackupScreen = ({ navigation, route }) => {
   };
 
   const celebrateCompletion = () => {
-    // The completion popup will be shown automatically when isCompleted is true
-    // No need to call it as a function
+    console.log('🎉 Celebrating completion of Check 1.3.1');
+    setShowCompletionPopup(true);
   };
 
   const handleExit = () => {

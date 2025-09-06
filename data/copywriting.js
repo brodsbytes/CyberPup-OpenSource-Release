@@ -272,6 +272,51 @@ export const COPYWRITING = {
             "Never download password managers from unknown websites"
           ]
         },
+        deviceSpecificRecommendations: {
+          title: "Expert Recommendations for Your Devices",
+          description: "Based on your device ecosystem, here are the best password manager options:",
+          scenarios: {
+            appleOnly: {
+              title: "Apple Ecosystem (iPhone + Mac)",
+              recommendation: "Apple Passwords (Built-in)",
+              explanation: "Since you only use Apple devices, the built-in iCloud Keychain with the Passwords app is your best option. It's seamlessly integrated, free, and provides end-to-end encryption across all your Apple devices.",
+              setupSteps: [
+                "Go to Settings → Passwords on your iPhone/iPad",
+                "Turn on 'AutoFill Passwords'",
+                "On Mac: System Preferences → Apple ID → iCloud → Keychain",
+                "Enable 'Keychain' sync across devices"
+              ],
+              pros: ["Free", "Native integration", "Automatic sync", "Biometric unlock"],
+              alternatives: ["1Password (premium features)"]
+            },
+            androidOnly: {
+              title: "Android Device",
+              recommendation: "Google Password Manager (Built-in)",
+              explanation: "For Android users, Google's built-in password manager is the most convenient option. It automatically saves and fills passwords across your Google account and Chrome browser.",
+              setupSteps: [
+                "Open Settings on your Android device",
+                "Search for 'Password manager' or scroll to find it",
+                "Tap 'Password manager' to access Google Password Manager",
+                "Turn on 'Offer to save passwords' in Chrome settings"
+              ],
+              pros: ["Free", "Automatic sync", "Chrome integration", "Google account integration"],
+              alternatives: ["Bitwarden (cross-platform option)"]
+            },
+            mixedDevices: {
+              title: "Mixed Device Ecosystem",
+              recommendation: "Bitwarden (Free Cross-Platform)",
+              explanation: "Since you use multiple device types, Bitwarden is the best free option that works seamlessly across iPhone, Android, Windows, and Mac. It's open-source, secure, and offers unlimited password storage.",
+              setupSteps: [
+                "Download Bitwarden from your device's app store",
+                "Create a free account with a strong master password",
+                "Install browser extensions for easy access",
+                "Enable biometric unlock on mobile devices"
+              ],
+              pros: ["Free", "Cross-platform", "Open-source", "Unlimited passwords", "Strong security"],
+              alternatives: ["1Password (premium)", "Proton Pass (privacy-focused)"]
+            }
+          }
+        },
         createMasterPassword: {
           title: "Create an Unbreakable Master Password",
           description: "Set up the one password that protects all your others",

@@ -40,47 +40,11 @@ const Check1_2_4_BluetoothWifiScreen = ({ navigation, route }) => {
   const [showExitModal, setShowExitModal] = useState(false);
   const [showLearnMore, setShowLearnMore] = useState(false);
 
-  // ✅ PRESERVE: Exact same initialization logic
+  // ✅ PRESERVE: Exact same initialization logic with smart deduplication
   const initializeDeviceContent = async () => {
     try {
-      const devices = await DeviceCapabilities.getUserDevices();
-      const currentDevice = DeviceCapabilities.getCurrentDevice();
-      
-      let allDevices = [...devices];
-      
-      // Always ensure we have at least the current device
-      if (allDevices.length === 0) {
-        const currentDeviceInfo = {
-          id: 'current-device',
-          name: currentDevice.type || 'Your Device',
-          type: currentDevice.platform === 'ios' || currentDevice.platform === 'android' ? 'mobile' : 'computer',
-          platform: currentDevice.platform,
-          tier2: currentDevice.platform,
-          autoDetected: true,
-          supportsDeepLinks: currentDevice.supportsDeepLinks,
-          icon: getDeviceIcon(currentDevice)
-        };
-        allDevices = [currentDeviceInfo];
-      } else {
-        // Check if current device is already in the list
-        const hasCurrentDevice = devices.some(d => 
-          d.platform === currentDevice.platform && d.type === currentDevice.type
-        );
-        
-        if (!hasCurrentDevice) {
-          allDevices.unshift({
-            id: 'current-device',
-            name: currentDevice.type,
-            type: currentDevice.platform === 'ios' || currentDevice.platform === 'android' ? 'mobile' : 'computer',
-            platform: currentDevice.platform,
-            tier2: currentDevice.platform,
-            autoDetected: true,
-            supportsDeepLinks: currentDevice.supportsDeepLinks,
-            icon: getDeviceIcon(currentDevice)
-          });
-        }
-      }
-
+      // Use the new smart deduplication method to prevent device duplicates
+      const allDevices = await DeviceCapabilities.getUserDevicesWithCurrentDevice();
       setUserDevices(allDevices);
 
       // Create device-specific actions using SettingsGuide
@@ -257,8 +221,8 @@ const Check1_2_4_BluetoothWifiScreen = ({ navigation, route }) => {
 
   // ✅ PRESERVE: Completion celebration
   const celebrateCompletion = () => {
-    // The completion popup will be shown automatically when isCompleted is true
-    // No need to call it as a function
+    console.log('🎉 Celebrating completion of Check 1.2.4');
+    setShowCompletionPopup(true);
   };
 
   // Helper function to get device icon

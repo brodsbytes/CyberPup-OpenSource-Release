@@ -70,22 +70,33 @@ const completionMessages = {
 
 // Next screen navigation mapping
 const nextScreenMapping = {
+  // Area 1-1: Account Security (1-1-1 → 1-1-2 → 1-1-3 → 1-1-4 → 1-1-5)
   '1-1-1': SCREEN_NAMES.CHECK_1_1_2_HIGH_VALUE_ACCOUNTS,
-  '1-1-2': SCREEN_NAMES.CHECK_1_2_1_SCREEN_LOCK,
+  '1-1-2': SCREEN_NAMES.CHECK_1_1_3_PASSWORD_MANAGERS,
+  '1-1-3': SCREEN_NAMES.CHECK_1_1_4_MFA_SETUP,
+  '1-1-4': SCREEN_NAMES.CHECK_1_1_5_BREACH_CHECK,
+  
+  // Area 1-2: Device Security (1-2-1 → 1-2-2 → 1-2-3 → 1-2-4 → 1-2-5)
   '1-2-1': SCREEN_NAMES.CHECK_1_2_2_REMOTE_LOCK,
   '1-2-2': SCREEN_NAMES.CHECK_1_2_3_DEVICE_UPDATES,
   '1-2-3': SCREEN_NAMES.CHECK_1_2_4_BLUETOOTH_WIFI,
   '1-2-4': SCREEN_NAMES.CHECK_1_2_5_PUBLIC_CHARGING,
-  '1-2-5': SCREEN_NAMES.CHECK_1_3_1_CLOUD_BACKUP,
+  
+  // Area 1-3: Data Protection (1-3-1 → 1-3-2)
   '1-3-1': SCREEN_NAMES.CHECK_1_3_2_LOCAL_BACKUP,
-  '1-3-2': SCREEN_NAMES.CHECK_1_1_3_PASSWORD_MANAGERS,
-  '1-1-3': SCREEN_NAMES.CHECK_1_1_4_MFA_SETUP,
-  '1-1-4': SCREEN_NAMES.CHECK_1_1_5_BREACH_CHECK,
+  
+  // Area 1-4: Scam Defense (1-4-1 → 1-4-2)
   '1-4-1': SCREEN_NAMES.CHECK_1_4_2_SCAM_REPORTING,
-  '1-4-2': SCREEN_NAMES.CHECK_1_5_1_SHARING_AWARENESS,
+  
+  // Area 1-5: Privacy Protection (1-5-1 → 1-5-2)
   '1-5-1': SCREEN_NAMES.CHECK_1_5_2_PRIVACY_SETTINGS,
-  '1-5-2': SCREEN_NAMES.CHECK_1_1_5_BREACH_CHECK,
-  '1-1-5': SCREEN_NAMES.WELCOME // Last check goes back to welcome
+  
+  // Area completion transitions (last check in each area → first check of next area)
+  '1-1-5': SCREEN_NAMES.CHECK_1_2_1_SCREEN_LOCK, // Area 1-1 complete → start Area 1-2
+  '1-2-5': SCREEN_NAMES.CHECK_1_3_1_CLOUD_BACKUP, // Area 1-2 complete → start Area 1-3
+  '1-3-2': SCREEN_NAMES.CHECK_1_4_1_SCAM_RECOGNITION, // Area 1-3 complete → start Area 1-4
+  '1-4-2': SCREEN_NAMES.CHECK_1_5_1_SHARING_AWARENESS, // Area 1-4 complete → start Area 1-5
+  '1-5-2': SCREEN_NAMES.WELCOME // All areas complete → back to welcome
 };
 
 /**

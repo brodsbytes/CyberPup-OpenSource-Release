@@ -1,0 +1,103 @@
+CyberPup Privacy Policy
+Last Updated: September 2025
+1. INTRODUCTION
+CyberPup ("we," "our," or "us") is committed to protecting your privacy and maintaining the highest standards of data protection. This Privacy Policy explains how we collect, use, and safeguard your information when you use our cybersecurity education mobile application ("App").
+By using our App, you agree to the collection and use of information in accordance with this Privacy Policy. If you do not agree with our policies and practices, please do not use our App.
+2. INFORMATION WE COLLECT
+2.1 Information You Voluntarily Provide
+    • Email Addresses (Optional): When you use our breach checking feature, you may voluntarily enter your email address to check if it has been involved in known data breaches. This feature is entirely optional and user-initiated.
+    • Device Information (Optional): You may voluntarily provide information about your devices (type, operating system, model) to receive personalized security recommendations.
+2.2 Information We Do NOT Collect
+We do not collect, store, or process the following:
+    • Personal identification information beyond what you voluntarily provide
+    • Location data or GPS coordinates
+    • Contact lists, photos, or personal files
+    • Browsing history or web activity outside the App
+    • Biometric data
+    • Financial or payment details
+    • Social media accounts or profiles
+    • Device identifiers for tracking
+    • Analytics or behavioral tracking data
+2.3 Local Data Storage
+We store the following only on your device:
+    • Lesson and progress data
+    • Completed security checks and validation results
+    • Achievements, badges, and gamification progress
+    • App preferences and settings
+    • Device audit results and recommendations
+    • Streak tracking
+This data is stored locally using React Native AsyncStorage. While AsyncStorage is not encrypted by default, no sensitive data (such as passwords, financial info, or personal identifiers) is stored. All data is cleared when you uninstall the App.
+3. HOW WE USE YOUR INFORMATION
+3.1 Breach Checking Feature
+    • Your email address is sent to XposedOrNot.com, a third-party security service.
+    • The service checks your email against known breach databases.
+    • Neither our App nor XposedOrNot permanently stores your email.
+    • This feature is optional and requires your explicit action.
+3.2 Educational Content and Progress Tracking
+Locally stored data is used to:
+    • Track your learning progress
+    • Provide personalized recommendations
+    • Display achievements and streaks
+    • Save preferences and settings
+3.3 Security Alerts and Updates
+The App may fetch general cybersecurity news and alerts from public RSS feeds. No personal data is involved in this process.
+4. THIRD-PARTY SERVICES
+4.1 XposedOrNot API
+    • Provider: XposedOrNot.com
+    • Purpose: Check email addresses against known breaches
+    • Data Shared: Only the email you enter
+    • Retention: Email addresses are not stored
+    • Security: All communication uses HTTPS
+4.2 RSS-to-JSON Services
+    • Used to fetch cybersecurity news and alerts
+    • No personal information is shared
+4.3 No Analytics or Tracking Services
+We do not use:
+    • Analytics platforms (Google, Facebook, etc.)
+    • Crash reporting services
+    • User behavior tracking
+    • Advertising networks
+5. DATA SECURITY
+We implement safeguards to protect your information:
+5.1 Technical Safeguards
+    • All data transmission uses HTTPS (TLS 1.2+)
+    • No sensitive data stored locally
+    • Local data stored only on your device via AsyncStorage
+    • Input validation and sanitization for all user inputs
+    • Rate limiting on API calls
+5.2 Operational Safeguards
+    • No external servers or databases
+    • No user accounts or authentication systems
+    • No third-party data sharing beyond breach checking
+    • Regular code reviews and privacy-first development
+6. YOUR RIGHTS AND CHOICES
+    • Opt-Out: You can choose not to use the breach checking feature.
+    • Data Deletion: All data can be removed by uninstalling the App.
+    • Progress Control: Reset or export your progress at any time within the App.
+    • No Marketing: We do not send promotional emails or notifications.
+7. CHILDREN'S PRIVACY
+Our App is educational and may be used by all ages. We do not knowingly collect personal information from children under 13. If you are a parent or guardian and believe your child has provided personal information, please contact us.
+For users under 18, we recommend parental supervision when using the breach checking feature.
+8. INTERNATIONAL USERS
+This Privacy Policy applies worldwide. Depending on your location, local privacy rights (such as GDPR in the EU or CCPA in California) may apply. CyberPup does not sell personal data and relies on your consent for optional features such as breach checking.
+9. DATA RETENTION
+    • Local Data: Retained until you delete the App or reset your progress.
+    • Third-Party Data: Email addresses are not retained by CyberPup or XposedOrNot. Breach results are not stored. RSS feed data may be cached temporarily.
+10. CHANGES TO THIS POLICY
+We may update this Privacy Policy to reflect changes in practices or laws. Updates will be shown in the App with an updated "Last Updated" date. Your continued use of the App means you accept the updated Privacy Policy.
+11. CONTACT US
+If you have questions, concerns, or requests regarding this Privacy Policy, please contact us:
+📧 cyberpupsecurity@proton.me
+We will respond within 30 days.
+12. APP PERMISSIONS
+Our App requests the following permissions:
+Android
+    • INTERNET: Required for breach checking and fetching news/alerts
+    • VIBRATE: For optional haptic feedback on achievements
+iOS
+    • No special permissions beyond standard app functionality
+All permissions are used only for the stated purposes.
+13. THIRD-PARTY LINKS
+The App may contain links to external websites. This Privacy Policy does not apply to those websites. Please review their policies before using them.
+14. EFFECTIVE DATE
+This Privacy Policy is effective as of the “Last Updated” date above

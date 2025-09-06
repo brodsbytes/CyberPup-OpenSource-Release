@@ -23,9 +23,14 @@ const CircularProgress = ({
   interactive = false,
   onPress,
   forceAnimation = false,
+  staticMode = false, // New prop to enable static mode
 }) => {
   const [animatedProgress] = useState(new Animated.Value(0));
   const [pulseAnim] = useState(new Animated.Value(1));
+  const [staticProgress, setStaticProgress] = useState(0);
+  
+  // Generate unique gradient ID to prevent conflicts
+  const gradientId = `progressGradient-${Math.random().toString(36).substr(2, 9)}`;
 
   const normalized = Math.max(0, Math.min(100, Number(progress) || 0));
   const radius = (size - strokeWidth) / 2;
@@ -51,6 +56,37 @@ const CircularProgress = ({
   
   const AnimatedPath = Animated.createAnimatedComponent(Path);
   
+  // Static progress arc that doesn't use animations
+  const StaticProgressArc = ({ progressValue }) => {
+    const endAngle = startAngle + (progressValue / 100) * arcAngle;
+    const start = polarToCartesian(centerX, centerY, radius, startAngle);
+    const end = polarToCartesian(centerX, centerY, radius, endAngle);
+    const largeArcFlag = (progressValue / 100) * arcAngle > 180 ? 1 : 0;
+    const arcPath = `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${end.x} ${end.y}`;
+    
+    return progressValue > 0 ? (
+      <>
+        {/* Primary gradient path */}
+        <Path
+          d={arcPath}
+          stroke={`url(#${gradientId})`}
+          strokeWidth={strokeWidth}
+          fill="transparent"
+          strokeLinecap="round"
+        />
+        {/* Fallback solid color path in case gradient fails */}
+        <Path
+          d={arcPath}
+          stroke="#2196F3"
+          strokeWidth={strokeWidth}
+          fill="transparent"
+          strokeLinecap="round"
+          opacity={0.8}
+        />
+      </>
+    ) : null;
+  };
+
   const AnimatedProgressArc = () => {
     const [currentProgress, setCurrentProgress] = useState(0);
     
@@ -73,7 +109,7 @@ const CircularProgress = ({
     return currentProgress > 0 ? (
       <Path
         d={arcPath}
-        stroke="url(#progressGradient)"
+        stroke={`url(#${gradientId})`}
         strokeWidth={strokeWidth}
         fill="transparent"
         strokeLinecap="round"
@@ -83,12 +119,18 @@ const CircularProgress = ({
 
   // Animate progress when it changes
   useEffect(() => {
-    Animated.timing(animatedProgress, {
-      toValue: normalized,
-      duration: 1000,
-      useNativeDriver: false,
-    }).start();
-  }, [normalized, forceAnimation]);
+    if (staticMode) {
+      // In static mode, just set the static progress value
+      setStaticProgress(normalized);
+    } else {
+      // In animated mode, animate to the new value
+      Animated.timing(animatedProgress, {
+        toValue: normalized,
+        duration: 1000,
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [normalized, forceAnimation, staticMode]);
 
   // Handle press with haptic feedback
   const handlePress = () => {
@@ -141,7 +183,7 @@ const CircularProgress = ({
         
         {/* Define the gradient */}
         <Defs>
-          <LinearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <LinearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
             <Stop offset="0%" stopColor="#2196F3" stopOpacity="1" />
             <Stop offset="50%" stopColor="#42A5F5" stopOpacity="0.7" />
             <Stop offset="100%" stopColor="#64B5F6" stopOpacity="0.2" />
@@ -156,7 +198,11 @@ const CircularProgress = ({
           strokeLinecap="round"
         />
         
-        <AnimatedProgressArc />
+        {staticMode ? (
+          <StaticProgressArc progressValue={staticProgress} />
+        ) : (
+          <AnimatedProgressArc />
+        )}
       </Svg>
       <CenterContent />
     </View>

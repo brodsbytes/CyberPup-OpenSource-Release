@@ -28,14 +28,7 @@ const BreachCheckStep = ({
   const [email, setEmail] = useState('');
   const [isCheckingBreach, setIsCheckingBreach] = useState(false);
   const [breachResult, setBreachResult] = useState(null);
-  const [emailError, setEmailError] = useState('');
-
-  useEffect(() => {
-    // Clear error when email changes
-    if (emailError && email) {
-      setEmailError('');
-    }
-  }, [email]);
+  const [emailError, setEmailError] = useState(null);
 
   const validateEmail = (emailText) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -44,11 +37,9 @@ const BreachCheckStep = ({
 
   const handleEmailChange = (text) => {
     setEmail(text);
-    // Real-time validation feedback
-    if (text.length > 0 && !validateEmail(text)) {
-      setEmailError('Please enter a valid email address');
-    } else {
-      setEmailError('');
+    // Clear any existing errors when user starts typing
+    if (emailError) {
+      setEmailError(null);
     }
   };
 
@@ -64,7 +55,7 @@ const BreachCheckStep = ({
     }
 
     setIsCheckingBreach(true);
-    setEmailError('');
+    setEmailError(null);
 
     try {
       // Try detailed analytics first, fallback to basic check
@@ -169,7 +160,7 @@ const BreachCheckStep = ({
   const handleTryAgain = () => {
     setBreachResult(null);
     setEmail('');
-    setEmailError('');
+    setEmailError(null);
   };
 
   const renderBreachResults = () => {
@@ -198,21 +189,36 @@ const BreachCheckStep = ({
         {breachResult.isBreached && breachResult.breaches.length > 0 && (
           <View style={styles.breachesList}>
             <Text style={styles.breachesTitle}>Affected Services:</Text>
-            <ScrollView style={styles.breachesScrollView} showsVerticalScrollIndicator={false}>
-              {breachResult.breaches.map((breach, index) => (
-                <View key={index} style={styles.breachItem}>
-                  <Text style={styles.breachName}>{breach.name}</Text>
-                  <Text style={styles.breachDetails}>
-                    Date: {breach.date} • Records: {breach.records}
-                  </Text>
-                  {breach.dataTypes && breach.dataTypes.length > 0 && (
-                    <Text style={styles.breachData}>
-                      Data: {Array.isArray(breach.dataTypes) ? breach.dataTypes.join(', ') : breach.dataTypes}
+            <View style={styles.breachesScrollContainer}>
+              <ScrollView 
+                style={styles.breachesScrollView} 
+                showsVerticalScrollIndicator={true}
+                nestedScrollEnabled={true}
+                bounces={false}
+                scrollEventThrottle={16}
+              >
+                {breachResult.breaches.map((breach, index) => (
+                  <View key={index} style={styles.breachItem}>
+                    <Text style={styles.breachName}>{breach.name}</Text>
+                    <Text style={styles.breachDetails}>
+                      Date: {breach.date} • Records: {breach.records}
                     </Text>
-                  )}
+                    {breach.dataTypes && breach.dataTypes.length > 0 && (
+                      <Text style={styles.breachData}>
+                        Data: {Array.isArray(breach.dataTypes) ? breach.dataTypes.join(', ') : breach.dataTypes}
+                      </Text>
+                    )}
+                  </View>
+                ))}
+              </ScrollView>
+              {breachResult.breaches.length > 2 && (
+                <View style={styles.scrollHint}>
+                  <Text style={styles.scrollHintText}>
+                    Scroll to see all {breachResult.breaches.length} breaches
+                  </Text>
                 </View>
-              ))}
-            </ScrollView>
+              )}
+            </View>
           </View>
         )}
 
@@ -289,13 +295,13 @@ const BreachCheckStep = ({
             <Ionicons 
               name="mail" 
               size={Responsive.iconSizes.medium} 
-              color={emailError ? Colors.warning : Colors.textSecondary} 
+              color={Colors.textSecondary} 
               style={styles.inputIcon}
             />
             <TextInput
               style={[
                 styles.emailInput,
-                emailError && styles.emailInputError
+                !!emailError && styles.emailInputError
               ]}
               value={email}
               onChangeText={handleEmailChange}
@@ -308,17 +314,17 @@ const BreachCheckStep = ({
             />
           </View>
 
-          {emailError ? (
+          {emailError && (
             <Text style={styles.errorText}>{emailError}</Text>
-          ) : null}
+          )}
 
           <TouchableOpacity
             style={[
               styles.checkButton,
-              (!email.trim() || emailError || isCheckingBreach) && styles.checkButtonDisabled
+              (!email.trim() || isCheckingBreach) && styles.checkButtonDisabled
             ]}
             onPress={performBreachCheck}
-            disabled={!email.trim() || emailError || isCheckingBreach}
+            disabled={!email.trim() || isCheckingBreach}
             activeOpacity={0.8}
           >
             {isCheckingBreach ? (
@@ -481,8 +487,15 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     marginBottom: Responsive.spacing.sm,
   },
+  breachesScrollContainer: {
+    position: 'relative',
+  },
   breachesScrollView: {
-    maxHeight: 200,
+    // Calculate height for 2.5 breach items
+    // Each breach item: padding (16) + name (20) + details (16) + data (16) + margins (8) = ~76px
+    // 2.5 items = 76 * 2.5 = 190px
+    maxHeight: 190,
+    minHeight: 190,
   },
   breachItem: {
     backgroundColor: Colors.background,
@@ -505,6 +518,23 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.sm,
     color: Colors.textSecondary,
     fontStyle: 'italic',
+  },
+  scrollHint: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    paddingVertical: Responsive.spacing.xs,
+    paddingHorizontal: Responsive.spacing.sm,
+    borderBottomLeftRadius: Responsive.borderRadius.medium,
+    borderBottomRightRadius: Responsive.borderRadius.medium,
+  },
+  scrollHintText: {
+    fontSize: Typography.sizes.xs,
+    color: Colors.textPrimary,
+    textAlign: 'center',
+    fontWeight: Typography.weights.medium,
   },
   tryAgainButton: {
     flexDirection: 'row',

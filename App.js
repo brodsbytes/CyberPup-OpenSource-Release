@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import WelcomeScreen from './screens/WelcomeScreen';
 import InsightsScreen from './screens/InsightsScreen';
@@ -9,6 +10,7 @@ import { GuideDetailScreen, ToolDetailScreen, AlertDetailScreen } from './screen
 
 import { APP_CONSTANTS, SCREEN_NAMES, ERROR_MESSAGES } from './constants';
 import { AppStorage } from './utils/storage';
+import { cyberPupLogger, LOG_CATEGORIES } from './utils/logger';
 
 import {
   // Level 1 Check screens
@@ -57,6 +59,7 @@ export default function App() {
   const [initialRoute, setInitialRoute] = useState(APP_CONSTANTS.NAVIGATION.INITIAL_ROUTES.AUDIT);
 
   useEffect(() => {
+    cyberPupLogger.info(LOG_CATEGORIES.GENERAL, 'App starting up', { timestamp: new Date().toISOString() });
     checkAuditStatus();
   }, []);
 
@@ -64,35 +67,41 @@ export default function App() {
     // Register background fetch for security alerts (only on native platforms)
     try {
       BackgroundAlertsService.registerBackgroundFetch();
+      cyberPupLogger.info(LOG_CATEGORIES.SECURITY, 'Background fetch registered successfully');
     } catch (error) {
-      console.log('Background fetch not available on this platform:', error.message);
+      cyberPupLogger.warn(LOG_CATEGORIES.SECURITY, 'Background fetch not available on this platform', { error: error.message });
     }
     
     return () => {
       // Cleanup on app unmount
       try {
         BackgroundAlertsService.unregisterBackgroundFetch();
+        cyberPupLogger.info(LOG_CATEGORIES.SECURITY, 'Background fetch unregistered successfully');
       } catch (error) {
-        console.log('Background fetch cleanup not available on this platform:', error.message);
+        cyberPupLogger.warn(LOG_CATEGORIES.SECURITY, 'Background fetch cleanup not available on this platform', { error: error.message });
       }
     };
   }, []);
 
   const checkAuditStatus = async () => {
     try {
+      cyberPupLogger.debug(LOG_CATEGORIES.STORAGE, 'Checking audit status from storage');
       const welcomeCompleted = await AsyncStorage.getItem('welcome_completed');
       
       if (welcomeCompleted === 'true') {
+        cyberPupLogger.info(LOG_CATEGORIES.NAVIGATION, 'Welcome completed, navigating to main app');
         setInitialRoute(APP_CONSTANTS.NAVIGATION.INITIAL_ROUTES.WELCOME);
       } else {
+        cyberPupLogger.info(LOG_CATEGORIES.NAVIGATION, 'Welcome not completed, showing initial welcome screen');
         setInitialRoute(SCREEN_NAMES.INITIAL_WELCOME);
       }
     } catch (error) {
-      console.log(ERROR_MESSAGES.AUDIT_STATUS_ERROR, error);
+      cyberPupLogger.error(LOG_CATEGORIES.STORAGE, 'Failed to check audit status', { error: error.message, stack: error.stack });
       // Fallback to initial welcome screen if there's an error
       setInitialRoute(SCREEN_NAMES.INITIAL_WELCOME);
     } finally {
       setIsLoading(false);
+      cyberPupLogger.debug(LOG_CATEGORIES.GENERAL, 'App loading completed');
     }
   };
 
@@ -101,13 +110,14 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName={initialRoute}
-        screenOptions={{
-          headerShown: false,
-        }}
-      >
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <Stack.Navigator
+          initialRouteName={initialRoute}
+          screenOptions={{
+            headerShown: false,
+          }}
+        >
         <Stack.Screen name={SCREEN_NAMES.INITIAL_WELCOME} component={InitialWelcomeScreen} />
         <Stack.Screen name={SCREEN_NAMES.DEVICE_AUDIT} component={DeviceAuditScreen} />
         
@@ -156,8 +166,9 @@ export default function App() {
         {/* 🎯 Phase 4 Pattern A Enhanced Screens */}
         <Stack.Screen name={SCREEN_NAMES.CHECK_1_2_5_PUBLIC_CHARGING} component={Check1_2_5_PublicChargingScreen} />
         <Stack.Screen name={SCREEN_NAMES.CHECK_1_5_1_SHARING_AWARENESS} component={Check1_5_1_SharingAwarenessScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }
 

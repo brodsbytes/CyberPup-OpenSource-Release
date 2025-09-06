@@ -50,12 +50,14 @@ const GamificationIcons = ({ onStreakPress, onBadgesPress }) => {
         Animated.timing(flickerAnim, {
           toValue: 0.7,
           duration: 800,
-          useNativeDriver: false,
+          easing: Easing.inOut(Easing.ease), // More natural flicker
+          useNativeDriver: true, // Opacity can use native driver
         }),
         Animated.timing(flickerAnim, {
           toValue: 1,
           duration: 800,
-          useNativeDriver: false,
+          easing: Easing.inOut(Easing.ease), // More natural flicker
+          useNativeDriver: true, // Opacity can use native driver
         }),
       ])
     ).start();
@@ -66,12 +68,14 @@ const GamificationIcons = ({ onStreakPress, onBadgesPress }) => {
         Animated.timing(shineAnim, {
           toValue: 1,
           duration: 2000,
-          useNativeDriver: false,
+          easing: Easing.inOut(Easing.quad), // Smoother shine
+          useNativeDriver: true, // Opacity can use native driver
         }),
         Animated.timing(shineAnim, {
           toValue: 0,
           duration: 2000,
-          useNativeDriver: false,
+          easing: Easing.inOut(Easing.quad), // Smoother shine
+          useNativeDriver: true, // Opacity can use native driver
         }),
       ])
     ).start();
@@ -83,12 +87,14 @@ const GamificationIcons = ({ onStreakPress, onBadgesPress }) => {
       Animated.timing(scaleAnim, {
         toValue: 0.9,
         duration: 100,
-        useNativeDriver: false,
+        easing: Easing.out(Easing.quad), // Smoother press
+        useNativeDriver: true, // Scale can use native driver
       }),
       Animated.timing(scaleAnim, {
         toValue: 1,
         duration: 100,
-        useNativeDriver: false,
+        easing: Easing.out(Easing.back(1.1)), // Subtle bounce back
+        useNativeDriver: true, // Scale can use native driver
       }),
     ]).start();
 
@@ -103,12 +109,14 @@ const GamificationIcons = ({ onStreakPress, onBadgesPress }) => {
       Animated.timing(badgeScaleAnim, {
         toValue: 0.9,
         duration: 100,
-        useNativeDriver: false,
+        easing: Easing.out(Easing.quad), // Smoother press
+        useNativeDriver: true, // Scale can use native driver
       }),
       Animated.timing(badgeScaleAnim, {
         toValue: 1,
         duration: 100,
-        useNativeDriver: false,
+        easing: Easing.out(Easing.back(1.1)), // Subtle bounce back
+        useNativeDriver: true, // Scale can use native driver
       }),
     ]).start();
 

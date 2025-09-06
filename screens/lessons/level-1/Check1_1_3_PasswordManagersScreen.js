@@ -65,29 +65,8 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
 
   const initializeDeviceContent = async () => {
     try {
-      // Get user's registered devices
-      const devices = await DeviceCapabilities.getUserDevices();
-      const currentDevice = DeviceCapabilities.getCurrentDevice();
-      
-      // Add current device if not already in the list
-      let allDevices = [...devices];
-      const hasCurrentDevice = devices.some(d => 
-        d.platform === currentDevice.platform && d.type === currentDevice.type
-      );
-      
-      if (!hasCurrentDevice) {
-        allDevices.unshift({
-          id: 'current-device',
-          name: currentDevice.type,
-          type: currentDevice.platform === 'ios' || currentDevice.platform === 'android' ? 'mobile' : 'computer',
-          platform: currentDevice.platform,
-          tier2: currentDevice.platform,
-          autoDetected: true,
-          supportsDeepLinks: currentDevice.supportsDeepLinks,
-          icon: getDeviceIcon(currentDevice)
-        });
-      }
-
+      // Use the new smart deduplication method to prevent device duplicates
+      const allDevices = await DeviceCapabilities.getUserDevicesWithCurrentDevice();
       setUserDevices(allDevices);
 
       // Create device-specific actions for password manager setup
@@ -117,12 +96,16 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
 
   const createPasswordManagerActions = async (device) => {
     const platform = device.platform || device.tier2;
-    const settingsGuide = SettingsGuide.createGuidance('password-manager', device);
+    const settingsGuide = SettingsGuide.createGuidance('passwords', device);
     const recommendedApps = settingsGuide.getRecommendedApps('password-manager');
 
     // Get copywriting content for device actions
     const copywritingContent = CopywritingService.getCheckContent('1-1-3');
     const deviceActionsContent = copywritingContent.deviceActions || {};
+
+    // Get device-specific recommendations
+    const userDevices = await DeviceCapabilities.getUserDevices();
+    const recommendations = SettingsGuide.getPasswordManagerRecommendations(userDevices);
 
     const actions = [
       {
@@ -130,7 +113,7 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
         title: deviceActionsContent.chooseManager?.title || 'Choose Your Password Manager',
         description: deviceActionsContent.chooseManager?.description || 'Select and install a trusted password manager that fits your devices',
         completed: false,
-        steps: deviceActionsContent.chooseManager?.steps || [
+        steps: recommendations.primary.setupSteps || deviceActionsContent.chooseManager?.steps || [
           'Check if your device has a built-in password manager (iCloud Keychain, Google Password Manager)',
           'For built-in managers: Go to Settings → Passwords → turn on AutoFill',
           'For third-party apps: Choose from Bitwarden (free), 1Password, or Dashlane',
@@ -144,10 +127,15 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
           'Premium managers offer advanced features like security monitoring',
           'Never download password managers from unknown websites'
         ],
-        deepLink: recommendedApps.length > 0 ? recommendedApps[0].url : null,
+        deepLink: platform === 'android' ? 'android-password-manager' : settingsGuide.deepLink.url,
         verification: 'manual',
         priority: 'critical',
-        apps: recommendedApps
+        apps: recommendedApps,
+        // Add device-specific recommendation data
+        recommendation: {
+          primary: recommendations.primary,
+          alternatives: recommendations.alternatives
+        }
       },
       {
         id: `${device.id}-create-master-password`,
@@ -349,8 +337,8 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
   };
 
   const celebrateCompletion = () => {
-    // The completion popup will be shown automatically when isCompleted is true
-    // No need to call it as a function
+    console.log('🎉 Celebrating completion of Check 1.1.3');
+    setShowCompletionPopup(true);
   };
 
   const handleExit = () => {
@@ -379,23 +367,82 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
     return totalActions > 0 ? (completedActions / totalActions) * 100 : 0;
   };
 
+  const renderDeviceSpecificRecommendations = () => {
+    try {
+      const recommendations = SettingsGuide.getPasswordManagerRecommendations(userDevices);
+      
+      return (
+        <View style={styles.recommendationCard}>
+          <View style={styles.primaryRecommendation}>
+            <View style={styles.recommendationHeader}>
+              <Ionicons 
+                name={recommendations.primary.type === 'built-in' ? 'shield-checkmark' : 'star'} 
+                size={Responsive.iconSizes.medium} 
+                color={Colors.accent} 
+              />
+              <Text style={styles.recommendationTitle}>
+                {recommendations.primary.name}
+              </Text>
+              <View style={[
+                styles.recommendationBadge, 
+                { backgroundColor: recommendations.primary.type === 'built-in' ? Colors.success : Colors.accent }
+              ]}>
+                <Text style={styles.recommendationBadgeText}>
+                  {recommendations.primary.type === 'built-in' ? 'Built-in' : 
+                   recommendations.primary.type === 'free' ? 'Free' : 'Premium'}
+                </Text>
+              </View>
+            </View>
+            
+            <Text style={styles.recommendationDescription}>
+              {recommendations.primary.whyRecommended}
+            </Text>
+            
+            <View style={styles.prosConsContainer}>
+              <View style={styles.prosSection}>
+                <Text style={styles.prosConsTitle}>✅ Benefits:</Text>
+                {recommendations.primary.pros.map((pro, index) => (
+                  <Text key={index} style={styles.prosConsItem}>• {pro}</Text>
+                ))}
+              </View>
+              
+              {recommendations.primary.cons && recommendations.primary.cons.length > 0 && (
+                <View style={styles.consSection}>
+                  <Text style={styles.prosConsTitle}>⚠️ Considerations:</Text>
+                  {recommendations.primary.cons.map((con, index) => (
+                    <Text key={index} style={styles.prosConsItem}>• {con}</Text>
+                  ))}
+                </View>
+              )}
+            </View>
+          </View>
+          
+          {recommendations.alternatives && recommendations.alternatives.length > 0 && (
+            <View style={styles.alternativesSection}>
+              <Text style={styles.alternativesTitle}>Other Options:</Text>
+              {recommendations.alternatives.map((alt, index) => (
+                <View key={index} style={styles.alternativeItem}>
+                  <Text style={styles.alternativeName}>{alt.name}</Text>
+                  <Text style={styles.alternativeDescription}>{alt.description}</Text>
+                  <Text style={styles.alternativeReason}>{alt.whyConsider}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      );
+    } catch (error) {
+      console.log('Error rendering recommendations:', error);
+      return null;
+    }
+  };
+
   // Get copywriting content for rendering
   const copywritingContent = CopywritingService.getCheckContent('1-1-3');
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
-      
-      {/* ✅ UPDATED: Header with progress bar */}
-      <HeaderWithProgress
-        checkId="1-1-3"
-        onExit={handleExit}
-        isCompleted={isCompleted}
-        progress={getProgress()}
-        navigation={navigation}
-      />
-
-      {/* ✅ STANDARDIZED: Exit Modal using common component */}
+    <View style={styles.rootContainer}>
+      {/* ✅ STANDARDIZED: Exit Modal using common component - positioned at root level */}
       <ExitModal
         visible={showExitModal}
         onClose={() => setShowExitModal(false)}
@@ -405,6 +452,18 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
         title="Wait, don't go!"
         message="You're making great progress on securing your passwords. Don't lose momentum now!"
       />
+      
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
+        
+        {/* ✅ UPDATED: Header with progress bar */}
+        <HeaderWithProgress
+          checkId="1-1-3"
+          onExit={handleExit}
+          isCompleted={isCompleted}
+          progress={getProgress()}
+          navigation={navigation}
+        />
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
@@ -414,22 +473,6 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
             <Text style={styles.description}>
               {copywritingContent.description || 'Configure secure password managers on all your devices. This creates strong, unique passwords and makes login easier and safer.'}
             </Text>
-            
-            {/* Progress Indicator */}
-            <View style={styles.progressSection}>
-              <View style={styles.progressHeader}>
-                <Text style={styles.progressTitle}>Setup Progress</Text>
-                <Text style={styles.progressPercentage}>{Math.round(getOverallProgress())}%</Text>
-              </View>
-              <View style={styles.progressBar}>
-                <View 
-                  style={[
-                    styles.progressFill, 
-                    { width: `${getOverallProgress()}%` }
-                  ]} 
-                />
-              </View>
-            </View>
           </View>
 
           {/* Learn More Section */}
@@ -452,6 +495,17 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
               <Text style={styles.learnMoreBody}>
                 Password managers automatically generate strong, unique passwords for every account and store them securely in one encrypted vault. They seamlessly auto-fill your passwords on websites and apps, sync across all your devices, and protect you from password reuse attacks. Many also monitor for compromised passwords and alert you when it's time to change them.
               </Text>
+            </View>
+          )}
+
+          {/* Device-Specific Recommendations */}
+          {userDevices.length > 0 && (
+            <View style={styles.recommendationsSection}>
+              <Text style={styles.recommendationsTitle}>🎯 Expert Recommendations for Your Devices</Text>
+              <Text style={styles.recommendationsSubtitle}>
+                Based on your device ecosystem, here's what security experts recommend:
+              </Text>
+              {renderDeviceSpecificRecommendations()}
             </View>
           )}
 
@@ -496,27 +550,6 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
             )}
           </View>
 
-          {/* Security Tips */}
-          <View style={styles.tipsSection}>
-            <Text style={styles.tipsTitle}>🔐 Security Best Practices</Text>
-            <View style={styles.tipItem}>
-              <Ionicons name="shield-checkmark" size={Responsive.iconSizes.medium} color={Colors.accent} />
-              <Text style={styles.tipText}>Choose a password manager with zero-knowledge encryption</Text>
-            </View>
-            <View style={styles.tipItem}>
-              <Ionicons name="key" size={Responsive.iconSizes.medium} color={Colors.accent} />
-              <Text style={styles.tipText}>Use a strong, memorable master password</Text>
-            </View>
-            <View style={styles.tipItem}>
-              <Ionicons name="sync" size={Responsive.iconSizes.medium} color={Colors.accent} />
-              <Text style={styles.tipText}>Enable sync to access passwords on all devices</Text>
-            </View>
-            <View style={styles.tipItem}>
-              <Ionicons name="finger-print" size={Responsive.iconSizes.medium} color={Colors.accent} />
-              <Text style={styles.tipText}>Enable biometric unlock where available</Text>
-            </View>
-          </View>
-
           {/* Completion Status */}
           <CompletionPopup
           isVisible={showCompletionPopup}
@@ -537,11 +570,15 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
 
         </View>
       </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  rootContainer: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     backgroundColor: Colors.background,
@@ -592,37 +629,6 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     lineHeight: Typography.sizes.md * 1.5,
     marginBottom: Responsive.spacing.lg,
-  },
-  progressSection: {
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.large,
-    padding: Responsive.padding.card,
-  },
-  progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Responsive.spacing.sm,
-  },
-  progressTitle: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
-  },
-  progressPercentage: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.bold,
-    color: Colors.accent,
-  },
-  progressBar: {
-    height: 6,
-    backgroundColor: Colors.overlayLight,
-    borderRadius: 3,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: Colors.accent,
-    borderRadius: 3,
   },
   learnMoreButton: {
     flexDirection: 'row',
@@ -726,6 +732,116 @@ const styles = StyleSheet.create({
     marginLeft: Responsive.spacing.sm,
     flex: 1,
     lineHeight: Typography.sizes.sm * 1.4,
+  },
+  recommendationsSection: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  recommendationsTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.bold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.sm,
+  },
+  recommendationsSubtitle: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    marginBottom: Responsive.spacing.md,
+    lineHeight: Typography.sizes.sm * 1.4,
+  },
+  recommendationCard: {
+    backgroundColor: Colors.background,
+    borderRadius: Responsive.borderRadius.medium,
+    padding: Responsive.padding.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  primaryRecommendation: {
+    marginBottom: Responsive.spacing.md,
+  },
+  recommendationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Responsive.spacing.sm,
+  },
+  recommendationTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.bold,
+    color: Colors.textPrimary,
+    marginLeft: Responsive.spacing.sm,
+    flex: 1,
+  },
+  recommendationBadge: {
+    paddingHorizontal: Responsive.spacing.sm,
+    paddingVertical: Responsive.spacing.xs,
+    borderRadius: Responsive.borderRadius.small,
+  },
+  recommendationBadgeText: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+  },
+  recommendationDescription: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    lineHeight: Typography.sizes.sm * 1.4,
+    marginBottom: Responsive.spacing.md,
+  },
+  prosConsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  prosSection: {
+    flex: 1,
+    marginRight: Responsive.spacing.sm,
+  },
+  consSection: {
+    flex: 1,
+    marginLeft: Responsive.spacing.sm,
+  },
+  prosConsTitle: {
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.xs,
+  },
+  prosConsItem: {
+    fontSize: Typography.sizes.xs,
+    color: Colors.textSecondary,
+    lineHeight: Typography.sizes.xs * 1.3,
+    marginBottom: Responsive.spacing.xs,
+  },
+  alternativesSection: {
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    paddingTop: Responsive.spacing.md,
+  },
+  alternativesTitle: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.sm,
+  },
+  alternativeItem: {
+    marginBottom: Responsive.spacing.sm,
+  },
+  alternativeName: {
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+  },
+  alternativeDescription: {
+    fontSize: Typography.sizes.xs,
+    color: Colors.textSecondary,
+    marginTop: Responsive.spacing.xs,
+  },
+  alternativeReason: {
+    fontSize: Typography.sizes.xs,
+    color: Colors.accent,
+    fontStyle: 'italic',
+    marginTop: Responsive.spacing.xs,
   },
   completionCard: {
     backgroundColor: Colors.successSoft,

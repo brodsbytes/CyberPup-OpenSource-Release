@@ -65,36 +65,17 @@ const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
 
   const initializeDeviceContent = async () => {
     try {
-      // Get user's registered devices
-      const devices = await DeviceCapabilities.getUserDevices();
-      const currentDevice = DeviceCapabilities.getCurrentDevice();
-      
-      // Add current device if not already in the list
-      let allDevices = [...devices];
-      const hasCurrentDevice = devices.some(d => 
-        d.platform === currentDevice.platform && d.type === currentDevice.type
-      );
-      
-      if (!hasCurrentDevice) {
-        allDevices.unshift({
-          id: 'current-device',
-          name: currentDevice.type,
-          type: currentDevice.platform === 'ios' || currentDevice.platform === 'android' ? 'mobile' : 'computer',
-          platform: currentDevice.platform,
-          tier2: currentDevice.platform,
-          autoDetected: true,
-          supportsDeepLinks: currentDevice.supportsDeepLinks,
-          settingsUrl: currentDevice.settingsUrl,
-          icon: getDeviceIcon(currentDevice)
-        });
-      }
-
+      // Use the new smart deduplication method to prevent device duplicates
+      const allDevices = await DeviceCapabilities.getUserDevicesWithCurrentDevice();
       setUserDevices(allDevices);
 
       // Create device-specific actions for screen lock setup
       const actions = {};
       for (const device of allDevices) {
-        actions[device.id] = await createScreenLockActions(device);
+        const deviceActions = await createScreenLockActions(device);
+        actions[device.id] = deviceActions;
+        console.log(`🔗 Deep Link Debug for ${device.name}:`, deviceActions.map(a => ({ title: a.title, deepLink: a.deepLink })));
+        console.log(`📋 Total actions created for ${device.name}:`, deviceActions.length);
       }
       setDeviceActions(actions);
 
@@ -168,7 +149,14 @@ const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
           'Battery life impact is minimal with modern devices',
           'Consider longer timeouts only if you\'re in a secure, private location'
         ],
-        deepLink: deviceContent?.deepLink,
+        deepLink: (() => {
+          const devicePlatform = device.platform || device.tier2;
+          const link = devicePlatform === 'android' ? 'android.settings.DISPLAY_SETTINGS' : 
+                      devicePlatform === 'ios' ? 'App-Prefs:DISPLAY' : 
+                      deviceContent?.deepLink;
+          console.log(`🔗 Auto-lock deep link for ${devicePlatform}:`, link);
+          return link;
+        })(),
         verification: 'settings_check',
         priority: 'high'
       }
@@ -336,8 +324,8 @@ const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
   };
 
   const celebrateCompletion = () => {
-    // The completion popup will be shown automatically when isCompleted is true
-    // No need to call it as a function
+    console.log('🎉 Celebrating completion of Check 1.2.1');
+    setShowCompletionPopup(true);
   };
 
   const handleExit = () => {

@@ -451,23 +451,40 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
             {breachResult?.isBreached && breachResult.breaches.length > 0 && (
               <View style={styles.breachesList}>
                 <Text style={styles.breachesTitle}>Affected Services:</Text>
-                {breachResult.breaches.map((breach, index) => (
-                  <View key={index} style={styles.breachItem}>
-                    <Text style={styles.breachName}>{breach.name}</Text>
-                    <Text style={styles.breachDate}>Date: {breach.date}</Text>
-                    {breach.records && breach.records !== 'Unknown' && (
-                      <Text style={styles.breachRecords}>Records: {breach.records}</Text>
-                    )}
-                    {breach.industry && breach.industry !== 'Unknown' && (
-                      <Text style={styles.breachIndustry}>Industry: {breach.industry}</Text>
-                    )}
-                    {breach.dataTypes && breach.dataTypes.length > 0 && (
-                      <Text style={styles.breachData}>
-                        Data: {Array.isArray(breach.dataTypes) ? breach.dataTypes.join(', ') : breach.dataTypes}
+                <View style={styles.breachesScrollContainer}>
+                  <ScrollView 
+                    style={styles.breachesScrollView} 
+                    showsVerticalScrollIndicator={true}
+                    nestedScrollEnabled={true}
+                    bounces={false}
+                    scrollEventThrottle={16}
+                  >
+                    {breachResult.breaches.map((breach, index) => (
+                      <View key={index} style={styles.breachItem}>
+                        <Text style={styles.breachName}>{breach.name}</Text>
+                        <Text style={styles.breachDate}>Date: {breach.date}</Text>
+                        {breach.records && breach.records !== 'Unknown' && (
+                          <Text style={styles.breachRecords}>Records: {breach.records}</Text>
+                        )}
+                        {breach.industry && breach.industry !== 'Unknown' && (
+                          <Text style={styles.breachIndustry}>Industry: {breach.industry}</Text>
+                        )}
+                        {breach.dataTypes && breach.dataTypes.length > 0 && (
+                          <Text style={styles.breachData}>
+                            Data: {Array.isArray(breach.dataTypes) ? breach.dataTypes.join(', ') : breach.dataTypes}
+                          </Text>
+                        )}
+                      </View>
+                    ))}
+                  </ScrollView>
+                  {breachResult.breaches.length > 2 && (
+                    <View style={styles.scrollHint}>
+                      <Text style={styles.scrollHintText}>
+                        Scroll to see all {breachResult.breaches.length} breaches
                       </Text>
-                    )}
-                  </View>
-                ))}
+                    </View>
+                  )}
+                </View>
               </View>
             )}
 
@@ -890,6 +907,16 @@ const styles = StyleSheet.create({
   breachesList: {
     marginBottom: Responsive.spacing.lg,
   },
+  breachesScrollContainer: {
+    position: 'relative',
+  },
+  breachesScrollView: {
+    // Calculate height for 2.5 breach items
+    // Each breach item: padding (16) + name (20) + details (16) + data (16) + margins (8) = ~76px
+    // 2.5 items = 76 * 2.5 = 190px
+    maxHeight: 190,
+    minHeight: 190,
+  },
   breachesTitle: {
     fontSize: Typography.sizes.lg,
     fontWeight: Typography.weights.semibold,
@@ -925,6 +952,23 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.sm,
     color: Colors.textSecondary,
     marginTop: Responsive.spacing.xs,
+  },
+  scrollHint: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    paddingVertical: Responsive.spacing.xs,
+    paddingHorizontal: Responsive.spacing.sm,
+    borderBottomLeftRadius: Responsive.borderRadius.medium,
+    borderBottomRightRadius: Responsive.borderRadius.medium,
+  },
+  scrollHintText: {
+    fontSize: Typography.sizes.xs,
+    color: Colors.textPrimary,
+    textAlign: 'center',
+    fontWeight: Typography.weights.medium,
   },
   breachModalButtons: {
     marginTop: Responsive.spacing.lg,

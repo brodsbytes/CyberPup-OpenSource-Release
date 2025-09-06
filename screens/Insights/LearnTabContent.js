@@ -26,25 +26,35 @@ const LearnTabContent = ({ query, navigation }) => {
   const [userCountry, setUserCountry] = useState('US');
 
   useEffect(() => {
-    loadSecurityAlerts();
+    console.log('🔍 LearnTabContent: Component mounted, loading security alerts...');
+    // Clear any existing mock data from cache first
+    SecurityAlertsService.clearMockDataFromCache().then(() => {
+      loadSecurityAlerts();
+    });
   }, []);
 
   const loadSecurityAlerts = async () => {
     try {
+      console.log('🔄 LearnTabContent: Starting to load security alerts...');
       setAlertsLoading(true);
       setAlertsError(null);
       
+      console.log('🌍 LearnTabContent: Getting user country...');
       const detectedCountry = await LocationUtils.getUserCountry();
+      console.log(`📍 LearnTabContent: Detected country: ${detectedCountry}`);
       setUserCountry(detectedCountry);
       
-      const securityAlerts = await SecurityAlertsService.getSecurityAlerts(detectedCountry);
+      console.log('📡 LearnTabContent: Fetching fresh security alerts (clearing cache)...');
+      const securityAlerts = await SecurityAlertsService.clearCacheAndRefresh(detectedCountry);
+      console.log(`✅ LearnTabContent: Successfully loaded ${securityAlerts.length} alerts`);
       setAlerts(securityAlerts);
     } catch (error) {
-      console.log('Error loading security alerts:', error);
+      console.log('❌ LearnTabContent: Error loading security alerts:', error);
       setAlertsError(error.message);
       setAlerts([]);
     } finally {
       setAlertsLoading(false);
+      console.log('🏁 LearnTabContent: Security alerts loading completed');
     }
   };
 
@@ -53,7 +63,7 @@ const LearnTabContent = ({ query, navigation }) => {
       setAlertsError(null);
       const detectedCountry = await LocationUtils.getUserCountry();
       setUserCountry(detectedCountry);
-      const freshAlerts = await SecurityAlertsService.refreshAlerts(detectedCountry);
+      const freshAlerts = await SecurityAlertsService.clearCacheAndRefresh(detectedCountry);
       setAlerts(freshAlerts);
     } catch (error) {
       console.log('Error refreshing alerts:', error);
@@ -116,8 +126,8 @@ const LearnTabContent = ({ query, navigation }) => {
     if (alerts.length === 0) {
       return (
         <View style={styles.alertsEmptyContainer}>
-          <Text style={styles.emptyText}>No security alerts at this time</Text>
-          <Text style={styles.emptySubtext}>Your security is up to date!</Text>
+          <Text style={styles.emptyText}>Live security alerts cannot be loaded</Text>
+          <Text style={styles.emptySubtext}>Please refresh or try again later</Text>
         </View>
       );
     }

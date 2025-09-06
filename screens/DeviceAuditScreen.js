@@ -12,6 +12,7 @@ import {
   Platform,
   Dimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Responsive } from '../theme';
@@ -22,32 +23,25 @@ const DEVICE_HIERARCHY = {
   mobile: {
     apple: {
       name: 'Apple (iPhone, iPad)',
-      icon: 'phone-portrait',
-      models: ['iPhone 16 Pro', 'iPhone 16', 'iPhone 15 Pro', 'iPhone 15', 'iPhone 14 Pro', 'iPhone 14', 'iPhone 13', 'iPhone 12', 'iPad Pro', 'iPad Air', 'iPad', 'Other iPhone', 'Other iPad']
+      displayName: 'Apple',
+      icon: 'phone-portrait'
     },
     android: {
       name: 'Android (Samsung, Pixel, etc)',
-      icon: 'phone-portrait',
-      models: ['Samsung Galaxy S24', 'Samsung Galaxy S23', 'Google Pixel 8', 'Google Pixel 7', 'OnePlus', 'Other Android Phone', 'Android Tablet']
+      displayName: 'Android',
+      icon: 'phone-portrait'
     }
   },
   computer: {
     macos: {
       name: 'macOS (MacBook, iMac, etc)',
-      icon: 'laptop',
-      types: {
-        macbook: ['MacBook Air M3', 'MacBook Air M2', 'MacBook Pro 14"', 'MacBook Pro 16"', 'Other MacBook'],
-        'mac-mini': ['Mac mini M3', 'Mac mini M2', 'Other Mac mini'],
-        imac: ['iMac 24" M3', 'iMac 24" M1', 'Other iMac']
-      }
+      displayName: 'macOS',
+      icon: 'laptop'
     },
     windows: {
       name: 'Windows (HP, Dell, Lenovo, etc)',
-      icon: 'laptop',
-      versions: {
-        'windows-11': ['Windows 11 Home', 'Windows 11 Pro'],
-        'windows-10': ['Windows 10 Home', 'Windows 10 Pro']
-      }
+      displayName: 'Windows',
+      icon: 'laptop'
     }
   }
 };
@@ -56,11 +50,11 @@ const DeviceAuditScreen = ({ navigation, route }) => {
   const [devices, setDevices] = useState([]);
   const [isAddingDevice, setIsAddingDevice] = useState(false);
   const [isFirstTime, setIsFirstTime] = useState(true);
+  const insets = useSafeAreaInsets();
   
   // Hierarchical device selection state
   const [selectedTier1, setSelectedTier1] = useState(null); // 'mobile' or 'computer'
   const [selectedTier2, setSelectedTier2] = useState(null); // platform/brand
-  const [selectedTier3, setSelectedTier3] = useState(null); // model/version
   const [customDeviceName, setCustomDeviceName] = useState('');
   
   // Device removal confirmation state
@@ -114,6 +108,8 @@ const DeviceAuditScreen = ({ navigation, route }) => {
           id: Date.now().toString(),
           name: deviceName,
           type: deviceType,
+          platform: Platform.OS,
+          tier2: Platform.OS,
           autoDetected: true,
         };
         setDevices([autoDetectedDevice]);
@@ -150,10 +146,9 @@ const DeviceAuditScreen = ({ navigation, route }) => {
     
     if (customDeviceName.trim()) {
       deviceName = customDeviceName.trim();
-    } else if (selectedTier3) {
-      deviceName = selectedTier3;
     } else if (selectedTier2) {
-      deviceName = DEVICE_HIERARCHY[selectedTier1][selectedTier2].name;
+      // Use displayName (without brackets) for saved devices
+      deviceName = DEVICE_HIERARCHY[selectedTier1][selectedTier2].displayName;
     } else if (selectedTier1) {
       deviceName = selectedTier1 === 'mobile' ? 'Mobile Device' : 'Computer';
     }
@@ -163,9 +158,9 @@ const DeviceAuditScreen = ({ navigation, route }) => {
         id: Date.now().toString(),
         name: deviceName,
         type: deviceType,
+        platform: selectedTier2,
         tier1: selectedTier1,
         tier2: selectedTier2,
-        tier3: selectedTier3,
         autoDetected: false,
       };
       const updatedDevices = [...devices, newDevice];
@@ -179,18 +174,24 @@ const DeviceAuditScreen = ({ navigation, route }) => {
   const resetSelections = () => {
     setSelectedTier1(null);
     setSelectedTier2(null);
-    setSelectedTier3(null);
     setCustomDeviceName('');
   };
 
   const removeDevice = (deviceId) => {
     const deviceToDelete = devices.find(device => device.id === deviceId);
+    
+    // Prevent removal of auto-detected devices
+    if (deviceToDelete && deviceToDelete.autoDetected) {
+      console.log('Cannot remove auto-detected device:', deviceToDelete.name);
+      return;
+    }
+    
     setDeviceToRemove(deviceToDelete);
     setShowRemoveConfirmation(true);
   };
 
   const confirmRemoveDevice = async () => {
-    if (deviceToRemove) {
+    if (deviceToRemove && !deviceToRemove.autoDetected) {
       console.log('Removing device:', deviceToRemove.name);
       const updatedDevices = devices.filter(device => device.id !== deviceToRemove.id);
       setDevices(updatedDevices);
@@ -220,7 +221,7 @@ const DeviceAuditScreen = ({ navigation, route }) => {
 
   const renderHierarchicalSelector = () => {
     const isDeviceNameReady = () => {
-      return customDeviceName.trim() || selectedTier3 || selectedTier2 || selectedTier1;
+      return customDeviceName.trim() || selectedTier2 || selectedTier1;
     };
 
     return (
@@ -237,7 +238,6 @@ const DeviceAuditScreen = ({ navigation, route }) => {
               onPress={() => {
                 setSelectedTier1('mobile');
                 setSelectedTier2(null);
-                setSelectedTier3(null);
               }}
             >
               <Ionicons 
@@ -261,7 +261,6 @@ const DeviceAuditScreen = ({ navigation, route }) => {
               onPress={() => {
                 setSelectedTier1('computer');
                 setSelectedTier2(null);
-                setSelectedTier3(null);
               }}
             >
               <Ionicons 
@@ -295,7 +294,6 @@ const DeviceAuditScreen = ({ navigation, route }) => {
                   ]}
                   onPress={() => {
                     setSelectedTier2(key);
-                    setSelectedTier3(null);
                   }}
                 >
                   <Text style={[
@@ -315,70 +313,6 @@ const DeviceAuditScreen = ({ navigation, route }) => {
           </View>
         )}
 
-        {/* Tier 3: Model/Version */}
-        {selectedTier2 && (
-          <View style={styles.selectorTier}>
-            <Text style={styles.tierTitle}>
-              {selectedTier1 === 'mobile' ? 'Model (Optional)' : 'Version/Model (Optional)'}
-            </Text>
-            <View style={styles.modelScrollContainer}>
-              <ScrollView 
-                style={styles.modelScrollView}
-                showsVerticalScrollIndicator={true}
-                nestedScrollEnabled={true}
-              >
-                <View style={styles.tierOptionsList}>
-                  {(() => {
-                    const tier2Data = DEVICE_HIERARCHY[selectedTier1][selectedTier2];
-                    let options = [];
-                    
-                    if (selectedTier1 === 'mobile') {
-                      options = tier2Data.models;
-                    } else if (selectedTier1 === 'computer') {
-                      if (selectedTier2 === 'macos') {
-                        // For macOS, show device types first
-                        options = Object.keys(tier2Data.types).map(type => 
-                          type === 'mac-mini' ? 'Mac mini' : 
-                          type === 'macbook' ? 'MacBook' : 
-                          type === 'imac' ? 'iMac' : type
-                        );
-                      } else if (selectedTier2 === 'windows') {
-                        // For Windows, show versions
-                        options = Object.keys(tier2Data.versions).map(version => 
-                          version === 'windows-11' ? 'Windows 11' :
-                          version === 'windows-10' ? 'Windows 10' : version
-                        );
-                      }
-                    }
-                    
-                    return options.map((option, index) => (
-                      <TouchableOpacity
-                        key={index}
-                        style={[
-                          styles.listOption,
-                          selectedTier3 === option && styles.listOptionActive,
-                        ]}
-                        onPress={() => setSelectedTier3(option)}
-                      >
-                        <Text style={[
-                          styles.listOptionText,
-                          selectedTier3 === option && styles.listOptionTextActive,
-                        ]}>
-                          {option}
-                        </Text>
-                        <Ionicons 
-                          name={selectedTier3 === option ? "checkmark-circle" : "radio-button-off"} 
-                          size={Responsive.iconSizes.medium} 
-                          color={selectedTier3 === option ? Colors.accent : Colors.textSecondary} 
-                        />
-                      </TouchableOpacity>
-                    ));
-                  })()}
-                </View>
-              </ScrollView>
-            </View>
-          </View>
-        )}
 
         {/* Custom Device Name */}
         {selectedTier1 && (
@@ -408,7 +342,7 @@ const DeviceAuditScreen = ({ navigation, route }) => {
               </View>
               <View style={styles.previewInfo}>
                 <Text style={styles.previewName}>
-                  {customDeviceName.trim() || selectedTier3 || (selectedTier2 ? DEVICE_HIERARCHY[selectedTier1][selectedTier2].name : selectedTier1 === 'mobile' ? 'Mobile Device' : 'Computer')}
+                  {customDeviceName.trim() || (selectedTier2 ? DEVICE_HIERARCHY[selectedTier1][selectedTier2].displayName : selectedTier1 === 'mobile' ? 'Mobile Device' : 'Computer')}
                 </Text>
                 <Text style={styles.previewType}>
                   {selectedTier1 === 'mobile' ? 'Mobile Device' : 'Computer'}
@@ -440,17 +374,19 @@ const DeviceAuditScreen = ({ navigation, route }) => {
             <Text style={styles.autoDetectedLabel}>Auto-detected</Text>
           )}
         </View>
-        <TouchableOpacity
-          style={styles.removeButton}
-          onPress={() => {
-            console.log('Remove button pressed for device:', device.id);
-            removeDevice(device.id);
-          }}
-          activeOpacity={0.7}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Ionicons name="close-circle" size={Responsive.iconSizes.medium} color={Colors.error} />
-        </TouchableOpacity>
+        {!device.autoDetected && (
+          <TouchableOpacity
+            style={styles.removeButton}
+            onPress={() => {
+              console.log('Remove button pressed for device:', device.id);
+              removeDevice(device.id);
+            }}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="close-circle" size={Responsive.iconSizes.medium} color={Colors.error} />
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -484,9 +420,9 @@ const DeviceAuditScreen = ({ navigation, route }) => {
               <Text style={styles.title}>
                 Let's discover your devices
               </Text>
-              <Text style={styles.description}>
-                Every Cybersecurity assessment starts with a discovery phase. We will only use this information to personally guide you through our checks.
-              </Text>
+                              <Text style={styles.description}>
+                  This information is saved locally on your device - we will only use this information to personally guide you through our checks.{'\n\n'}Please take a moment to ensure you're saving all personal devices you use. Don't add work devices your employer provides.
+                </Text>
             </View>
           )}
 
@@ -553,7 +489,7 @@ const DeviceAuditScreen = ({ navigation, route }) => {
       </ScrollView>
 
       {/* Footer */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, Responsive.spacing.lg) }]}>
         <TouchableOpacity
           style={[styles.continueButton, devices.length === 0 && styles.continueButtonDisabled]}
           onPress={handleContinue}
@@ -870,16 +806,6 @@ const styles = StyleSheet.create({
   listOptionTextActive: {
     color: Colors.accent,
     fontWeight: Typography.weights.medium,
-  },
-  modelScrollContainer: {
-    maxHeight: 210, // Height for approximately 3.5 model options
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: Responsive.borderRadius.medium,
-    backgroundColor: Colors.surfaceAlt,
-  },
-  modelScrollView: {
-    flex: 1,
   },
   customInput: {
     backgroundColor: Colors.surfaceAlt,

@@ -295,8 +295,8 @@ const Check1_5_1_SharingAwarenessScreen = ({ navigation, route }) => {
 
   // ✅ STANDARD: Completion celebration
   const celebrateCompletion = () => {
-    // The completion popup will be shown automatically when isCompleted is true
-    // No need to call it as a function
+    console.log('🎉 Celebrating completion of Check 1.5.1');
+    setShowCompletionPopup(true);
   };
 
   // Calculate progress for the header

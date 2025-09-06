@@ -11,6 +11,7 @@ import {
   Image,
   Animated,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Responsive, CommonStyles } from '../theme';
@@ -22,6 +23,7 @@ const InitialWelcomeScreen = ({ navigation }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const scrollViewRef = useRef(null);
   const pulseAnim = useRef(new Animated.Value(0)).current;
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const pulseAnimation = Animated.loop(
@@ -356,7 +358,7 @@ const InitialWelcomeScreen = ({ navigation }) => {
       </ScrollView>
 
       {/* Navigation Footer */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, Responsive.spacing.lg) }]}>
         <TouchableOpacity
           style={styles.nextButton}
           onPress={handleNext}

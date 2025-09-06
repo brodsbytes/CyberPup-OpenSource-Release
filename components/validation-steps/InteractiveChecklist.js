@@ -341,8 +341,8 @@ const ChecklistItem = ({ item, onComplete, variant }) => {
     
     // Animate checkbox
     Animated.sequence([
-      Animated.timing(animationValue, { toValue: 1.2, duration: 100 }),
-      Animated.timing(animationValue, { toValue: 1, duration: 100 })
+      Animated.timing(animationValue, { toValue: 1.2, duration: 100, useNativeDriver: true }),
+      Animated.timing(animationValue, { toValue: 1, duration: 100, useNativeDriver: true })
     ]).start();
     
     onComplete(item.id, !item.completed);

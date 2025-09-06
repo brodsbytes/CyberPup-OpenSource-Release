@@ -9,8 +9,8 @@ import {
   Alert,
   Platform
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Responsive, CommonStyles } from '../../theme';
+import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 /**
@@ -20,29 +20,49 @@ import * as Haptics from 'expo-haptics';
  * Applies Phase 1 lessons: user-controlled advancement, contextual actions,
  * proper timing, and confirmation-based flows.
  */
-const ProgressiveActionCard = ({ 
+const ProgressiveActionCard = (props) => {
+  // State for expandable instructions
+  const [showAllSteps, setShowAllSteps] = useState(false);
+  
+  // Destructure props with validation
+  const { 
   action, 
   device, 
   onComplete, 
   onStatusChange,
   style,
-  variant // Added variant prop
-}) => {
-  const [status, setStatus] = useState(action.completed ? 'completed' : 'pending');
+    variant 
+  } = props || {};
+  
+  // Validate props early
+  if (!action || !device) {
+    return (
+      <View style={{ padding: 20, backgroundColor: Colors.error, borderRadius: 8, margin: 8 }}>
+        <Text style={{ color: Colors.textPrimary, textAlign: 'center' }}>Error: Missing required data</Text>
+      </View>
+    );
+  }
+
+
+  const [status, setStatus] = useState(action?.completed ? 'completed' : 'pending');
   const [showVerification, setShowVerification] = useState(false);
   const animationValue = useRef(new Animated.Value(1)).current;
   const statusIconAnimation = useRef(new Animated.Value(0)).current;
 
   // Update status when action.completed changes
   useEffect(() => {
-    setStatus(action.completed ? 'completed' : 'pending');
-  }, [action.completed]);
+    setStatus(action?.completed ? 'completed' : 'pending');
+  }, [action?.completed]);
 
   // Apply Phase 1 Lesson: User-controlled advancement
   const updateStatus = (newStatus) => {
     setStatus(newStatus);
-    if (onStatusChange) {
+    if (onStatusChange && typeof onStatusChange === 'function' && action?.id) {
+      try {
       onStatusChange(action.id, newStatus);
+      } catch (error) {
+        console.error('❌ ProgressiveActionCard - Error in onStatusChange:', error);
+      }
     }
     
     // Animate status change
@@ -62,6 +82,12 @@ const ProgressiveActionCard = ({
 
   // Apply Phase 1 Lesson: Contextual actions based on device capabilities
   const handlePrimaryAction = async () => {
+    console.log('🔘 Complete Step button pressed!', { 
+      actionTitle: action?.title, 
+      hasDeepLink: !!action?.deepLink,
+      deepLink: action?.deepLink 
+    });
+    
     try {
       // Haptic feedback for interaction
       if (Haptics?.impactAsync) {
@@ -85,17 +111,61 @@ const ProgressiveActionCard = ({
       updateStatus('in-progress');
 
       // Try deep link first if available
-      if (action.deepLink && device.supportsDeepLinks) {
+      console.log('🔗 ProgressiveActionCard Debug:', { 
+        hasDeepLink: !!action?.deepLink, 
+        deepLink: action?.deepLink, 
+        supportsDeepLinks: device?.supportsDeepLinks,
+        deviceName: device?.name 
+      });
+      
+      if (action?.deepLink && device?.supportsDeepLinks) {
         try {
-          const canOpen = await Linking.canOpenURL(action.deepLink);
-          if (canOpen) {
-            await Linking.openURL(action.deepLink);
+          // Special handling for Android Password Manager
+          if (action.deepLink === 'android-password-manager' && Platform.OS === 'android') {
+            console.log('🔗 Android Password Manager detected, using special handler');
+            
+            // Import SettingsGuide dynamically to avoid circular imports
+            const { SettingsGuide } = await import('../../utils/settingsGuide');
+            const result = await SettingsGuide.openAndroidPasswordManager(device);
+            
+            if (result.success) {
+              console.log(`✅ Android Password Manager opened via ${result.method}`);
+              // Apply Phase 1 Lesson: Give user time to process before showing verification
+              setTimeout(() => {
+                setShowVerification(true);
+                updateStatus('verification');
+              }, 1000);
+              return;
+            } else {
+              console.log('❌ Android Password Manager failed:', result.error);
+            }
+          }
+          // For Android settings, use Linking.sendIntent() instead of openURL()
+          else if (action.deepLink.startsWith('android.settings.') && Platform.OS === 'android') {
+            console.log('🔗 Android settings detected, using sendIntent:', action.deepLink);
+            // Use the proper React Native method for Android intents
+            await Linking.sendIntent(action.deepLink);
+            console.log('🔗 Settings opened successfully with sendIntent');
             // Apply Phase 1 Lesson: Give user time to process before showing verification
             setTimeout(() => {
               setShowVerification(true);
               updateStatus('verification');
             }, 1000);
             return;
+          } else {
+            // For non-Android settings URLs, use the traditional openURL approach
+            const canOpen = await Linking.canOpenURL(action.deepLink);
+            console.log('🔗 Can open deep link:', canOpen, action.deepLink);
+            if (canOpen) {
+              await Linking.openURL(action.deepLink);
+              console.log('🔗 Settings opened successfully with openURL');
+              // Apply Phase 1 Lesson: Give user time to process before showing verification
+              setTimeout(() => {
+                setShowVerification(true);
+                updateStatus('verification');
+              }, 1000);
+              return;
+            }
           }
         } catch (error) {
           console.log('Deep link failed, falling back to manual guidance:', error);
@@ -126,8 +196,12 @@ const ProgressiveActionCard = ({
     updateStatus('completed');
     setShowVerification(false);
     
-    if (onComplete) {
+    if (onComplete && typeof onComplete === 'function' && action?.id) {
+      try {
       onComplete(action.id, true);
+      } catch (error) {
+        console.error('❌ ProgressiveActionCard - Error in onComplete:', error);
+      }
     }
   };
 
@@ -136,8 +210,12 @@ const ProgressiveActionCard = ({
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     }
     updateStatus('completed');
-    if (onComplete) {
+    if (onComplete && typeof onComplete === 'function' && action?.id) {
+      try {
       onComplete(action.id, true);
+      } catch (error) {
+        console.error('❌ ProgressiveActionCard - Error in onComplete:', error);
+      }
     }
   };
 
@@ -162,7 +240,7 @@ const ProgressiveActionCard = ({
 
   // Apply Phase 1 Lesson: Contextual button text adapts to device capabilities
   const getActionButtonText = () => {
-    if (action.deepLink && device.supportsDeepLinks) {
+    if (action?.deepLink && device?.supportsDeepLinks) {
       return `Open ${device.platform === 'ios' ? 'Settings' : 'Settings'}`;
     }
     return 'View Instructions';
@@ -171,7 +249,7 @@ const ProgressiveActionCard = ({
   const getStatusDescription = () => {
     switch (status) {
       case 'completed':
-        return action.description;
+        return action?.description || '';
       case 'verification':
         return 'Return when you\'ve completed the steps';
       case 'in-progress':
@@ -179,190 +257,210 @@ const ProgressiveActionCard = ({
       case 'guided':
         return 'Follow the manual steps below';
       default:
-        return action.description;
+        return action?.description || '';
     }
   };
 
-  return (
-    <Animated.View 
-      style={[
-        styles.card, 
-        styles[`status-${status}${variant === 'wizard' ? '-wizard' : ''}`], 
-        // Fallback for wizard completed state
-        variant === 'wizard' && status === 'completed' && styles['status-completed-wizard'],
-        { transform: [{ scale: animationValue }] },
-        style
-      ]}
-    >
-      {/* Card Header */}
-      <View style={styles.cardHeader}>
-        <View style={styles.deviceInfo}>
-          <View style={styles.deviceIcon}>
-            <Ionicons 
-              name={device.icon || 'phone-portrait'} 
-              size={Responsive.iconSizes.medium} 
-              color={Colors.accent} 
-            />
-          </View>
-          <View style={styles.deviceDetails}>
-            <Text style={styles.deviceName}>{device.name || device.type}</Text>
-            <Text style={styles.devicePlatform}>{device.platform}</Text>
-          </View>
-        </View>
-        <View style={styles.statusIndicator}>
-          {getStatusIcon()}
-        </View>
-      </View>
+  // Safe step-by-step rendering
+  try {
+    
+    // Theme-based card styling
+    const cardStyle = {
+      backgroundColor: Colors.surface,
+      borderRadius: Responsive.borderRadius.large,
+      padding: Responsive.padding.card,
+      margin: Responsive.spacing.sm,
+      borderWidth: action?.completed ? 2 : 1,
+      borderColor: action?.completed ? Colors.success : Colors.border,
+      opacity: action?.completed ? Colors.cardCompletedOpacity : Colors.cardInProgressOpacity
+    };
 
-      {/* Card Content */}
-      <View style={styles.cardContent}>
-        <Text style={styles.actionTitle}>{action.title}</Text>
-        <Text style={styles.actionDescription}>
-          {getStatusDescription()}
-        </Text>
+    // Theme-based button styling (matching other check screens)
+    const primaryButtonStyle = {
+      backgroundColor: Colors.accent,
+      borderRadius: Responsive.borderRadius.medium,
+      paddingVertical: Responsive.padding.button,
+      paddingHorizontal: Responsive.spacing.lg,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: Responsive.buttonHeight.medium,
+      opacity: action?.completed ? 0.7 : 1
+    };
 
-        {/* Primary Action Button */}
-        {status === 'pending' && (
-          <View>
-            <TouchableOpacity 
-              style={styles.primaryButton} 
-              onPress={handlePrimaryAction}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.primaryButtonText}>
-                {getActionButtonText()}
-              </Text>
-              <Ionicons 
-                name="arrow-forward" 
-                size={Responsive.iconSizes.small} 
-                color={Colors.textPrimary} 
-              />
-            </TouchableOpacity>
-            
-            {/* Complete Step Button - shown when instructions are not expanded, but only for non-wizard variants */}
-            {variant !== 'wizard' && (
-              <View style={styles.completeStepContainer}>
-                <TouchableOpacity
-                  style={styles.completeStepButton}
-                  onPress={handleMarkComplete}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons 
-                    name="checkmark-circle" 
-                    size={Responsive.iconSizes.medium} 
-                    color={Colors.textPrimary} 
-                  />
-                  <Text style={styles.completeStepButtonText}>Complete Step</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-        )}
+    const secondaryButtonStyle = {
+      backgroundColor: Colors.surface,
+      borderRadius: Responsive.borderRadius.medium,
+      paddingVertical: Responsive.padding.button,
+      paddingHorizontal: Responsive.spacing.lg,
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: Responsive.buttonHeight.medium,
+      borderWidth: 1,
+      borderColor: Colors.accent
+    };
 
-        {/* Manual Steps (shown when deep link fails or not available) */}
-        {(status === 'guided' || status === 'in-progress') && action.steps && (
-          <View style={styles.stepsContainer}>
-            <Text style={styles.stepsTitle}>Manual Steps:</Text>
-            {action.steps.map((step, index) => (
-              <View key={index} style={styles.stepItem}>
-                <View style={styles.stepNumber}>
-                  <Text style={styles.stepNumberText}>{index + 1}</Text>
-                </View>
-                <Text style={styles.stepText}>{step}</Text>
-              </View>
-            ))}
-            
-            {/* Complete Step Button - shown when instructions are expanded, but only for non-wizard variants */}
-            {variant !== 'wizard' && (
-              <View style={styles.completeStepContainer}>
-                <TouchableOpacity
-                  style={styles.completeStepButton}
-                  onPress={handleMarkComplete}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons 
-                    name="checkmark-circle" 
-                    size={Responsive.iconSizes.medium} 
-                    color={Colors.textPrimary} 
-                  />
-                  <Text style={styles.completeStepButtonText}>Complete Step</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* Verification Section */}
-        {showVerification && status === 'verification' && (
-          <View style={styles.verificationSection}>
-            <View style={styles.verificationHeader}>
-              <Ionicons 
-                name="return-down-back" 
-                size={Responsive.iconSizes.medium} 
-                color={Colors.accent} 
-              />
-              <Text style={styles.verificationTitle}>Welcome back!</Text>
-            </View>
-            <Text style={styles.verificationText}>
-              Did you complete the {action.title.toLowerCase()} setup?
+    return (
+      <View style={cardStyle}>
+        <View style={{ flex: 1 }}>
+          {/* Device Header */}
+          <View style={{ 
+            flexDirection: 'row', 
+            alignItems: 'center', 
+            marginBottom: Responsive.spacing.md,
+            paddingBottom: Responsive.spacing.sm,
+            borderBottomWidth: 1,
+            borderBottomColor: Colors.border
+          }}>
+            <Ionicons name="phone-portrait-outline" size={16} color={Colors.accent} />
+            <Text style={{
+              fontSize: Typography.sizes.sm,
+              color: Colors.textSecondary,
+              marginLeft: Responsive.spacing.sm,
+              flex: 1
+            }}>
+              {String(device?.name || 'Device')} • {String(device?.platform || 'Unknown')}
             </Text>
-            
-            <View style={styles.verificationButtons}>
-              <TouchableOpacity 
-                style={[styles.verificationButton, styles.verificationButtonSecondary]}
-                onPress={() => {
-                  setShowVerification(false);
-                  updateStatus('guided');
-                }}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.verificationButtonSecondaryText}>
-                  Show steps again
-                </Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.verificationButton, styles.verificationButtonPrimary]}
-                onPress={handleVerificationComplete}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.verificationButtonText}>
-                  Yes, completed
-                </Text>
-              </TouchableOpacity>
-            </View>
           </View>
-        )}
 
+          {/* Title with completion indicator */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: Responsive.spacing.sm }}>
+            <Text style={{
+              fontSize: Typography.sizes.lg,
+              fontWeight: Typography.weights.bold,
+              color: action?.completed ? Colors.cardCompletedTitleColor : Colors.cardInProgressTitleColor,
+              flex: 1
+            }}>
+              {String(action?.title || 'Loading...')}
+            </Text>
+            {action?.completed && (
+              <Ionicons name="checkmark-circle" size={20} color={Colors.success} />
+            )}
+          </View>
 
+          <Text style={{
+            fontSize: Typography.sizes.md,
+            color: Colors.textSecondary,
+            marginBottom: Responsive.spacing.md,
+            lineHeight: Typography.sizes.md * 1.4
+          }}>
+            {String(action?.description || 'Loading description...')}
+          </Text>
 
-        {/* Completed State */}
-        {status === 'completed' && (
-          <View style={styles.completedSection}>
-            <View style={styles.completedIndicator}>
-              <Ionicons 
-                name="checkmark-circle" 
-                size={Responsive.iconSizes.large} 
-                color={Colors.success} 
-              />
-              <Text style={styles.completedText}>Security step completed!</Text>
+          {/* Manual Steps Section */}
+          {action?.steps && Array.isArray(action.steps) && action.steps.length > 0 && (
+            <View style={{ marginBottom: Responsive.spacing.md }}>
+              <Text style={{
+                fontSize: Typography.sizes.md,
+                fontWeight: Typography.weights.semibold,
+                color: Colors.textPrimary,
+                marginBottom: Responsive.spacing.sm
+              }}>
+                Steps to Complete:
+              </Text>
+              
+              {(showAllSteps ? action.steps : action.steps.slice(0, 3)).map((step, index) => (
+                <View key={index} style={{ 
+                  flexDirection: 'row', 
+                  alignItems: 'flex-start', 
+                  marginBottom: Responsive.spacing.xs 
+                }}>
+                  <Text style={{ 
+                    fontSize: Typography.sizes.sm, 
+                    color: Colors.accent, 
+                    marginRight: Responsive.spacing.sm,
+                    marginTop: 2,
+                    fontWeight: Typography.weights.semibold
+                  }}>
+                    {index + 1}.
+                  </Text>
+                  <Text style={{
+                    fontSize: Typography.sizes.sm,
+                    color: Colors.textSecondary,
+                    flex: 1,
+                    lineHeight: Typography.sizes.sm * 1.4
+                  }}>
+                    {String(step)}
+                  </Text>
+                </View>
+              ))}
             </View>
+          )}
+          
+          {/* Action Buttons - Instructions above Complete */}
+          <View style={{ gap: Responsive.spacing.sm }}>
+            {/* Instructions Button (always visible if steps exist) */}
+            {action?.steps && Array.isArray(action.steps) && action.steps.length > 0 && (
+              <TouchableOpacity 
+                style={secondaryButtonStyle}
+                onPress={() => {
+                  setShowAllSteps(!showAllSteps);
+                }}
+              >
+                <Text style={{
+                  fontSize: Typography.sizes.md,
+                  fontWeight: Typography.weights.semibold,
+                  color: Colors.accent
+                }}>
+                  {showAllSteps ? '📋 Hide Instructions' : '📋 View Instructions'}
+                </Text>
+              </TouchableOpacity>
+            )}
             
+            {/* Open Settings Button (if deep link available) */}
+            {action?.deepLink && device?.supportsDeepLinks && !action?.completed && (
+              <TouchableOpacity 
+                style={{
+                  backgroundColor: Colors.accent,
+                  borderRadius: Responsive.borderRadius.medium,
+                  paddingVertical: Responsive.padding.button,
+                  paddingHorizontal: Responsive.spacing.lg,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexDirection: 'row',
+                  gap: Responsive.spacing.sm,
+                  marginBottom: Responsive.spacing.sm,
+                }}
+                onPress={handlePrimaryAction}
+              >
+                <Ionicons name="settings-outline" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
+                <Text style={{
+                  fontSize: Typography.sizes.md,
+                  fontWeight: Typography.weights.semibold,
+                  color: Colors.textPrimary
+                }}>
+                  Open Settings
+                </Text>
+              </TouchableOpacity>
+            )}
+            
+            {/* Complete/Reset Button */}
             <TouchableOpacity 
-              style={styles.resetButton}
+              style={action?.completed ? primaryButtonStyle : primaryButtonStyle}
               onPress={() => {
-                updateStatus('pending');
-                setShowVerification(false);
+                if (typeof onComplete === 'function') {
+                  onComplete(action?.id, !action?.completed);
+                }
               }}
-              activeOpacity={0.8}
             >
-              <Text style={styles.resetButtonText}>Reset if needed</Text>
+              <Text style={{
+                fontSize: Typography.sizes.md,
+                fontWeight: Typography.weights.semibold,
+                color: Colors.textPrimary
+              }}>
+                {action?.completed ? 'Reset Step' : 'Complete Step'}
+              </Text>
             </TouchableOpacity>
           </View>
-        )}
+        </View>
       </View>
-    </Animated.View>
-  );
+    );
+  } catch (error) {
+    return (
+      <View style={{ padding: 20, backgroundColor: Colors.error, borderRadius: 8, margin: 8 }}>
+        <Text style={{ color: Colors.textPrimary, textAlign: 'center' }}>Error loading action card</Text>
+      </View>
+    );
+  }
 };
 
 const styles = StyleSheet.create({

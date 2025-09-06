@@ -24,6 +24,20 @@ const ANIMATION_TYPES = {
   CONFETTI: 'confetti',
 };
 
+/**
+ * CompletionPopup - Production-ready celebration animations
+ * 
+ * Performance Optimizations:
+ * - Uses native drivers (useNativeDriver: true) for all supported properties
+ * - Smooth easing curves (cubic, back, sine) for natural motion
+ * - Optimized particle systems with predictable timing
+ * 
+ * Future Upgrade Path:
+ * - TODO: Replace particle systems with Lottie animations for richer effects
+ * - TODO: Consider React Native Reanimated 3 for complex physics
+ * - TODO: Add haptic feedback patterns for different celebration types
+ */
+
 const CompletionPopup = ({
   isVisible,
   title,
@@ -128,7 +142,7 @@ const CompletionPopup = ({
     iconBreathing.setValue(1);
     iconFloating.setValue(0);
 
-    // Modern entrance sequence with organic easing
+    // Modern entrance sequence with organic easing and native performance
     Animated.sequence([
       // Modal entrance from bottom with custom easing
       Animated.parallel([
@@ -136,19 +150,19 @@ const CompletionPopup = ({
           toValue: 1,
           tension: 120,
           friction: 8,
-          useNativeDriver: false,
+          useNativeDriver: true, // Scale can use native driver
         }),
         Animated.timing(modalOpacity, {
           toValue: 1,
           duration: 400,
-          easing: Easing.ease,
-          useNativeDriver: false,
+          easing: Easing.out(Easing.quad), // Smoother easing
+          useNativeDriver: true, // Opacity can use native driver
         }),
         Animated.spring(modalTranslateY, {
           toValue: 0,
           tension: 100,
           friction: 8,
-          useNativeDriver: false,
+          useNativeDriver: true, // Transform can use native driver
         }),
       ]),
       // Icon entrance with sophisticated movement
@@ -157,29 +171,28 @@ const CompletionPopup = ({
           toValue: 1,
           tension: 180,
           friction: 6,
-          useNativeDriver: false,
+          useNativeDriver: true, // Scale can use native driver
         }),
         Animated.timing(iconRotation, {
           toValue: 1,
           duration: 1200,
-          easing: Easing.elastic(1),
-          useNativeDriver: false,
+          easing: Easing.out(Easing.back(1.2)), // More dynamic easing
+          useNativeDriver: true, // Rotation can use native driver
         }),
-
       ]),
       // Text entrance with staggered timing
       Animated.timing(textOpacity, {
         toValue: 1,
         duration: 500,
-        easing: Easing.ease,
-        useNativeDriver: false,
+        easing: Easing.out(Easing.quad), // Smoother easing
+        useNativeDriver: true, // Opacity can use native driver
       }),
       // Button entrance with bounce
       Animated.spring(buttonScale, {
         toValue: 1,
         tension: 140,
         friction: 7,
-        useNativeDriver: false,
+        useNativeDriver: true, // Scale can use native driver
       }),
     ]).start(() => {
       setAnimationComplete(true);
@@ -200,41 +213,41 @@ const CompletionPopup = ({
   };
 
   const startIconContinuousAnimations = () => {
-    // Only run continuous animations on mobile
+    // Run continuous animations on all platforms except web
     if (Platform.OS === 'web') return;
     
-    // Breathing effect
+    // Breathing effect with smoother easing
     Animated.loop(
       Animated.sequence([
         Animated.timing(iconBreathing, {
           toValue: 1.05,
           duration: 2000,
-          easing: Easing.inOut(Easing.sine),
-          useNativeDriver: false,
+          easing: Easing.inOut(Easing.quad), // Smoother easing
+          useNativeDriver: true, // Scale can use native driver
         }),
         Animated.timing(iconBreathing, {
           toValue: 1,
           duration: 2000,
-          easing: Easing.inOut(Easing.sine),
-          useNativeDriver: false,
+          easing: Easing.inOut(Easing.quad), // Smoother easing
+          useNativeDriver: true, // Scale can use native driver
         }),
       ])
     ).start();
 
-    // Floating effect
+    // Floating effect with more organic movement
     Animated.loop(
       Animated.sequence([
         Animated.timing(iconFloating, {
           toValue: -8,
           duration: 3000,
-          easing: Easing.inOut(Easing.sine),
-          useNativeDriver: false,
+          easing: Easing.inOut(Easing.ease), // More natural floating motion
+          useNativeDriver: true, // Transform can use native driver
         }),
         Animated.timing(iconFloating, {
           toValue: 0,
           duration: 3000,
-          easing: Easing.inOut(Easing.sine),
-          useNativeDriver: false,
+          easing: Easing.inOut(Easing.ease), // More natural floating motion
+          useNativeDriver: true, // Transform can use native driver
         }),
       ])
     ).start();
@@ -261,7 +274,7 @@ const CompletionPopup = ({
       const delay = (index * 50) + (index % 3) * 100; // More predictable delays
       const duration = 1200 + (index % 4) * 200; // More predictable durations
       
-      // Main firework animation
+      // Main firework animation with improved easing
       const mainAnimation = Animated.sequence([
         Animated.delay(delay),
         Animated.parallel([
@@ -269,24 +282,24 @@ const CompletionPopup = ({
           Animated.timing(firework, {
             toValue: 1,
             duration,
-            easing: Easing.ease,
-            useNativeDriver: false,
+            easing: Easing.out(Easing.quad), // Smoother easing
+            useNativeDriver: true, // Transform can use native driver
           }),
           // Scale starts large and shrinks
           Animated.timing(fireworkScales[index], {
             toValue: 0.2,
             duration,
-            easing: Easing.ease,
-            useNativeDriver: false,
+            easing: Easing.out(Easing.quad), // More natural scale decay
+            useNativeDriver: true, // Scale can use native driver
           }),
-          // Staggered opacity fade
+          // Staggered opacity fade with smoother timing
           Animated.sequence([
-            Animated.delay(duration * 0.3),
+            Animated.delay(duration * 0.4), // Slightly longer hold time
             Animated.timing(fireworkOpacities[index], {
               toValue: 0,
-              duration: duration * 0.7,
-              easing: Easing.ease,
-              useNativeDriver: false,
+              duration: duration * 0.6,
+              easing: Easing.in(Easing.quad), // Smoother fade out
+              useNativeDriver: true, // Opacity can use native driver
             }),
           ]),
         ]),
@@ -303,14 +316,14 @@ const CompletionPopup = ({
             Animated.timing(trail, {
               toValue: 1,
               duration: trailDuration,
-              easing: Easing.ease,
-              useNativeDriver: false,
+              easing: Easing.out(Easing.quad), // Smoother easing
+              useNativeDriver: true, // Transform can use native driver
             }),
             Animated.timing(fireworkTrailOpacities[index][trailIndex], {
               toValue: 0,
               duration: trailDuration,
-              easing: Easing.ease,
-              useNativeDriver: false,
+              easing: Easing.in(Easing.quad), // Smoother fade out
+              useNativeDriver: true, // Opacity can use native driver
             }),
           ]),
         ]);
@@ -342,22 +355,22 @@ const CompletionPopup = ({
           Animated.timing(confettiPiece, {
             toValue: 1,
             duration: fallDuration,
-            easing: Easing.ease,
-            useNativeDriver: false,
+            easing: Easing.out(Easing.quad), // Smoother easing
+            useNativeDriver: true, // Transform can use native driver
           }),
           // Gravity effect - accelerating downward
           Animated.timing(confettiGravity[index], {
             toValue: 1,
             duration: fallDuration,
-            easing: Easing.ease,
-            useNativeDriver: false,
+            easing: Easing.in(Easing.cubic), // More realistic gravity acceleration
+            useNativeDriver: true, // Transform can use native driver
           }),
-          // Scale entrance
+          // Scale entrance with more natural timing
           Animated.timing(confettiScales[index], {
             toValue: 1,
-            duration: fallDuration * 0.15,
-            easing: Easing.elastic(1),
-            useNativeDriver: false,
+            duration: fallDuration * 0.2, // Slightly longer entrance
+            easing: Easing.out(Easing.back(1.1)), // Subtle bounce effect
+            useNativeDriver: true, // Scale can use native driver
           }),
           // 3D tumbling rotation - X axis
           Animated.loop(
@@ -365,7 +378,7 @@ const CompletionPopup = ({
               toValue: 1,
               duration: rotationSpeed,
               easing: Easing.linear,
-              useNativeDriver: false,
+              useNativeDriver: true, // Rotation can use native driver
             })
           ),
           // 3D tumbling rotation - Y axis
@@ -374,7 +387,7 @@ const CompletionPopup = ({
               toValue: 1,
               duration: rotationSpeed * 1.3,
               easing: Easing.linear,
-              useNativeDriver: false,
+              useNativeDriver: true, // Rotation can use native driver
             })
           ),
           // 3D tumbling rotation - Z axis
@@ -383,17 +396,17 @@ const CompletionPopup = ({
               toValue: 1,
               duration: rotationSpeed * 0.8,
               easing: Easing.linear,
-              useNativeDriver: false,
+              useNativeDriver: true, // Rotation can use native driver
             })
           ),
           // Fade out with air resistance timing
           Animated.sequence([
-            Animated.delay(fallDuration * 0.4),
+            Animated.delay(fallDuration * 0.5), // Longer hold time
             Animated.timing(confettiOpacities[index], {
               toValue: 0,
-              duration: fallDuration * 0.6,
-              easing: Easing.ease,
-              useNativeDriver: false,
+              duration: fallDuration * 0.5,
+              easing: Easing.in(Easing.quad), // Smoother fade out
+              useNativeDriver: true, // Opacity can use native driver
             }),
           ]),
         ]),
@@ -683,10 +696,10 @@ const CompletionPopup = ({
               {
                 transform: [
                   { 
-                    scale: Platform.OS === 'web' ? iconScale : Animated.multiply(iconScale, iconBreathing)
+                    scale: Animated.multiply(iconScale, iconBreathing)
                   },
                   {
-                    translateY: Platform.OS === 'web' ? 0 : iconFloating,
+                    translateY: iconFloating,
                   },
                   {
                     rotate: iconRotation.interpolate({

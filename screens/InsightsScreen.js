@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -30,6 +30,14 @@ const InsightsScreen = ({ navigation }) => {
   const [showCatalogue, setShowCatalogue] = useState(false);
 
   const segments = ['Learn', 'Tools'];
+
+  useEffect(() => {
+    console.log('🔍 InsightsScreen: Component mounted');
+  }, []);
+
+  useEffect(() => {
+    console.log(`🔍 InsightsScreen: Tab changed to ${tab === 0 ? 'Learn' : 'Tools'}`);
+  }, [tab]);
 
   const handleTabChange = (index) => {
     setTab(index);

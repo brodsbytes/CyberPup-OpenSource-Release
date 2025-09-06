@@ -18,6 +18,20 @@ import { CopywritingService } from '../../utils/copywritingService';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
+/**
+ * AreaCompletionScreen - Production-ready area completion animations
+ * 
+ * Performance Optimizations:
+ * - Uses native drivers (useNativeDriver: true) for all supported properties
+ * - Smooth easing curves (cubic, back, sine) for natural motion
+ * - Optimized particle and star systems with predictable timing
+ * 
+ * Future Upgrade Path:
+ * - TODO: Replace particle systems with Lottie animations for richer effects
+ * - TODO: Consider React Native Reanimated 3 for complex physics
+ * - TODO: Add area-specific celebration themes
+ */
+
 const AreaCompletionScreen = ({
   route,
   navigation,
@@ -135,13 +149,14 @@ const AreaCompletionScreen = ({
       stars.forEach(s => s.setValue(0));
       starScales.forEach(ss => ss.setValue(0));
 
-    // Entrance sequence
+    // Entrance sequence with native performance
     Animated.sequence([
-      // Background glow
+      // Background glow - cannot use native driver (opacity interpolation)
       Animated.timing(backgroundGlow, {
         toValue: 1,
         duration: 1000,
-        useNativeDriver: false,
+        easing: Easing.out(Easing.quad), // Smoother easing
+        useNativeDriver: false, // Cannot use native driver for interpolated opacity
       }),
       // Trophy entrance
       Animated.parallel([
@@ -149,13 +164,13 @@ const AreaCompletionScreen = ({
           toValue: 1,
           tension: 100,
           friction: 8,
-          useNativeDriver: false,
+          useNativeDriver: true, // Scale can use native driver
         }),
         Animated.timing(trophyRotation, {
           toValue: 1,
           duration: 800,
-          easing: Easing.elastic(1),
-          useNativeDriver: false,
+          easing: Easing.out(Easing.back(1.2)), // More dynamic easing
+          useNativeDriver: true, // Rotation can use native driver
         }),
       ]),
       // Progress circle
@@ -163,28 +178,28 @@ const AreaCompletionScreen = ({
         toValue: 1,
         tension: 100,
         friction: 8,
-        useNativeDriver: false,
+        useNativeDriver: true, // Scale can use native driver
       }),
       // Text entrance
       Animated.timing(textOpacity, {
         toValue: 1,
         duration: 500,
-        easing: Easing.ease,
-        useNativeDriver: false,
+        easing: Easing.out(Easing.quad), // Smoother easing
+        useNativeDriver: true, // Opacity can use native driver
       }),
       // Next area preview
       Animated.timing(nextAreaOpacity, {
         toValue: 1,
         duration: 500,
-        easing: Easing.ease,
-        useNativeDriver: false,
+        easing: Easing.out(Easing.quad), // Smoother easing
+        useNativeDriver: true, // Opacity can use native driver
       }),
       // Button entrance
       Animated.spring(buttonScale, {
         toValue: 1,
         tension: 100,
         friction: 8,
-        useNativeDriver: false,
+        useNativeDriver: true, // Scale can use native driver
       }),
     ]).start(() => {
       startParticleAnimation();
@@ -226,13 +241,15 @@ const AreaCompletionScreen = ({
             toValue: 1,
             duration: config.duration,
             delay: config.delay,
-            useNativeDriver: false,
+            easing: Easing.out(Easing.quad), // Smoother easing
+            useNativeDriver: true, // Transform can use native driver
           }),
           Animated.timing(particleOpacities[index], {
             toValue: 0,
             duration: config.duration,
             delay: config.delay,
-            useNativeDriver: false,
+            easing: Easing.in(Easing.quad), // Smoother fade out
+            useNativeDriver: true, // Opacity can use native driver
           }),
         ]);
       });
@@ -254,13 +271,14 @@ const AreaCompletionScreen = ({
             Animated.timing(star, {
               toValue: 1,
               duration: 500,
-              useNativeDriver: false,
+              easing: Easing.out(Easing.back(1.1)), // Subtle bounce effect
+              useNativeDriver: true, // Transform can use native driver
             }),
             Animated.spring(starScales[index], {
               toValue: 1,
               tension: 100,
               friction: 8,
-              useNativeDriver: false,
+              useNativeDriver: true, // Scale can use native driver
             }),
           ]),
         ]);

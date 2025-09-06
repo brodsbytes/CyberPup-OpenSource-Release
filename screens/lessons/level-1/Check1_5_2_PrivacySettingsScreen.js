@@ -46,7 +46,6 @@ const Check1_5_2_PrivacySettingsScreen = ({ navigation, route }) => {
     
     // 🌐 WEB TESTING: Early detection for web platform
     const currentDevice = DeviceCapabilities.getCurrentDevice();
-    console.log('🔍 Current device:', currentDevice);
     
     if (currentDevice.platform === 'web' || currentDevice.platform === 'unknown') {
       console.log('🌐 Detected web platform, using web testing content directly...');
@@ -786,14 +785,6 @@ const Check1_5_2_PrivacySettingsScreen = ({ navigation, route }) => {
           
           {/* ✅ CRITICAL: Conditional rendering with fallback */}
           {(() => {
-            console.log('🔍 Render debug:', {
-              isInitializing,
-              userDevicesLength: userDevices.length,
-              deviceActionsKeys: Object.keys(deviceActions),
-              deviceActionsLength: Object.keys(deviceActions).length,
-              shouldShowTimeline: !isInitializing && userDevices.length > 0 && Object.keys(deviceActions).length > 0
-            });
-            
             if (isInitializing) {
               return (
                 <View style={styles.fallbackContainer}>

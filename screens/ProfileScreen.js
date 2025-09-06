@@ -6,7 +6,8 @@ import {
   SafeAreaView, 
   ScrollView, 
   TouchableOpacity,
-  RefreshControl
+  RefreshControl,
+  StatusBar
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -135,6 +136,8 @@ const ProfileScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
+      
       {/* Sticky Gamification Bar */}
       <StickyGamificationBar
         onMascotPress={() => setShowCatalogue(true)}

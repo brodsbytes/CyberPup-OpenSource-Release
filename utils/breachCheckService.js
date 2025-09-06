@@ -7,6 +7,29 @@ export class BreachCheckService {
   static RATE_LIMIT_DELAY = 1000; // 1 second in milliseconds
 
   /**
+   * Create a timeout signal for fetch requests (Android compatible)
+   * @param {number} timeoutMs - Timeout in milliseconds
+   * @returns {AbortSignal} Abort signal with timeout
+   */
+  static createTimeoutSignal(timeoutMs) {
+    const controller = new AbortController();
+    
+    // Use setTimeout for timeout (Android compatible)
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, timeoutMs);
+    
+    // Clean up timeout if request completes normally
+    const originalSignal = controller.signal;
+    const cleanup = () => clearTimeout(timeoutId);
+    
+    // Add event listener to clean up timeout
+    originalSignal.addEventListener('abort', cleanup);
+    
+    return originalSignal;
+  }
+
+  /**
    * Check if an email address has been involved in data breaches
    * @param {string} email - Email address to check
    * @returns {Promise<Object>} Breach check result
@@ -29,8 +52,8 @@ export class BreachCheckService {
             'Accept': 'application/json',
             'User-Agent': 'CyberPup-App/1.0'
           },
-          // 10 second timeout
-          signal: AbortSignal.timeout(10000)
+          // 10 second timeout (Android compatible)
+          signal: this.createTimeoutSignal(10000)
         }
       );
 
@@ -107,7 +130,7 @@ export class BreachCheckService {
             'Accept': 'application/json',
             'User-Agent': 'CyberPup-App/1.0'
           },
-          signal: AbortSignal.timeout(10000)
+          signal: this.createTimeoutSignal(10000)
         }
       );
 

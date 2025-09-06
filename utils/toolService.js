@@ -36,7 +36,7 @@ export class ToolService {
         topics: ['data-breach', 'account-security'],
         relatedCheckId: '1-1-5',
         author: 'CyberPup Security Team',
-        lastUpdated: '2025-01-27',
+        lastUpdated: '2025-09-06',
         category: 'Security Monitoring',
         fullDescription: `See if your accounts have been exposed in a data breach. CyberPup will check safely through XposedOrNot and guide you on the next steps if your details are found.`,
         features: [

@@ -64,29 +64,8 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
 
   const initializeDeviceContent = async () => {
     try {
-      // Get user's registered devices
-      const devices = await DeviceCapabilities.getUserDevices();
-      const currentDevice = DeviceCapabilities.getCurrentDevice();
-      
-      // Add current device if not already in the list
-      let allDevices = [...devices];
-      const hasCurrentDevice = devices.some(d => 
-        d.platform === currentDevice.platform && d.type === currentDevice.type
-      );
-      
-      if (!hasCurrentDevice) {
-        allDevices.unshift({
-          id: 'current-device',
-          name: currentDevice.type,
-          type: currentDevice.platform === 'ios' || currentDevice.platform === 'android' ? 'mobile' : 'computer',
-          platform: currentDevice.platform,
-          tier2: currentDevice.platform,
-          autoDetected: true,
-          supportsDeepLinks: currentDevice.supportsDeepLinks,
-          icon: getDeviceIcon(currentDevice)
-        });
-      }
-
+      // Use the new smart deduplication method to prevent device duplicates
+      const allDevices = await DeviceCapabilities.getUserDevicesWithCurrentDevice();
       setUserDevices(allDevices);
 
       // Create device-specific actions for MFA setup
@@ -351,8 +330,8 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
   };
 
   const celebrateCompletion = () => {
-    // The completion popup will be shown automatically when isCompleted is true
-    // No need to call it as a function
+    console.log('🎉 Celebrating completion of Check 1.1.4');
+    setShowCompletionPopup(true);
   };
 
   const handleExit = () => {

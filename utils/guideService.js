@@ -36,8 +36,8 @@ export class GuideService {
         topics: ['passwords', 'authentication'],
         relatedCheckId: '1-1-1',
         author: 'CyberPup Security Team',
-        publishedDate: '2025-01-15',
-        lastUpdated: '2025-01-15',
+        publishedDate: '2025-08-28',
+        lastUpdated: '2025-09-06',
         difficulty: 'Beginner',
         fullContent: `
           <h1>Creating Strong Passwords: Your First Line of Defense</h1>
@@ -205,8 +205,8 @@ export class GuideService {
         topics: ['mfa', 'authentication', 'account-security'],
         relatedCheckId: '1-1-4',
         author: 'CyberPup Security Team',
-        publishedDate: '2025-01-12',
-        lastUpdated: '2025-01-15',
+        publishedDate: '2025-08-28',
+        lastUpdated: '2025-09-06',
         difficulty: 'Essential',
         fullContent: `
           <h1>Setting Up Two-Factor Authentication: Double Your Security</h1>
@@ -509,8 +509,8 @@ export class GuideService {
         readMinutes: 10,
         topics: ['phishing', 'email-security'],
         author: 'CyberPup Security Team',
-        publishedDate: '2025-01-10',
-        lastUpdated: '2025-01-15',
+        publishedDate: '2025-08-28',
+        lastUpdated: '2025-09-06',
         difficulty: 'Beginner',
         fullContent: `
           <h1>Spotting Phishing Emails: Your Defense Against Digital Deception</h1>
@@ -778,8 +778,8 @@ export class GuideService {
         topics: ['passwords', 'authentication'],
         relatedCheckId: '1-1-3',
         author: 'CyberPup Security Team',
-        publishedDate: '2025-01-08',
-        lastUpdated: '2025-01-15',
+        publishedDate: '2025-08-28',
+        lastUpdated: '2025-09-06',
         difficulty: 'Essential',
         fullContent: `
           <h1>Password Manager Setup: Your Digital Vault</h1>
@@ -1024,8 +1024,8 @@ export class GuideService {
         topics: ['passwords', 'data-breach', 'account-security'],
         relatedCheckId: '1-1-5',
         author: 'CyberPup Security Team',
-        publishedDate: '2025-01-27',
-        lastUpdated: '2025-01-27',
+        publishedDate: '2025-08-28',
+        lastUpdated: '2025-09-06',
         difficulty: 'Beginner',
         fullContent: `
           <h1>Password Change After Data Breach: Secure Your Accounts</h1>

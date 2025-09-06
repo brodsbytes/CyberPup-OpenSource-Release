@@ -20,6 +20,66 @@ export class DeviceCapabilities {
   }
 
   /**
+   * Get user devices with smart deduplication to prevent current device duplicates
+   * @returns {Promise<Array>} Array of user devices with current device included if not already present
+   */
+  static async getUserDevicesWithCurrentDevice() {
+    try {
+      const devices = await this.getUserDevices();
+      const currentDevice = this.getCurrentDevice();
+      
+      
+      // Smart deduplication logic
+      const hasCurrentDevice = devices.some(device => {
+        // For mobile devices, check if it's the same type (Android Phone, iPhone, etc.)
+        if (currentDevice.platform === 'ios' || currentDevice.platform === 'android') {
+          const isMobileDevice = device.type === 'mobile';
+          const isSameDeviceName = device.name === currentDevice.type;
+          
+          // If device has platform field, check it matches
+          if (device.platform) {
+            return device.platform === currentDevice.platform && isMobileDevice && isSameDeviceName;
+          }
+          
+          // If device doesn't have platform field (from DeviceAuditScreen), 
+          // just check name and type match
+          return isMobileDevice && isSameDeviceName;
+        }
+        
+        // For computers, check platform and type
+        if (device.platform) {
+          return device.platform === currentDevice.platform && device.type === 'computer';
+        }
+        return device.type === 'computer' && device.name === currentDevice.type;
+      });
+      
+      // Ensure all devices have the supportsDeepLinks property
+      let allDevices = devices.map(device => ({
+        ...device,
+        supportsDeepLinks: device.supportsDeepLinks ?? true // Default to true if not set
+      }));
+      
+      if (!hasCurrentDevice) {
+        // Add current device if not already present
+        allDevices.unshift({
+          id: 'current-device',
+          name: currentDevice.type,
+          type: currentDevice.platform === 'ios' || currentDevice.platform === 'android' ? 'mobile' : 'computer',
+          platform: currentDevice.platform,
+          tier2: currentDevice.platform,
+          autoDetected: true,
+          supportsDeepLinks: currentDevice.supportsDeepLinks,
+          icon: this.getDeviceIcon(currentDevice)
+        });
+      }
+      return allDevices;
+    } catch (error) {
+      console.log('Error getting user devices with current device:', error);
+      return [];
+    }
+  }
+
+  /**
    * Detect current device platform and capabilities
    * @returns {Object} Current device information
    */
@@ -50,6 +110,24 @@ export class DeviceCapabilities {
     }
 
     return deviceInfo;
+  }
+
+  /**
+   * Get appropriate icon for a device
+   * @param {Object} device - Device information
+   * @returns {string} Icon name
+   */
+  static getDeviceIcon(device) {
+    const platform = device.platform || device.tier2;
+    const type = device.type;
+    
+    if (type === 'mobile') {
+      return platform === 'ios' ? 'phone-portrait' : 'phone-portrait';
+    } else if (type === 'computer') {
+      return platform === 'macos' ? 'laptop' : 'desktop';
+    }
+    
+    return 'desktop';
   }
 
   /**

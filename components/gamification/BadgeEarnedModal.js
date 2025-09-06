@@ -23,32 +23,35 @@ const BadgeEarnedModal = ({
 
   useEffect(() => {
     if (visible && badge) {
-      // Start animations
+      // Start animations with native performance
       Animated.sequence([
         // Badge scales in
         Animated.spring(scaleAnim, {
           toValue: 1,
           tension: 100,
           friction: 8,
-          useNativeDriver: false,
+          useNativeDriver: true, // Scale can use native driver
         }),
-        // Glow effect
+        // Glow effect - cannot use native driver (interpolated opacity)
         Animated.timing(glowAnim, {
           toValue: 1,
           duration: 500,
-          useNativeDriver: false,
+          easing: Easing.out(Easing.quad), // Smoother easing
+          useNativeDriver: false, // Cannot use native driver for interpolated opacity
         }),
         // Text fades in
         Animated.timing(textAnim, {
           toValue: 1,
           duration: 300,
-          useNativeDriver: false,
+          easing: Easing.out(Easing.quad), // Smoother easing
+          useNativeDriver: true, // Opacity can use native driver
         }),
-        // Confetti animation
+        // Confetti animation - cannot use native driver (interpolated opacity)
         Animated.timing(confettiAnim, {
           toValue: 1,
           duration: 1000,
-          useNativeDriver: false,
+          easing: Easing.out(Easing.quad), // Smoother easing
+          useNativeDriver: false, // Cannot use native driver for interpolated opacity
         }),
       ]).start();
     } else {

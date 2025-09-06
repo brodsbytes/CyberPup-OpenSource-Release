@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,22 @@ import { Colors, Typography, Responsive, CommonStyles, CheckVariants } from '../
 import CircularProgress from './CircularProgress';
 import ProgressiveActionCard from './ProgressiveActionCard';
 
+// Wrapper component to handle errors
+const ProgressiveActionCardWrapper = (props) => {
+  try {
+    return <ProgressiveActionCard {...props} />;
+  } catch (error) {
+    console.error('❌ ProgressiveActionCardWrapper - Error caught:', error);
+    return (
+      <View style={{ padding: 20, backgroundColor: 'red', margin: 10, borderRadius: 8 }}>
+        <Text style={{ color: 'white', textAlign: 'center' }}>
+          Error rendering action card: {error.message}
+        </Text>
+      </View>
+    );
+  }
+};
+
 const TimelineDashboard = ({ 
   userDevices, 
   deviceActions, 
@@ -26,6 +42,35 @@ const TimelineDashboard = ({
   showUnifiedView = false,
   showProgressHeader = true
 }) => {
+  // Data sanitization functions to prevent type errors
+  const sanitizeActionData = (action) => {
+    if (!action) return {};
+    
+    return {
+      id: String(action.id || ''),
+      title: String(action.title || ''),
+      description: String(action.description || ''),
+      completed: Boolean(action.completed),
+      steps: Array.isArray(action.steps) ? action.steps.map(step => String(step)) : [],
+      tips: Array.isArray(action.tips) ? action.tips.map(tip => String(tip)) : [],
+      deepLink: action.deepLink ? String(action.deepLink) : null
+    };
+  };
+
+  const sanitizeDeviceData = (device) => {
+    if (!device) return {};
+    
+    return {
+      id: String(device.id || ''),
+      name: String(device.name || ''),
+      type: String(device.type || ''),
+      platform: String(device.platform || ''),
+      icon: String(device.icon || 'phone-portrait'),
+      supportsDeepLinks: Boolean(device.supportsDeepLinks),
+      autoDetected: Boolean(device.autoDetected)
+    };
+  };
+
   // ✅ UPDATED: Timeline-specific state
   const [selectedMilestone, setSelectedMilestone] = useState(0);
   const [milestoneProgress, setMilestoneProgress] = useState({});
@@ -180,7 +225,15 @@ const TimelineDashboard = ({
     }
   };
 
+  // ✅ FIXED: Stable callback functions to prevent React Native bridge issues
+  const stableOnComplete = useCallback((deviceId, actionId, completed) => {
+    return handleTimelineActionComplete(deviceId, actionId, completed);
+  }, [handleTimelineActionComplete]);
 
+  const stableOnStatusChange = useCallback((actionId, status) => {
+    // This is optional, so we can pass null if not needed
+    return null;
+  }, []);
   
   // Handle milestone selection
   const handleMilestoneSelect = (milestoneIndex) => {
@@ -316,15 +369,33 @@ const TimelineDashboard = ({
           
           {/* Action Card */}
           <View style={styles.actionCard}>
-            <ProgressiveActionCard
-              key={milestones[selectedMilestone].action.id} // Force re-render when milestone changes
-              action={milestones[selectedMilestone].action}
-              device={milestones[selectedMilestone].device}
-              onComplete={(actionId, completed) => 
-                handleTimelineActionComplete(milestones[selectedMilestone].device.id, actionId, completed)
+            {(() => {
+              try {
+                const sanitizedAction = sanitizeActionData(milestones[selectedMilestone].action);
+                const sanitizedDevice = sanitizeDeviceData(milestones[selectedMilestone].device);
+                
+                
+                return (
+                  <ProgressiveActionCardWrapper
+                    key={milestones[selectedMilestone].action.id} // Force re-render when milestone changes
+                    action={sanitizedAction}
+                    device={sanitizedDevice}
+                    onComplete={(actionId, completed) => 
+                      stableOnComplete(milestones[selectedMilestone].device.id, actionId, completed)
+                    }
+                    onStatusChange={stableOnStatusChange}
+                    variant="timeline"
+                  />
+                );
+              } catch (error) {
+                console.error('❌ TimelineDashboard - Error rendering ProgressiveActionCard:', error);
+                return (
+                  <View style={styles.errorContainer}>
+                    <Text style={styles.errorText}>Error loading action card</Text>
+                  </View>
+                );
               }
-              variant="timeline"
-            />
+            })()}
           </View>
 
 
@@ -509,6 +580,17 @@ const styles = {
     color: Colors.textSecondary,
     textAlign: 'center',
     lineHeight: Typography.sizes.md * 1.5,
+  },
+  errorContainer: {
+    backgroundColor: Colors.error,
+    padding: Responsive.padding.card,
+    borderRadius: Responsive.borderRadius.medium,
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: Typography.sizes.md,
+    color: Colors.textPrimary,
+    textAlign: 'center',
   },
 
 };
