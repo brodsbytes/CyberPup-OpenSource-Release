@@ -22,7 +22,12 @@ const InteractiveChecklist = ({
   variant = 'checklist',
   checkId,
   navigation,
-  checklistItems = []
+  checklistItems = [],
+  // 🔧 NEW: Configuration options for sequential expansion
+  enableSequentialExpansion = false,
+  expansionOrder = 'original', // 'original', 'priority', 'custom'
+  // 🔧 NEW: Custom header text support
+  customHeaderTitle = 'Security Checklist'
 }) => {
   // ✅ PRESERVE: All existing state management
   const [checklistProgress, setChecklistProgress] = useState(0);
@@ -33,6 +38,10 @@ const InteractiveChecklist = ({
   const [showCompleted, setShowCompleted] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('priority'); // priority, device, status
+  
+  // 🔧 NEW: Sequential expansion state for enhanced variant
+  const [expandedItemId, setExpandedItemId] = useState(null);
+  const [hasInitializedExpansion, setHasInitializedExpansion] = useState(false);
   
   // Calculate progress
   const calculateProgress = () => {
@@ -121,6 +130,45 @@ const InteractiveChecklist = ({
     setCompletedItems(checklistItems.filter(item => item.completed).length);
   }, [checklistItems]);
   
+  // 🔧 NEW: Robust sequential expansion logic
+  const getNextItemToExpand = (updatedItems = null) => {
+    const itemsToCheck = updatedItems || checklistItems;
+    if (!itemsToCheck || itemsToCheck.length === 0) return null;
+    
+    // Determine which items to consider based on expansion order
+    let itemsToConsider = [...itemsToCheck];
+    
+    if (expansionOrder === 'priority') {
+      // Sort by priority: critical > high > medium > low
+      const priorityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
+      itemsToConsider.sort((a, b) => (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0));
+    }
+    // For 'original' order, use the items as they are
+    
+    // Find the first incomplete item in the determined order
+    for (let i = 0; i < itemsToConsider.length; i++) {
+      if (!itemsToConsider[i].completed) {
+        return itemsToConsider[i].id;
+      }
+    }
+    
+    // If all items are completed, return null
+    return null;
+  };
+  
+  // Auto-expand first incomplete item when sequential expansion is enabled
+  useEffect(() => {
+    const shouldEnableExpansion = enableSequentialExpansion || variant === 'enhanced';
+    
+    if (shouldEnableExpansion && checklistItems.length > 0 && !hasInitializedExpansion) {
+      const nextItemId = getNextItemToExpand();
+      if (nextItemId) {
+        setExpandedItemId(nextItemId);
+        setHasInitializedExpansion(true);
+      }
+    }
+  }, [checklistItems, variant, hasInitializedExpansion, enableSequentialExpansion, expansionOrder]);
+  
   const totalItems = checklistItems.length;
   const filteredItems = getFilteredItems();
   const categories = getCategories();
@@ -143,7 +191,7 @@ const InteractiveChecklist = ({
       <View style={[styles.checklistHeader, styles[variant]]}>
         {/* Progress Overview */}
         <View style={styles.progressOverview}>
-          <Text style={styles.progressTitle}>Security Checklist</Text>
+          <Text style={styles.progressTitle}>{customHeaderTitle}</Text>
           <Text style={styles.progressSubtitle}>
             {completedItems} of {totalItems} items completed
           </Text>
@@ -289,6 +337,12 @@ const InteractiveChecklist = ({
             item={item}
             onComplete={handleChecklistItemComplete}
             variant={variant}
+            expandedItemId={expandedItemId}
+            onExpandedChange={setExpandedItemId}
+            checklistItems={checklistItems}
+            enableSequentialExpansion={enableSequentialExpansion || variant === 'enhanced'}
+            expansionOrder={expansionOrder}
+            getNextItemToExpand={getNextItemToExpand}
           />
         ))}
         
@@ -329,9 +383,21 @@ const CategoryChip = ({ category, isSelected, onPress, variant }) => {
 };
 
 // Checklist Item Component
-const ChecklistItem = ({ item, onComplete, variant }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+const ChecklistItem = ({ 
+  item, 
+  onComplete, 
+  variant, 
+  expandedItemId, 
+  onExpandedChange, 
+  checklistItems,
+  enableSequentialExpansion,
+  expansionOrder,
+  getNextItemToExpand
+}) => {
   const [animationValue] = useState(new Animated.Value(1));
+  
+  // 🔧 NEW: Determine if this item should be expanded
+  const isExpanded = enableSequentialExpansion ? expandedItemId === item.id : false;
   
   const handleToggle = async () => {
     // Haptic feedback
@@ -345,7 +411,27 @@ const ChecklistItem = ({ item, onComplete, variant }) => {
       Animated.timing(animationValue, { toValue: 1, duration: 100, useNativeDriver: true })
     ]).start();
     
-    onComplete(item.id, !item.completed);
+    const newCompleted = !item.completed;
+    onComplete(item.id, newCompleted);
+    
+    // 🔧 NEW: Handle sequential expansion
+    if (enableSequentialExpansion && newCompleted && onExpandedChange) {
+      // Simulate the updated state to find the next item to expand
+      const updatedItems = checklistItems.map(i => 
+        i.id === item.id ? { ...i, completed: newCompleted } : i
+      );
+      
+      setTimeout(() => {
+        const nextItemId = getNextItemToExpand(updatedItems);
+        onExpandedChange(nextItemId);
+      }, 500); // Small delay to show completion animation
+    }
+  };
+  
+  const handleExpandToggle = () => {
+    if (enableSequentialExpansion && onExpandedChange) {
+      onExpandedChange(isExpanded ? null : item.id);
+    }
   };
   
   return (
@@ -360,7 +446,7 @@ const ChecklistItem = ({ item, onComplete, variant }) => {
       {/* Item Header */}
       <TouchableOpacity
         style={styles.itemHeader}
-        onPress={() => setIsExpanded(!isExpanded)}
+        onPress={handleExpandToggle}
         activeOpacity={0.8}
       >
         {/* Checkbox */}
@@ -414,9 +500,9 @@ const ChecklistItem = ({ item, onComplete, variant }) => {
             </View>
           )}
           
-          {/* Action Buttons */}
-          <View style={styles.itemActions}>
-            {item.deepLink && (
+          {/* Action Buttons - Only show deep link button if available */}
+          {item.deepLink && (
+            <View style={styles.itemActions}>
               <TouchableOpacity
                 style={styles.actionButton}
                 onPress={() => handleDeepLink(item.deepLink)}
@@ -424,16 +510,8 @@ const ChecklistItem = ({ item, onComplete, variant }) => {
                 <Ionicons name="open-outline" size={16} color={CheckVariants.checklist.accent} />
                 <Text style={styles.actionButtonText}>{CopywritingService.getValidationFeedback('interactiveChecklist', 'openSettings')}</Text>
               </TouchableOpacity>
-            )}
-            
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => handleLearnMore(item)}
-            >
-              <Ionicons name="information-circle-outline" size={16} color={CheckVariants.checklist.accent} />
-              <Text style={styles.actionButtonText}>{CopywritingService.getValidationFeedback('interactiveChecklist', 'learnMore')}</Text>
-            </TouchableOpacity>
-          </View>
+            </View>
+          )}
           
           {/* Tips */}
           {item.tips && (

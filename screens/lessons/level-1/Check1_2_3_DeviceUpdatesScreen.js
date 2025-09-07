@@ -309,7 +309,7 @@ const Check1_2_3_DeviceUpdatesScreen = ({ navigation, route }) => {
             title: 'Check for Android Updates',
             description: 'Ensure your Android device is running the latest security patch.',
             completed: false,
-            deepLink: 'android-app://com.android.settings/.system.SystemUpdateActivity',
+            deepLink: 'android.settings.SYSTEM_UPDATE_SETTINGS',
             steps: [
               'Open Settings app',
               'Scroll down and tap System',
@@ -329,7 +329,7 @@ const Check1_2_3_DeviceUpdatesScreen = ({ navigation, route }) => {
             title: 'Enable Auto-Download Updates',
             description: 'Configure your Android device to automatically download updates.',
             completed: false,
-            deepLink: 'android-app://com.android.settings/.system.SystemUpdateActivity',
+            deepLink: 'android.settings.SYSTEM_UPDATE_SETTINGS',
             steps: [
               'Open Settings app',
               'Scroll down and tap System',
@@ -577,6 +577,7 @@ const Check1_2_3_DeviceUpdatesScreen = ({ navigation, route }) => {
           variant="modal"
             onClose={() => setShowCompletionPopup(false)}
             checkId="1-2-3"
+            animationType="confetti"
           />
 
           {/* Security Best Practices */}

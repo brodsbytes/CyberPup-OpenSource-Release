@@ -21,6 +21,7 @@ import { AppStorage } from '../../../utils/storage';
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import { getCompletionMessage, getNextScreenName, getCompletionNavigation } from '../../../utils/completionMessages';
 import { CopywritingService } from '../../../utils/copywritingService';
+import { getChecklistConfig } from '../../../constants/checklistConfig';
 
 import InteractiveChecklist from '../../../components/validation-steps/InteractiveChecklist';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
@@ -42,163 +43,63 @@ const Check1_4_2_ScamReportingScreen = ({ navigation, route }) => {
       
       const scamReportingItems = [
         {
-          id: 'recognize-scam-types',
-          title: 'Recognize Common Scam Types',
-          description: 'Learn to identify different types of scams and fraud',
+          id: 'document-scam-evidence',
+          title: 'Save Evidence of the Scam',
+          description: 'Collect and save all evidence when you encounter a scam',
           completed: false,
           priority: 'critical',
-          category: 'awareness',
+          category: 'action',
           tips: [
-            'Phishing emails try to steal login credentials',
-            'Tech support scams claim your device is infected',
-            'Romance scams build fake relationships for money',
-            'Investment scams promise unrealistic returns'
-          ],
-          steps: [
-            'Research common scam types online',
-            'Learn the red flags for each scam type',
-            'Understand how scammers operate',
-            'Recognize urgency and pressure tactics'
-          ]
-        },
-        {
-          id: 'document-evidence',
-          title: 'Document Scam Evidence',
-          description: 'Collect and preserve evidence when you encounter a scam',
-          completed: false,
-          priority: 'high',
-          category: 'evidence',
-          tips: [
-            'Take screenshots of suspicious messages',
-            'Save email headers and phone numbers',
-            'Record dates and times of contact',
-            'Keep copies of any documents or links'
+            'Take screenshots of suspicious messages, emails, or websites',
+            'Save phone numbers, email addresses, and usernames',
+            'Record dates and times when the scam occurred',
+            'Keep copies of any documents or links the scammer sent'
           ],
           steps: [
             'Take screenshots of all suspicious communications',
             'Save email headers and sender information',
-            'Record phone numbers and call times',
-            'Document any money or information shared'
+            'Write down phone numbers and call times',
+            'Save any documents, links, or files the scammer sent'
           ]
         },
         {
-          id: 'report-to-authorities',
-          title: 'Report to Authorities',
-          description: 'Report scams to appropriate government agencies',
+          id: 'report-to-local-authorities',
+          title: 'Report to Your Local Authorities',
+          description: 'Report the scam to your local government and law enforcement',
           completed: false,
           priority: 'critical',
-          category: 'reporting',
+          category: 'action',
           tips: [
-            'Report to FTC at ReportFraud.ftc.gov',
-            'Contact your state attorney general',
-            'Report to FBI Internet Crime Complaint Center',
-            'Contact local law enforcement if money was lost'
+            'Search online for your country\'s fraud reporting website',
+            'Contact your local police if you lost money',
+            'Report to your country\'s consumer protection agency',
+            'Contact your bank or credit card company if financial info was shared'
           ],
           steps: [
-            'Visit ReportFraud.ftc.gov to file a complaint',
-            'Contact your state attorney general\'s office',
-            'File a report with IC3 if it involves the internet',
-            'Contact local police if you lost money'
+            'Search for "[Your Country] fraud reporting" or "[Your Country] scam reporting"',
+            'Visit your government\'s official fraud reporting website',
+            'Contact your local police station if you lost money',
+            'Call your bank immediately if you shared financial information'
           ]
         },
         {
           id: 'report-to-platforms',
-          title: 'Report to Platforms',
-          description: 'Report scams to the platforms where they occurred',
+          title: 'Report to the Platform Where It Happened',
+          description: 'Report the scam to the website, app, or service where it occurred',
           completed: false,
           priority: 'high',
-          category: 'reporting',
+          category: 'action',
           tips: [
-            'Report phishing emails to your email provider',
-            'Report social media scams to the platform',
-            'Report fake websites to hosting providers',
-            'Report phone scams to your carrier'
+            'Report phishing emails to your email provider (Gmail, Outlook, etc.)',
+            'Report social media scams using the platform\'s reporting tools',
+            'Report fake websites to the hosting company',
+            'Report phone scams to your phone carrier'
           ],
           steps: [
-            'Report phishing emails to your email provider',
-            'Use platform reporting tools for social media scams',
-            'Report fake websites to hosting companies',
-            'Contact your phone carrier about scam calls'
-          ]
-        },
-        {
-          id: 'protect-accounts',
-          title: 'Protect Your Accounts',
-          description: 'Secure your accounts after encountering a scam',
-          completed: false,
-          priority: 'critical',
-          category: 'protection',
-          tips: [
-            'Change passwords for any compromised accounts',
-            'Enable two-factor authentication',
-            'Monitor accounts for suspicious activity',
-            'Contact banks if financial information was shared'
-          ],
-          steps: [
-            'Change passwords for any affected accounts',
-            'Enable 2FA on all important accounts',
-            'Monitor bank and credit card statements',
-            'Contact financial institutions if needed'
-          ]
-        },
-        {
-          id: 'warn-others',
-          title: 'Warn Others',
-          description: 'Help protect others by sharing scam information',
-          completed: false,
-          priority: 'medium',
-          category: 'community',
-          tips: [
-            'Share scam details with family and friends',
-            'Post warnings on social media (without personal details)',
-            'Report to community groups and forums',
-            'Help educate others about scam prevention'
-          ],
-          steps: [
-            'Warn family and friends about the scam',
-            'Share general scam information on social media',
-            'Report to local community groups',
-            'Help others learn to recognize similar scams'
-          ]
-        },
-        {
-          id: 'learn-prevention',
-          title: 'Learn Prevention Strategies',
-          description: 'Educate yourself on preventing future scams',
-          completed: false,
-          priority: 'high',
-          category: 'education',
-          tips: [
-            'Never share personal information with strangers',
-            'Be skeptical of urgent requests for money',
-            'Verify information through official sources',
-            'Trust your instincts - if it seems too good to be true, it probably is'
-          ],
-          steps: [
-            'Research scam prevention strategies',
-            'Learn to verify information independently',
-            'Practice healthy skepticism online',
-            'Stay updated on new scam tactics'
-          ]
-        },
-        {
-          id: 'support-victims',
-          title: 'Support Scam Victims',
-          description: 'Learn how to help others who have been scammed',
-          completed: false,
-          priority: 'medium',
-          category: 'support',
-          tips: [
-            'Be supportive and non-judgmental',
-            'Help them report the scam',
-            'Assist with account security measures',
-            'Encourage them to seek professional help if needed'
-          ],
-          steps: [
-            'Learn how to support scam victims emotionally',
-            'Help them document and report the scam',
-            'Assist with securing their accounts',
-            'Know when to recommend professional help'
+            'If it was an email: Forward it to your email provider\'s spam team',
+            'If it was on social media: Use the "Report" button on the post or message',
+            'If it was a fake website: Look for a "Report" link on the site',
+            'If it was a phone call: Contact your phone carrier to report the number'
           ]
         }
       ];
@@ -333,7 +234,7 @@ const Check1_4_2_ScamReportingScreen = ({ navigation, route }) => {
             </View>
             <Text style={styles.title}>Scam Reporting</Text>
             <Text style={styles.description}>
-              Learn how to report scams and fraud to protect yourself and others. This guide will teach you the proper channels and procedures for reporting cybercrime.
+              Learn the essential steps to report scams and fraud. This guide will show you how to take action when you encounter a scam, regardless of where you live.
             </Text>
           </View>
 
@@ -360,20 +261,22 @@ const Check1_4_2_ScamReportingScreen = ({ navigation, route }) => {
             </View>
           )}
           
-          {/* ✅ CRITICAL: Conditional rendering with fallback */}
+          {/* ✅ REFINED: Simple scam reporting checklist */}
           {!isLoading && checklistItems.length > 0 ? (
             <InteractiveChecklist
               checklistItems={checklistItems}
               onActionComplete={handleChecklistItemComplete}
-              variant="checklist"
+              variant="enhanced"
               checkId="1-4-2"
               navigation={navigation}
+              customHeaderTitle="Let's Learn to Report Scams"
+              {...getChecklistConfig('1-4-2')}
             />
           ) : (
             <View style={styles.fallbackContainer}>
               <Text style={styles.fallbackTitle}>Setting Up Scam Reporting</Text>
               <Text style={styles.fallbackText}>
-                We're preparing your personalized scam reporting checklist.
+                We're preparing your scam reporting checklist.
               </Text>
               <TouchableOpacity
                 style={styles.retryButton}
@@ -431,11 +334,18 @@ const Check1_4_2_ScamReportingScreen = ({ navigation, route }) => {
           navigation={navigation}
           onContinue={() => {
             setIsCompleted(false);
-            navigation.navigate(getNextScreenName('1-4-2'));
+            // Use the new navigation logic for area completion
+            const completionNav = getCompletionNavigation('1-4-2');
+            if (completionNav.type === 'area_completion') {
+              navigation.navigate(completionNav.target, completionNav.params);
+            } else {
+              navigation.navigate(completionNav.target);
+            }
           }}
           variant="modal"
             onClose={() => setShowCompletionPopup(false)}
             checkId="1-4-2"
+            animationType="confetti"
           />
     </SafeAreaView>
   );

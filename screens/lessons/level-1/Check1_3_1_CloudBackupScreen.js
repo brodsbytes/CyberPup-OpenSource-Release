@@ -8,6 +8,7 @@ import {
   StatusBar,
   TouchableOpacity,
   ScrollView,
+  Alert,
   Modal,
   Platform,
 } from 'react-native';
@@ -24,16 +25,16 @@ import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 import { CopywritingService } from '../../../utils/copywritingService';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
+import ExitModal from '../../../components/common/ExitModal';
 
 /**
  * Check1_3_1_CloudBackupScreen - Pattern B Implementation
  * 
- * Cloud backup setup with mobile verification workflows and desktop recommendations.
- * Applies proven Pattern B architecture:
+ * Enhanced cloud backup setup with device-specific recommendations
+ * and guided backup configuration flows. Applies Phase 1 lessons:
  * - User-controlled advancement
+ * - Contextual actions based on device capabilities
  * - Device-specific content delivery
- * - Mobile verification workflows to check backup status
- * - Native services + reputable third-party options
  * - Proper progress persistence
  */
 const Check1_3_1_CloudBackupScreen = ({ navigation, route }) => {
@@ -65,29 +66,8 @@ const Check1_3_1_CloudBackupScreen = ({ navigation, route }) => {
 
   const initializeDeviceContent = async () => {
     try {
-      // Get user's registered devices
-      const devices = await DeviceCapabilities.getUserDevices();
-      const currentDevice = DeviceCapabilities.getCurrentDevice();
-      
-      // Add current device if not already in the list
-      let allDevices = [...devices];
-      const hasCurrentDevice = devices.some(d => 
-        d.platform === currentDevice.platform && d.type === currentDevice.type
-      );
-      
-      if (!hasCurrentDevice) {
-        allDevices.unshift({
-          id: 'current-device',
-          name: currentDevice.type,
-          type: currentDevice.platform === 'ios' || currentDevice.platform === 'android' ? 'mobile' : 'computer',
-          platform: currentDevice.platform,
-          tier2: currentDevice.platform,
-          autoDetected: true,
-          supportsDeepLinks: currentDevice.supportsDeepLinks,
-          icon: getDeviceIcon(currentDevice)
-        });
-      }
-
+      // Use the new smart deduplication method to prevent device duplicates
+      const allDevices = await DeviceCapabilities.getUserDevicesWithCurrentDevice();
       setUserDevices(allDevices);
 
       // Create device-specific actions for cloud backup setup
@@ -117,223 +97,186 @@ const Check1_3_1_CloudBackupScreen = ({ navigation, route }) => {
 
   const createCloudBackupActions = async (device) => {
     const platform = device.platform || device.tier2;
-    const isMobile = device.type === 'mobile' || platform === 'ios' || platform === 'android';
     const settingsGuide = SettingsGuide.createGuidance('backup', device);
+    const recommendedApps = settingsGuide.getRecommendedApps('cloud-backup');
 
-    const actions = [];
+    // Get copywriting content for device actions
+    const copywritingContent = CopywritingService.getCheckContent('1-3-1');
+    const deviceActionsContent = copywritingContent.deviceActions || {};
 
-    if (isMobile) {
-      // Mobile devices get verification workflows
-      if (platform === 'ios') {
-        actions.push({
-          id: `${device.id}-icloud-check`,
-          title: 'Check iCloud Backup Status',
-          description: 'Verify that iCloud backup is enabled and working',
-          completed: false,
-          steps: [
-            'Open Settings',
-            'Tap your name at the top',
-            'Tap "iCloud"',
-            'Tap "iCloud Backup"',
-            'Check that "iCloud Backup" is turned on',
-            'Check the "Last Backup" date is recent'
-          ],
-          deepLink: 'App-Prefs:CASTLE',
-          verification: 'verification_workflow',
-          priority: 'high'
-        });
-        
-        actions.push({
-          id: `${device.id}-icloud-enable`,
-          title: 'Enable iCloud Backup',
-          description: 'Turn on automatic iCloud backup if not enabled',
-          completed: false,
-          steps: [
-            'In iCloud Backup settings',
-            'Turn on "iCloud Backup" if disabled',
-            'Tap "Back Up Now" to start initial backup',
-            'Ensure you have enough iCloud storage',
-            'Consider upgrading iCloud storage if needed'
-          ],
-          deepLink: 'App-Prefs:CASTLE',
-          verification: 'manual',
-          priority: 'high'
-        });
-      } else if (platform === 'android') {
-        actions.push({
-          id: `${device.id}-google-check`,
-          title: 'Check Google Backup Status',
-          description: 'Verify that Google backup is enabled and working',
-          completed: false,
-          steps: [
-            'Open Settings',
-            'Tap "Google" or search for "Backup"',
-            'Tap "Backup"',
-            'Check that "Back up to Google Drive" is on',
-            'Review what data is being backed up',
-            'Check the last backup date'
-          ],
-          deepLink: 'android.settings.SYNC_SETTINGS',
-          verification: 'verification_workflow',
-          priority: 'high'
-        });
-        
-        actions.push({
-          id: `${device.id}-google-enable`,
-          title: 'Enable Google Backup',
-          description: 'Turn on automatic Google Drive backup if not enabled',
-          completed: false,
-          steps: [
-            'In Google Backup settings',
-            'Turn on "Back up to Google Drive" if disabled',
-            'Select data to back up (Apps, Call history, etc.)',
-            'Tap "Back up now" to start initial backup',
-            'Ensure you have enough Google Drive storage'
-          ],
-          deepLink: 'android.settings.SYNC_SETTINGS',
-          verification: 'manual',
-          priority: 'high'
-        });
-      }
-      
-      // Third-party option for mobile
-      actions.push({
-        id: `${device.id}-third-party`,
-        title: 'Consider Additional Backup Service',
-        description: 'Set up a reputable third-party backup service for extra protection',
+    // Get device-specific recommendations
+    const userDevices = await DeviceCapabilities.getUserDevices();
+    const recommendations = SettingsGuide.getCloudBackupRecommendations(userDevices);
+
+    const actions = [
+      {
+        id: `${device.id}-choose-backup-solution`,
+        title: deviceActionsContent.chooseBackupSolution?.title || 'Choose Your Backup Solution',
+        description: deviceActionsContent.chooseBackupSolution?.description || 'Select and configure a reliable backup solution that fits your devices',
         completed: false,
-        steps: [
-          'Research reputable backup services (Dropbox, OneDrive, pCloud)',
-          'Install your chosen backup app',
-          'Sign up for an account',
-          'Configure automatic photo and document backup',
-          'Verify backup is working correctly'
+        steps: recommendations.primary.setupSteps || deviceActionsContent.chooseBackupSolution?.steps || [
+          'Check if your device has built-in backup (iCloud, Google Drive, OneDrive)',
+          'For built-in solutions: Go to Settings → Backup and enable automatic backup',
+          'For third-party apps: Choose from Dropbox, OneDrive, or Google Drive',
+          'Download your chosen backup app from the official app store',
+          'Sign in with your account and enable automatic backup',
+          'Verify backup is working by checking recent backup dates'
+        ],
+        tips: deviceActionsContent.chooseBackupSolution?.tips || [
+          'Built-in solutions are often the most reliable and integrated',
+          'OneDrive works great across all platforms (Windows, Mac, iOS, Android)',
+          'Google Drive offers generous free storage (15GB)',
+          'Always enable automatic backup to avoid data loss'
+        ],
+        deepLink: platform === 'android' ? 'android.settings.SYNC_SETTINGS' : settingsGuide.deepLink.url,
+        verification: 'manual',
+        priority: 'critical',
+        apps: recommendedApps,
+        // Add device-specific recommendation data
+        recommendation: {
+          primary: recommendations.primary,
+          alternatives: recommendations.alternatives
+        }
+      },
+      {
+        id: `${device.id}-configure-automatic-backup`,
+        title: deviceActionsContent.configureAutomaticBackup?.title || 'Set Up Automatic Backup',
+        description: deviceActionsContent.configureAutomaticBackup?.description || 'Enable automatic backup to protect your data without thinking about it',
+        completed: false,
+        steps: deviceActionsContent.configureAutomaticBackup?.steps || [
+          'Open your backup app or device settings',
+          'Find "Automatic Backup" or "Auto Backup" settings',
+          'Turn on automatic backup for photos and videos',
+          'Enable backup for important documents and files',
+          'Set backup to occur when connected to Wi-Fi',
+          'Test backup by taking a photo and checking it appears in backup'
+        ],
+        tips: deviceActionsContent.configureAutomaticBackup?.tips || [
+          'Automatic backup only works when connected to Wi-Fi to save data',
+          'Set backup to occur during off-peak hours to avoid slowing down your device',
+          'Regularly check backup status to ensure it\'s working properly',
+          'Consider upgrading storage if you frequently run out of space'
         ],
         verification: 'manual',
-        priority: 'medium',
-        thirdPartyOptions: getThirdPartyBackupOptions(platform)
-      });
-      
-    } else {
-      // Desktop devices get recommendations only
-      if (platform === 'windows') {
-        actions.push({
-          id: `${device.id}-onedrive`,
-          title: 'Set Up OneDrive Sync',
-          description: 'Enable OneDrive for automatic cloud backup of documents',
-          completed: false,
-          steps: [
-            'Press Windows key + I to open Settings',
-            'Click "Accounts" then "Backup"',
-            'Sign in to your Microsoft account',
-            'Turn on "Sync settings" and "Folder backup"',
-            'Choose folders to sync (Desktop, Documents, Pictures)',
-            'Verify sync is working'
-          ],
-          verification: 'manual',
-          priority: 'high'
-        });
-        
-        actions.push({
-          id: `${device.id}-file-history`,
-          title: 'Enable File History',
-          description: 'Set up Windows File History for local backup',
-          completed: false,
-          steps: [
-            'Connect an external drive',
-            'Open File History in Control Panel',
-            'Click "Turn on" File History',
-            'Select backup location (external drive)',
-            'Configure backup frequency',
-            'Run first backup'
-          ],
-          verification: 'manual',
-          priority: 'medium'
-        });
-      } else if (platform === 'macos') {
-        actions.push({
-          id: `${device.id}-time-machine`,
-          title: 'Set Up Time Machine',
-          description: 'Enable macOS Time Machine for complete system backup',
-          completed: false,
-          steps: [
-            'Connect an external drive or network storage',
-            'Open System Preferences > Time Machine',
-            'Click "Select Backup Disk"',
-            'Choose your backup destination',
-            'Turn on Time Machine',
-            'Wait for initial backup to complete'
-          ],
-          verification: 'manual',
-          priority: 'high'
-        });
-        
-        actions.push({
-          id: `${device.id}-icloud-drive`,
-          title: 'Enable iCloud Drive',
-          description: 'Turn on iCloud Drive for document and desktop sync',
-          completed: false,
-          steps: [
-            'Open System Preferences > Apple ID',
-            'Click "iCloud" in the sidebar',
-            'Check "iCloud Drive"',
-            'Click "Options" next to iCloud Drive',
-            'Enable "Desktop & Documents Folders"',
-            'Monitor sync status'
-          ],
-          verification: 'manual',
-          priority: 'high'
-        });
-      }
-      
-      // Third-party option for desktop
-      actions.push({
-        id: `${device.id}-third-party`,
-        title: 'Consider Professional Backup Solution',
-        description: 'Set up a comprehensive backup service for complete protection',
+        priority: 'critical'
+      },
+      {
+        id: `${device.id}-verify-backup-integrity`,
+        title: deviceActionsContent.verifyBackupIntegrity?.title || 'Verify Backup is Working',
+        description: deviceActionsContent.verifyBackupIntegrity?.description || 'Test your backup to ensure your data is safely stored and can be restored',
         completed: false,
-        steps: [
-          'Research professional backup services (Backblaze, Carbonite, Acronis)',
-          'Choose a service that meets your needs',
-          'Download and install the backup software',
-          'Configure backup settings and schedules',
-          'Perform initial backup',
-          'Test restore functionality'
+        steps: deviceActionsContent.verifyBackupIntegrity?.steps || [
+          'Check backup status in your backup app or device settings',
+          'Look for "Last Backup" date and ensure it\'s recent (within 24 hours)',
+          'Verify that photos, contacts, and important files are being backed up',
+          'Test restore by downloading a backed-up photo to a different device',
+          'Check available storage space in your backup service',
+          'Set up backup notifications to stay informed of backup status'
+        ],
+        tips: deviceActionsContent.verifyBackupIntegrity?.tips || [
+          'Backup should occur automatically at least once per day',
+          'If backup hasn\'t occurred recently, check your internet connection',
+          'Test restore functionality periodically to ensure it works when needed',
+          'Keep backup apps updated for the latest security features'
         ],
         verification: 'manual',
-        priority: 'medium',
-        thirdPartyOptions: getThirdPartyBackupOptions(platform)
-      });
-    }
+        priority: 'high'
+      },
+      {
+        id: `${device.id}-setup-additional-protection`,
+        title: deviceActionsContent.setupAdditionalProtection?.title || 'Add Extra Protection',
+        description: deviceActionsContent.setupAdditionalProtection?.description || 'Set up additional backup layers for maximum data protection',
+        completed: false,
+        steps: deviceActionsContent.setupAdditionalProtection?.steps || [
+          'Consider a second backup service for critical files (3-2-1 rule)',
+          'Set up local backup on external drive or computer if available',
+          'Enable backup for app data and settings',
+          'Configure backup for contacts, calendar, and notes',
+          'Set up family sharing if using a paid backup service',
+          'Review and clean up old backups to manage storage costs'
+        ],
+        tips: deviceActionsContent.setupAdditionalProtection?.tips || [
+          'The 3-2-1 rule: 3 copies, 2 different media types, 1 offsite',
+          'Local backup provides fastest restore times',
+          'Multiple backup services protect against service outages',
+          'Regular cleanup prevents unnecessary storage costs'
+        ],
+        verification: 'manual',
+        priority: 'medium'
+      }
+    ];
 
     return actions;
   };
 
-  const getThirdPartyBackupOptions = (platform) => {
-    const options = {
-      ios: [
-        { name: 'Dropbox', description: 'Popular cloud storage with automatic photo backup' },
-        { name: 'Google Drive', description: 'Additional Google storage beyond device backup' },
-        { name: 'OneDrive', description: 'Microsoft cloud storage with Office integration' }
-      ],
-      android: [
-        { name: 'Dropbox', description: 'Popular cloud storage with automatic photo backup' },
-        { name: 'OneDrive', description: 'Microsoft cloud storage with Office integration' },
-        { name: 'pCloud', description: 'Secure European cloud storage provider' }
-      ],
-      windows: [
-        { name: 'Backblaze', description: 'Unlimited computer backup for $6/month' },
-        { name: 'Carbonite', description: 'Personal and business backup solutions' },
-        { name: 'Acronis True Image', description: 'Complete cyber protection with backup' }
-      ],
-      macos: [
-        { name: 'Backblaze', description: 'Unlimited Mac backup for $6/month' },
-        { name: 'Arq', description: 'Encrypted backup to your own cloud storage' },
-        { name: 'Super Duper!', description: 'Disk cloning and backup for Mac' }
-      ]
-    };
-    
-    return options[platform] || [];
+  const renderDeviceSpecificRecommendations = () => {
+    try {
+      const recommendations = SettingsGuide.getCloudBackupRecommendations(userDevices);
+      
+      return (
+        <View style={styles.recommendationCard}>
+          <View style={styles.primaryRecommendation}>
+            <View style={styles.recommendationHeader}>
+              <Ionicons 
+                name={recommendations.primary.type === 'built-in' ? 'cloud-done' : 'cloud-upload'} 
+                size={Responsive.iconSizes.medium} 
+                color={Colors.accent} 
+              />
+              <Text style={styles.recommendationTitle}>
+                {recommendations.primary.name}
+              </Text>
+              <View style={[
+                styles.recommendationBadge, 
+                { backgroundColor: recommendations.primary.type === 'built-in' ? Colors.success : Colors.accent }
+              ]}>
+                <Text style={styles.recommendationBadgeText}>
+                  {recommendations.primary.type === 'built-in' ? 'Built-in' : 
+                   recommendations.primary.type === 'free' ? 'Free' : 'Premium'}
+                </Text>
+              </View>
+            </View>
+            
+            <Text style={styles.recommendationDescription}>
+              {recommendations.primary.whyRecommended}
+            </Text>
+            
+            <View style={styles.prosConsContainer}>
+              <View style={styles.prosSection}>
+                <Text style={styles.prosConsTitle}>✅ Benefits:</Text>
+                {recommendations.primary.pros.map((pro, index) => (
+                  <Text key={index} style={styles.prosConsItem}>• {pro}</Text>
+                ))}
+              </View>
+              
+              {recommendations.primary.cons && recommendations.primary.cons.length > 0 && (
+                <View style={styles.consSection}>
+                  <Text style={styles.prosConsTitle}>⚠️ Considerations:</Text>
+                  {recommendations.primary.cons.map((con, index) => (
+                    <Text key={index} style={styles.prosConsItem}>• {con}</Text>
+                  ))}
+                </View>
+              )}
+            </View>
+          </View>
+          
+          {recommendations.alternatives && recommendations.alternatives.length > 0 && (
+            <View style={styles.alternativesSection}>
+              <Text style={styles.alternativesTitle}>Other Options:</Text>
+              {recommendations.alternatives.map((alt, index) => (
+                <View key={index} style={styles.alternativeItem}>
+                  <Text style={styles.alternativeName}>{alt.name}</Text>
+                  <Text style={styles.alternativeDescription}>{alt.description}</Text>
+                  <Text style={styles.alternativeReason}>{alt.whyConsider}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      );
+    } catch (error) {
+      console.log('Error rendering recommendations:', error);
+      return null;
+    }
   };
 
   const getDeviceIcon = (device) => {
@@ -495,89 +438,42 @@ const Check1_3_1_CloudBackupScreen = ({ navigation, route }) => {
     return totalActions > 0 ? (completedActions / totalActions) * 100 : 0;
   };
 
+  // Get copywriting content for rendering
+  const copywritingContent = CopywritingService.getCheckContent('1-3-1');
+
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
-      
-      {/* ✅ UPDATED: Header with progress bar */}
-      <HeaderWithProgress
-        checkId="1-3-1"
-        onExit={handleExit}
-        isCompleted={isCompleted}
-        progress={getProgress()}
-        navigation={navigation}
-      />
-
-      {/* Exit Modal */}
-      <Modal
+    <View style={styles.rootContainer}>
+      {/* ✅ STANDARDIZED: Exit Modal using common component - positioned at root level */}
+      <ExitModal
         visible={showExitModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowExitModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setShowExitModal(false)}
-            >
-              <Ionicons name="close" size={Responsive.iconSizes.large} color={Colors.textPrimary} />
-            </TouchableOpacity>
-
-            <View style={styles.modalCharacter}>
-              <Text style={styles.characterText}>☁️</Text>
-            </View>
-
-            <Text style={styles.modalTitle}>Wait, don't go!</Text>
-            <Text style={styles.modalMessage}>
-              You're about to protect your precious data and memories with cloud backup. Don't let a device failure erase years of photos and documents!
-            </Text>
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.keepLearningButton}
-                onPress={handleKeepLearning}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.keepLearningButtonText}>Keep going</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.exitLessonButton}
-                onPress={handleExitLesson}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.exitLessonButtonText}>Exit</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowExitModal(false)}
+        onKeepLearning={handleKeepLearning}
+        onExit={handleExitLesson}
+        icon="☁️"
+        title="Wait, don't go!"
+        message="You're about to protect your precious data and memories with cloud backup. Don't let a device failure erase years of photos and documents!"
+      />
+      
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
+        
+        {/* ✅ UPDATED: Header with progress bar */}
+        <HeaderWithProgress
+          checkId="1-3-1"
+          onExit={handleExit}
+          isCompleted={isCompleted}
+          progress={getProgress()}
+          navigation={navigation}
+        />
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           {/* Title and Description */}
           <View style={styles.titleSection}>
-            <Text style={styles.title}>Set Up Cloud Backup</Text>
+            <Text style={styles.title}>{copywritingContent.title || 'Set Up Cloud Backup'}</Text>
             <Text style={styles.description}>
-              Protect your important data, photos, and documents with reliable cloud backup solutions. Never lose your digital life to device failure or theft.
+              {copywritingContent.description || 'Protect your important data, photos, and documents with reliable cloud backup solutions. Never lose your digital life to device failure or theft.'}
             </Text>
-            
-            {/* Progress Indicator */}
-            <View style={styles.progressSection}>
-              <View style={styles.progressHeader}>
-                <Text style={styles.progressTitle}>Setup Progress</Text>
-                <Text style={styles.progressPercentage}>{Math.round(getOverallProgress())}%</Text>
-              </View>
-              <View style={styles.progressBar}>
-                <View 
-                  style={[
-                    styles.progressFill, 
-                    { width: `${getOverallProgress()}%` }
-                  ]} 
-                />
-              </View>
-            </View>
           </View>
 
           {/* Learn More Section */}
@@ -603,11 +499,22 @@ const Check1_3_1_CloudBackupScreen = ({ navigation, route }) => {
             </View>
           )}
 
+          {/* Device-Specific Recommendations */}
+          {userDevices.length > 0 && (
+            <View style={styles.recommendationsSection}>
+              <Text style={styles.recommendationsTitle}>🎯 Expert Recommendations for Your Devices</Text>
+              <Text style={styles.recommendationsSubtitle}>
+                Based on your device ecosystem, here's what backup experts recommend:
+              </Text>
+              {renderDeviceSpecificRecommendations()}
+            </View>
+          )}
+
           {/* Device-Specific Sections */}
           <View style={styles.devicesSection}>
             <Text style={styles.devicesSectionTitle}>Cloud Backup Setup by Device</Text>
             <Text style={styles.devicesSectionSubtitle}>
-              Configure automatic cloud backup on each device. Mobile devices support verification workflows, desktop devices get comprehensive recommendations.
+              Configure cloud backup on each of your devices for complete protection
             </Text>
 
             {userDevices.length > 0 ? (
@@ -644,27 +551,6 @@ const Check1_3_1_CloudBackupScreen = ({ navigation, route }) => {
             )}
           </View>
 
-          {/* Security Tips */}
-          <View style={styles.tipsSection}>
-            <Text style={styles.tipsTitle}>☁️ Backup Best Practices</Text>
-            <View style={styles.tipItem}>
-              <Ionicons name="repeat" size={Responsive.iconSizes.medium} color={Colors.accent} />
-              <Text style={styles.tipText}>Follow the 3-2-1 rule: 3 copies, 2 different media, 1 offsite</Text>
-            </View>
-            <View style={styles.tipItem}>
-              <Ionicons name="time" size={Responsive.iconSizes.medium} color={Colors.accent} />
-              <Text style={styles.tipText}>Enable automatic backup to keep data current</Text>
-            </View>
-            <View style={styles.tipItem}>
-              <Ionicons name="checkmark-circle" size={Responsive.iconSizes.medium} color={Colors.accent} />
-              <Text style={styles.tipText}>Test restore functionality periodically</Text>
-            </View>
-            <View style={styles.tipItem}>
-              <Ionicons name="lock-closed" size={Responsive.iconSizes.medium} color={Colors.accent} />
-              <Text style={styles.tipText}>Choose services with strong encryption</Text>
-            </View>
-          </View>
-
           {/* Completion Status */}
           <CompletionPopup
           isVisible={showCompletionPopup}
@@ -672,24 +558,29 @@ const Check1_3_1_CloudBackupScreen = ({ navigation, route }) => {
           description={getCompletionMessage('1-3-1').description}
           nextScreenName={getNextScreenName('1-3-1')}
           navigation={navigation}
-          onContinue={() => {
-            setIsCompleted(false);
-            navigation.navigate(getNextScreenName('1-3-1'));
-          }}
+                      onContinue={() => {
+              setIsCompleted(false);
+              navigation.navigate(getNextScreenName('1-3-1'));
+            }}
           variant="modal"
             onClose={() => setShowCompletionPopup(false)}
             checkId="1-3-1"
+            animationType="confetti"
           />
           {/* References Section */}
           <ReferencesSection references={getReferencesForCheck('1-3-1')} />
 
         </View>
       </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  rootContainer: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     backgroundColor: Colors.background,
@@ -740,37 +631,6 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     lineHeight: Typography.sizes.md * 1.5,
     marginBottom: Responsive.spacing.lg,
-  },
-  progressSection: {
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.large,
-    padding: Responsive.padding.card,
-  },
-  progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Responsive.spacing.sm,
-  },
-  progressTitle: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
-  },
-  progressPercentage: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.bold,
-    color: Colors.accent,
-  },
-  progressBar: {
-    height: 6,
-    backgroundColor: Colors.overlayLight,
-    borderRadius: 3,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: Colors.accent,
-    borderRadius: 3,
   },
   learnMoreButton: {
     flexDirection: 'row',
@@ -875,6 +735,116 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: Typography.sizes.sm * 1.4,
   },
+  recommendationsSection: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.large,
+    padding: Responsive.padding.card,
+    marginBottom: Responsive.spacing.lg,
+  },
+  recommendationsTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.bold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.sm,
+  },
+  recommendationsSubtitle: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    marginBottom: Responsive.spacing.md,
+    lineHeight: Typography.sizes.sm * 1.4,
+  },
+  recommendationCard: {
+    backgroundColor: Colors.background,
+    borderRadius: Responsive.borderRadius.medium,
+    padding: Responsive.padding.card,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  primaryRecommendation: {
+    marginBottom: Responsive.spacing.md,
+  },
+  recommendationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Responsive.spacing.sm,
+  },
+  recommendationTitle: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.bold,
+    color: Colors.textPrimary,
+    marginLeft: Responsive.spacing.sm,
+    flex: 1,
+  },
+  recommendationBadge: {
+    paddingHorizontal: Responsive.spacing.sm,
+    paddingVertical: Responsive.spacing.xs,
+    borderRadius: Responsive.borderRadius.small,
+  },
+  recommendationBadgeText: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+  },
+  recommendationDescription: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    lineHeight: Typography.sizes.sm * 1.4,
+    marginBottom: Responsive.spacing.md,
+  },
+  prosConsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  prosSection: {
+    flex: 1,
+    marginRight: Responsive.spacing.sm,
+  },
+  consSection: {
+    flex: 1,
+    marginLeft: Responsive.spacing.sm,
+  },
+  prosConsTitle: {
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.xs,
+  },
+  prosConsItem: {
+    fontSize: Typography.sizes.xs,
+    color: Colors.textSecondary,
+    lineHeight: Typography.sizes.xs * 1.3,
+    marginBottom: Responsive.spacing.xs,
+  },
+  alternativesSection: {
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    paddingTop: Responsive.spacing.md,
+  },
+  alternativesTitle: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Responsive.spacing.sm,
+  },
+  alternativeItem: {
+    marginBottom: Responsive.spacing.sm,
+  },
+  alternativeName: {
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+  },
+  alternativeDescription: {
+    fontSize: Typography.sizes.xs,
+    color: Colors.textSecondary,
+    marginTop: Responsive.spacing.xs,
+  },
+  alternativeReason: {
+    fontSize: Typography.sizes.xs,
+    color: Colors.accent,
+    fontStyle: 'italic',
+    marginTop: Responsive.spacing.xs,
+  },
   completionCard: {
     backgroundColor: Colors.successSoft,
     borderRadius: Responsive.borderRadius.xlarge,
@@ -913,85 +883,7 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
   },
-  // Modal styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: Colors.overlayDark,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.xxlarge,
-    padding: Responsive.padding.modal,
-    marginHorizontal: Responsive.padding.screen,
-    alignItems: 'center',
-    position: 'relative',
-    minWidth: Responsive.modal.width,
-  },
-  modalCloseButton: {
-    position: 'absolute',
-    top: Responsive.padding.button,
-    right: Responsive.padding.button,
-    width: Responsive.iconSizes.xlarge,
-    height: Responsive.iconSizes.xlarge,
-    borderRadius: Responsive.iconSizes.xlarge / 2,
-    backgroundColor: Colors.border,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalCharacter: {
-    marginBottom: Responsive.spacing.md,
-  },
-  characterText: {
-    fontSize: Responsive.iconSizes.xxlarge,
-  },
-  modalTitle: {
-    fontSize: Typography.sizes.xxl,
-    fontWeight: Typography.weights.bold,
-    color: Colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: Responsive.spacing.sm,
-  },
-  modalMessage: {
-    fontSize: Typography.sizes.md,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: Typography.sizes.md * 1.4,
-    marginBottom: Responsive.spacing.lg,
-  },
-  modalButtons: {
-    width: '100%',
-    gap: Responsive.spacing.sm,
-  },
-  keepLearningButton: {
-    backgroundColor: Colors.accent,
-    borderRadius: Responsive.borderRadius.large,
-    paddingVertical: Responsive.padding.button,
-    paddingHorizontal: Responsive.spacing.lg,
-    alignItems: 'center',
-    minHeight: Responsive.buttonHeight.medium,
-  },
-  keepLearningButtonText: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.textPrimary,
-  },
-  exitLessonButton: {
-    backgroundColor: Colors.surface,
-    borderRadius: Responsive.borderRadius.large,
-    paddingVertical: Responsive.padding.button,
-    paddingHorizontal: Responsive.spacing.lg,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.accent,
-    minHeight: Responsive.buttonHeight.medium,
-  },
-  exitLessonButtonText: {
-    fontSize: Typography.sizes.md,
-    fontWeight: Typography.weights.semibold,
-    color: Colors.accent,
-  },
+
 });
 
 export default Check1_3_1_CloudBackupScreen;

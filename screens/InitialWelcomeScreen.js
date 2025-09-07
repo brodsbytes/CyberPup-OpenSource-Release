@@ -43,6 +43,9 @@ const InitialWelcomeScreen = ({ navigation }) => {
     
     pulseAnimation.start();
     
+    // Pre-load the mascot image for the final step to prevent loading delay
+    Image.prefetch(Image.resolveAssetSource(require('../assets/images/cyberpup-mascot.png')).uri);
+    
     return () => pulseAnimation.stop();
   }, [pulseAnim]);
 
@@ -251,6 +254,11 @@ const InitialWelcomeScreen = ({ navigation }) => {
       {/* Bottom Line Text */}
       <Text style={styles.bottomLine}>
         No misleading marketing or sales tactics. Just industry standard best pracitses that actually make you safer.
+      </Text>
+
+      {/* Disclaimer Text */}
+      <Text style={styles.disclaimerText}>
+        CyberPup provides general educational content and cybersecurity guidance. It does not provide professional cybersecurity services, and no advice or recommendations in the App should be considered a guarantee of protection against threats.
       </Text>
 
     </View>
@@ -587,6 +595,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: Typography.sizes.md * 1.4,
     marginVertical: Responsive.spacing.xl,
+  },
+  disclaimerText: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: Typography.sizes.sm * 1.4,
+    fontStyle: 'italic',
+    marginTop: Responsive.spacing.md,
+    marginBottom: Responsive.spacing.lg,
   },
 
   finalMascotContainer: {

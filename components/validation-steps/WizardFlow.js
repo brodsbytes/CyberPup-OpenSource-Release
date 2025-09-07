@@ -32,6 +32,9 @@ const WizardFlow = ({
   // 🎨 NEW: Wizard-specific state
   const [showStepDetails, setShowStepDetails] = useState(false);
   
+  // 🔧 FIX: Track completing state to prevent step flash during completion animation
+  const [completingSteps, setCompletingSteps] = useState({});
+  
   // Calculate total steps across all devices
   const getTotalSteps = () => {
     let total = 0;
@@ -69,6 +72,10 @@ const WizardFlow = ({
   };
   
   const getCurrentStep = (deviceIndex) => {
+    // 🔧 FIX: If a step is completing, maintain the current step to prevent flash
+    if (completingSteps[deviceIndex]) {
+      return completingSteps[deviceIndex].currentStep;
+    }
     return deviceSteps[deviceIndex] || 0;
   };
   
@@ -81,6 +88,20 @@ const WizardFlow = ({
   
   // Handle wizard action completion for specific device
   const handleWizardActionComplete = async (deviceId, actionId, completed) => {
+    // 🔧 FIX: Set completing state before calling onActionComplete to prevent step flash
+    const deviceIndex = userDevices.findIndex(device => device.id === deviceId);
+    if (deviceIndex !== -1 && completed) {
+      const currentStep = getCurrentStep(deviceIndex);
+      setCompletingSteps(prev => ({
+        ...prev,
+        [deviceIndex]: {
+          currentStep,
+          actionId,
+          timestamp: Date.now()
+        }
+      }));
+    }
+    
     await onActionComplete(deviceId, actionId, completed);
     
     // Haptic feedback
@@ -89,19 +110,30 @@ const WizardFlow = ({
     }
     
     // Auto-advance to next step if action completed
-    if (completed) {
-      // Find which device this action belongs to
-      const deviceIndex = userDevices.findIndex(device => device.id === deviceId);
-      if (deviceIndex !== -1) {
-        const deviceActions = getDeviceActions(deviceIndex);
-        const currentActionIndex = deviceActions.findIndex(action => action.id === actionId);
-        
-        if (currentActionIndex < deviceActions.length - 1) {
-          // Next action in same device
-          setTimeout(() => {
-            setCurrentStep(deviceIndex, currentActionIndex + 1);
-          }, 500);
-        }
+    if (completed && deviceIndex !== -1) {
+      const deviceActions = getDeviceActions(deviceIndex);
+      const currentActionIndex = deviceActions.findIndex(action => action.id === actionId);
+      
+      if (currentActionIndex < deviceActions.length - 1) {
+        // Next action in same device
+        setTimeout(() => {
+          // Clear completing state and advance to next step
+          setCompletingSteps(prev => {
+            const newState = { ...prev };
+            delete newState[deviceIndex];
+            return newState;
+          });
+          setCurrentStep(deviceIndex, currentActionIndex + 1);
+        }, 500);
+      } else {
+        // No more steps, just clear completing state
+        setTimeout(() => {
+          setCompletingSteps(prev => {
+            const newState = { ...prev };
+            delete newState[deviceIndex];
+            return newState;
+          });
+        }, 500);
       }
     }
   };
@@ -116,10 +148,8 @@ const WizardFlow = ({
     if (currentAction && !currentAction.completed) {
       const device = userDevices[deviceIndex];
       await handleWizardActionComplete(device.id, currentAction.id, true);
-    }
-    
-    // Then advance to next step if available
-    if (currentStep < deviceActions.length - 1) {
+    } else if (currentStep < deviceActions.length - 1) {
+      // If action is already completed, just advance to next step
       setCurrentStep(deviceIndex, currentStep + 1);
     }
   };
@@ -251,8 +281,8 @@ const WizardFlow = ({
                       </TouchableOpacity>
                     )}
                     
-                    {/* Next Button or Device Complete Status */}
-                    {deviceProgress === 100 ? (
+                    {/* Device Complete Status */}
+                    {deviceProgress === 100 && (
                       <View style={styles.deviceCompleteButton}>
                         <Ionicons 
                           name="checkmark-circle" 
@@ -261,18 +291,6 @@ const WizardFlow = ({
                         />
                         <Text style={styles.deviceCompleteButtonText}>Device Complete!</Text>
                       </View>
-                    ) : (
-                      <TouchableOpacity 
-                        style={styles.nextButton}
-                        onPress={() => handleNextStep(deviceIndex)}
-                      >
-                        <Text style={styles.nextButtonText}>Next Step</Text>
-                        <Ionicons 
-                          name="chevron-forward" 
-                          size={Responsive.iconSizes.medium} 
-                          color={Colors.textPrimary} 
-                        />
-                      </TouchableOpacity>
                     )}
                   </View>
                 </View>

@@ -527,6 +527,7 @@ const Check1_2_1_ScreenLockScreen = ({ navigation, route }) => {
           variant="modal"
             onClose={() => setShowCompletionPopup(false)}
             checkId="1-2-1"
+            animationType="confetti"
           />
         </View>
       </ScrollView>

@@ -14,10 +14,8 @@ import { Colors, Typography, Responsive } from '../../theme';
 import ProgressiveActionCard from '../../components/ui/ProgressiveActionCard';
 import * as Haptics from 'expo-haptics';
 
-// Enable LayoutAnimation on Android
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
+// Note: setLayoutAnimationEnabledExperimental is deprecated in New Architecture
+// Layout animations are now handled automatically by the New Architecture
 
 /**
  * CollapsibleDeviceSection - Multi-device content container

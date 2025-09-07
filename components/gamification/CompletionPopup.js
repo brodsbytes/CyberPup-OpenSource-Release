@@ -341,7 +341,7 @@ const CompletionPopup = ({
   const startConfettiAnimation = () => {
     try {
       const animations = confetti.map((confettiPiece, index) => {
-      const delay = (index * 100) + (index % 3) * 200; // More predictable delays
+      const delay = (index * 50) + (index % 3) * 100; // Reduced delays for faster confetti appearance
       const fallDuration = 3000 + (index % 4) * 500; // More predictable durations
       const horizontalDistance = ((index % 7) - 3) * 50; // More predictable distances
       const verticalDistance = 500 + (index % 5) * 80; // More predictable distances

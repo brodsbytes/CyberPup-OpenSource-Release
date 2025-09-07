@@ -344,6 +344,7 @@ const Check1_2_2_RemoteLockScreen = ({ navigation, route }) => {
           variant="modal"
             onClose={() => setShowCompletionPopup(false)}
             checkId="1-2-2"
+            animationType="confetti"
           />
 
       {/* ✅ STANDARDIZED: Exit Modal using common component */}

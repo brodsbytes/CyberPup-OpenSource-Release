@@ -26,8 +26,8 @@ export const BackgroundAlertsService = {
   async registerBackgroundFetch() {
     try {
       // Check if background tasks are available
-      const isAvailable = await BackgroundTask.isAvailableAsync();
-      if (!isAvailable) {
+      const status = await BackgroundTask.getStatusAsync();
+      if (status !== BackgroundTask.BackgroundTaskStatus.Available) {
         console.log('⚠️ Background tasks not available on this platform');
         return;
       }
@@ -56,7 +56,8 @@ export const BackgroundAlertsService = {
   // Check if background fetch is available
   async isAvailable() {
     try {
-      return await BackgroundTask.isAvailableAsync();
+      const status = await BackgroundTask.getStatusAsync();
+      return status === BackgroundTask.BackgroundTaskStatus.Available;
     } catch (error) {
       console.log('❌ Error checking background task availability:', error);
       return false;

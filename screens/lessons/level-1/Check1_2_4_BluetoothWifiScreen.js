@@ -324,7 +324,7 @@ const Check1_2_4_BluetoothWifiScreen = ({ navigation, route }) => {
             title: 'Configure Wi-Fi Security',
             description: 'Set up secure Wi-Fi connections and network preferences.',
             completed: false,
-            deepLink: 'android-app://com.android.settings/.wifi.WifiSettings',
+            deepLink: 'android.settings.WIFI_SETTINGS',
             steps: [
               'Open Settings app',
               'Tap Network & Internet',
@@ -343,7 +343,7 @@ const Check1_2_4_BluetoothWifiScreen = ({ navigation, route }) => {
             title: 'Configure Bluetooth Security',
             description: 'Set up Bluetooth security and manage paired devices.',
             completed: false,
-            deepLink: 'android-app://com.android.settings/.bluetooth.BluetoothSettings',
+            deepLink: 'android.settings.BLUETOOTH_SETTINGS',
             steps: [
               'Open Settings app',
               'Tap Connected devices',
@@ -362,7 +362,7 @@ const Check1_2_4_BluetoothWifiScreen = ({ navigation, route }) => {
             title: 'Configure Network Security',
             description: 'Set up additional network security settings.',
             completed: false,
-            deepLink: 'android-app://com.android.settings/.wifi.WifiSettings',
+            deepLink: 'android.settings.WIFI_SETTINGS',
             steps: [
               'Open Settings app',
               'Tap Network & Internet',
@@ -648,6 +648,7 @@ const Check1_2_4_BluetoothWifiScreen = ({ navigation, route }) => {
           variant="modal"
             onClose={() => setShowCompletionPopup(false)}
             checkId="1-2-4"
+            animationType="confetti"
           />
 
           {/* Security Best Practices */}

@@ -307,6 +307,7 @@ const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
           variant="modal"
           onClose={() => setShowCompletionPopup(false)}
           checkId="1-4-1"
+          animationType="confetti"
           />
 
           {/* Security Best Practices */}

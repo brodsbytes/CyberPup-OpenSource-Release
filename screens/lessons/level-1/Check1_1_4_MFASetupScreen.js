@@ -509,6 +509,7 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
           variant="modal"
             onClose={() => setShowCompletionPopup(false)}
             checkId="1-1-4"
+            animationType="confetti"
           />
           {/* References Section */}
           <ReferencesSection references={getReferencesForCheck('1-1-4')} />

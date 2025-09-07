@@ -21,6 +21,7 @@ import { AppStorage } from '../../../utils/storage';
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import { getCompletionMessage, getNextScreenName } from '../../../utils/completionMessages';
 import { CopywritingService } from '../../../utils/copywritingService';
+import { getChecklistConfig } from '../../../constants/checklistConfig';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 import ExitModal from '../../../components/common/ExitModal';
 
@@ -42,163 +43,66 @@ const Check1_5_1_SharingAwarenessScreen = ({ navigation, route }) => {
       
       const sharingAwarenessItems = [
         {
-          id: 'oversharing-risks',
-          title: 'Understand Oversharing Risks',
-          description: 'Learn how sharing too much information can put you at risk',
+          id: 'check-social-media-privacy',
+          title: 'Check Your Social Media Privacy Settings',
+          description: 'Review and secure your social media accounts to control who sees your information',
           completed: false,
           priority: 'critical',
-          category: 'awareness',
+          category: 'action',
           tips: [
-            'Oversharing can lead to identity theft',
-            'Personal information can be used for social engineering',
-            'Location sharing can reveal your daily routines',
-            'Financial information should never be shared publicly'
+            'Set your accounts to private when possible',
+            'Review who can see your posts and personal information',
+            'Remove your home address, phone number, and full birth date from profiles',
+            'Be careful with location tagging in posts and photos'
           ],
           steps: [
-            'Research common oversharing risks online',
-            'Understand how personal data is used by attackers',
-            'Learn about social engineering techniques',
-            'Recognize the value of your personal information'
+            'Open each social media app (Facebook, Instagram, Twitter, etc.)',
+            'Go to Settings > Privacy or Account Settings',
+            'Set your account to "Private" if available',
+            'Remove personal information like address, phone, and full birth date from your profile',
+            'Check who can see your posts and limit to "Friends Only"'
           ]
         },
         {
-          id: 'social-media-privacy',
-          title: 'Review Social Media Privacy',
-          description: 'Audit your social media accounts for privacy settings',
+          id: 'turn-off-location-sharing',
+          title: 'Turn Off Location Sharing',
+          description: 'Stop sharing your location in real-time to protect your privacy and safety',
           completed: false,
           priority: 'high',
-          category: 'social-media',
-          tips: [
-            'Set all accounts to private when possible',
-            'Review who can see your posts and information',
-            'Limit personal information in your profiles',
-            'Be careful with location tagging and check-ins'
-          ],
-          steps: [
-            'Go through each social media platform',
-            'Check privacy settings and audience controls',
-            'Remove or hide personal information from profiles',
-            'Review and clean up old posts and photos'
-          ]
-        },
-        {
-          id: 'location-sharing',
-          title: 'Control Location Sharing',
-          description: 'Manage how and when you share your location',
-          completed: false,
-          priority: 'high',
-          category: 'location-privacy',
+          category: 'action',
           tips: [
             'Turn off location services when not needed',
-            'Be careful with location tagging in posts',
-            'Avoid sharing real-time location updates',
-            'Review apps that have location access'
+            'Avoid sharing your location in social media posts',
+            'Don\'t post about being away from home or on vacation',
+            'Review which apps have access to your location'
           ],
           steps: [
-            'Check device location settings',
-            'Review app permissions for location access',
-            'Turn off location sharing in social media',
-            'Use location services only when necessary'
+            'Go to your phone\'s Settings > Privacy > Location Services',
+            'Turn off location sharing for social media apps',
+            'In each social media app, turn off location tagging for posts',
+            'Avoid posting "check-ins" or location updates',
+            'Don\'t post about travel plans or being away from home'
           ]
         },
         {
-          id: 'personal-information-protection',
-          title: 'Protect Personal Information',
-          description: 'Keep sensitive personal information private',
-          completed: false,
-          priority: 'critical',
-          category: 'personal-data',
-          tips: [
-            'Never share full birth dates publicly',
-            'Avoid posting home addresses or phone numbers',
-            'Be careful with family member information',
-            'Don\'t share financial information or documents'
-          ],
-          steps: [
-            'Audit your online presence for personal info',
-            'Remove or hide sensitive information',
-            'Use privacy settings to limit access',
-            'Think before posting any personal details'
-          ]
-        },
-        {
-          id: 'work-information-security',
-          title: 'Secure Work Information',
-          description: 'Protect work-related information and avoid oversharing',
+          id: 'remove-personal-info',
+          title: 'Remove Personal Information from Posts',
+          description: 'Clean up your social media posts to remove sensitive personal information',
           completed: false,
           priority: 'high',
-          category: 'work-privacy',
+          category: 'action',
           tips: [
-            'Don\'t share work schedules or travel plans',
-            'Avoid posting about work projects or clients',
-            'Be careful with work-related photos or documents',
-            'Use separate accounts for work and personal use'
+            'Remove posts that show your home address or license plates',
+            'Delete posts with your phone number or email address',
+            'Remove photos that show your workplace or work documents',
+            'Be careful about sharing family member information'
           ],
           steps: [
-            'Review work-related social media posts',
-            'Remove or secure work information',
-            'Set up separate work and personal accounts',
-            'Be mindful of what you share about work'
-          ]
-        },
-        {
-          id: 'family-privacy',
-          title: 'Protect Family Privacy',
-          description: 'Safeguard information about family members',
-          completed: false,
-          priority: 'high',
-          category: 'family-privacy',
-          tips: [
-            'Get permission before sharing family photos',
-            'Be careful with children\'s information',
-            'Avoid sharing family schedules or routines',
-            'Protect family member contact information'
-          ],
-          steps: [
-            'Ask family members about sharing preferences',
-            'Review and secure family-related posts',
-            'Use privacy settings for family content',
-            'Be selective about what family information to share'
-          ]
-        },
-        {
-          id: 'digital-footprint-audit',
-          title: 'Audit Your Digital Footprint',
-          description: 'Review and clean up your online presence',
-          completed: false,
-          priority: 'medium',
-          category: 'digital-presence',
-          tips: [
-            'Search for yourself online regularly',
-            'Remove or secure old accounts and posts',
-            'Check what information is publicly available',
-            'Monitor your digital reputation'
-          ],
-          steps: [
-            'Search your name on multiple search engines',
-            'Review and clean up old social media accounts',
-            'Remove or secure outdated information',
-            'Set up alerts for mentions of your name'
-          ]
-        },
-        {
-          id: 'sharing-habits',
-          title: 'Develop Smart Sharing Habits',
-          description: 'Build healthy habits for online sharing',
-          completed: false,
-          priority: 'medium',
-          category: 'habits',
-          tips: [
-            'Think before you post - consider the consequences',
-            'Use the 24-hour rule for emotional posts',
-            'Ask yourself who might see this information',
-            'Consider the long-term impact of your posts'
-          ],
-          steps: [
-            'Create a personal sharing policy',
-            'Practice the 24-hour rule for important posts',
-            'Review posts before publishing',
-            'Regularly audit your sharing habits'
+            'Go through your recent social media posts',
+            'Delete any posts that show your home address, license plate, or phone number',
+            'Remove photos that show your workplace or work-related documents',
+            'Ask family members before posting photos or information about them',
+            'Think twice before posting anything that reveals your daily routine'
           ]
         }
       ];
@@ -332,7 +236,7 @@ const Check1_5_1_SharingAwarenessScreen = ({ navigation, route }) => {
             </View>
             <Text style={styles.title}>Sharing Awareness</Text>
             <Text style={styles.description}>
-              Develop smart sharing habits to protect your privacy. Learn to share safely without putting yourself, your family, or your work at risk.
+              Learn to share safely online and protect your privacy. This guide will show you simple steps to control what information you share and who can see it.
             </Text>
           </View>
 
@@ -359,7 +263,7 @@ const Check1_5_1_SharingAwarenessScreen = ({ navigation, route }) => {
             </View>
           )}
           
-          {/* ✅ CRITICAL: Conditional rendering with fallback */}
+          {/* ✅ REFINED: Simple sharing awareness checklist */}
           {!isLoading && checklistItems.length > 0 ? (
             <InteractiveChecklist
               checklistItems={checklistItems}
@@ -367,12 +271,14 @@ const Check1_5_1_SharingAwarenessScreen = ({ navigation, route }) => {
               variant="enhanced"
               checkId="1-5-1"
               navigation={navigation}
+              customHeaderTitle="Let's Learn Smart Sharing"
+              {...getChecklistConfig('1-5-1')}
             />
           ) : (
             <View style={styles.fallbackContainer}>
               <Text style={styles.fallbackTitle}>Setting Up Privacy Awareness</Text>
               <Text style={styles.fallbackText}>
-                We're preparing your personalized sharing awareness checklist.
+                We're preparing your sharing awareness checklist.
               </Text>
               <TouchableOpacity
                 style={styles.retryButton}
@@ -435,6 +341,7 @@ const Check1_5_1_SharingAwarenessScreen = ({ navigation, route }) => {
           variant="modal"
             onClose={() => setShowCompletionPopup(false)}
             checkId="1-5-1"
+            animationType="confetti"
           />
     </SafeAreaView>
   );

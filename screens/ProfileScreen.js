@@ -7,7 +7,9 @@ import {
   ScrollView, 
   TouchableOpacity,
   RefreshControl,
-  StatusBar
+  StatusBar,
+  Modal,
+  Linking
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -27,6 +29,7 @@ const ProfileScreen = ({ navigation }) => {
   const [showStreakDetails, setShowStreakDetails] = useState(false);
   const [showBadges, setShowBadges] = useState(false);
   const [showCatalogue, setShowCatalogue] = useState(false);
+  const [showHelpSupport, setShowHelpSupport] = useState(false);
   const [activityData, setActivityData] = useState({
     streak: {
       currentStreak: 0,
@@ -34,8 +37,7 @@ const ProfileScreen = ({ navigation }) => {
       totalDays: 0,
       nextMilestone: null
     },
-    lastBreachCheck: null,
-    lastMonthlyCheckup: null
+    lastBreachCheck: null
   });
 
   const loadActivityData = async () => {
@@ -53,13 +55,6 @@ const ProfileScreen = ({ navigation }) => {
         }
       }
 
-      // Load last monthly checkup (simulate - could be enhanced with actual monthly checkup tracking)
-      const lastMonthlyCheckupData = await AsyncStorage.getItem('last_monthly_checkup');
-      let lastMonthlyCheckup = null;
-      if (lastMonthlyCheckupData) {
-        lastMonthlyCheckup = new Date(lastMonthlyCheckupData);
-      }
-
       setActivityData({
         streak: streakData || {
           currentStreak: 0,
@@ -67,8 +62,7 @@ const ProfileScreen = ({ navigation }) => {
           totalDays: 0,
           nextMilestone: null
         },
-        lastBreachCheck,
-        lastMonthlyCheckup
+        lastBreachCheck
       });
     } catch (error) {
       console.log('Error loading activity data:', error);
@@ -104,6 +98,19 @@ const ProfileScreen = ({ navigation }) => {
     if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
     if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
     return `${Math.floor(diffDays / 365)} years ago`;
+  };
+
+  const handleOpenLink = async (url) => {
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        console.log('Cannot open URL:', url);
+      }
+    } catch (error) {
+      console.log('Error opening URL:', error);
+    }
   };
 
 
@@ -181,16 +188,6 @@ const ProfileScreen = ({ navigation }) => {
                   () => navigation.navigate(SCREEN_NAMES.CHECK_1_5_BREACH_CHECK)
                 )}
 
-                {/* Last Monthly Checkup */}
-                {renderActivityCard(
-                  'Last Monthly Checkup',
-                  'Review your security status',
-                  'calendar',
-                  formatDate(activityData.lastMonthlyCheckup),
-                  activityData.lastMonthlyCheckup ? Colors.success : Colors.textSecondary,
-                  () => navigation.navigate(SCREEN_NAMES.WELCOME)
-                )}
-
                 {/* Device Management Section */}
                 {renderActivityCard(
                   'Manage Devices',
@@ -206,21 +203,30 @@ const ProfileScreen = ({ navigation }) => {
               <View style={[styles.settingsSection, styles.activityCardPressable]}>
                 <Text style={styles.settingsTitle}>Settings</Text>
                 
-                <TouchableOpacity style={styles.settingItem}>
-                  <Ionicons name="notifications" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
-                  <Text style={styles.settingText}>Notification Preferences</Text>
-                  <Ionicons name="chevron-forward" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
-                </TouchableOpacity>
-                
-                <TouchableOpacity style={styles.settingItem}>
+                <TouchableOpacity 
+                  style={styles.settingItem}
+                  onPress={() => setShowHelpSupport(true)}
+                >
                   <Ionicons name="help-circle" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
                   <Text style={styles.settingText}>Help & Support</Text>
                   <Ionicons name="chevron-forward" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
                 </TouchableOpacity>
                 
-                <TouchableOpacity style={styles.settingItem}>
-                  <Ionicons name="information-circle" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
-                  <Text style={styles.settingText}>About CyberPup</Text>
+                <TouchableOpacity 
+                  style={styles.settingItem}
+                  onPress={() => handleOpenLink('https://github.com/CyberPupSecurity/cyberpup/blob/8962267bc4b177bb445a130183f5073a8c21372b/Privacy%20Policy%202025')}
+                >
+                  <Ionicons name="shield-checkmark" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
+                  <Text style={styles.settingText}>Privacy Policy</Text>
+                  <Ionicons name="chevron-forward" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={styles.settingItem}
+                  onPress={() => handleOpenLink('https://github.com/CyberPupSecurity/cyberpup/blob/8962267bc4b177bb445a130183f5073a8c21372b/Terms%20of%20Service%202025')}
+                >
+                  <Ionicons name="document-text" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
+                  <Text style={styles.settingText}>Terms of Service</Text>
                   <Ionicons name="chevron-forward" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
                 </TouchableOpacity>
               </View>
@@ -247,6 +253,40 @@ const ProfileScreen = ({ navigation }) => {
         onClose={() => setShowCatalogue(false)}
         navigation={navigation}
       />
+
+      {/* Help & Support Modal */}
+      <Modal
+        visible={showHelpSupport}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowHelpSupport(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Help & Support</Text>
+              <TouchableOpacity 
+                style={styles.modalCloseButton}
+                onPress={() => setShowHelpSupport(false)}
+              >
+                <Ionicons name="close" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.modalBody}>
+              <View style={styles.contactInfo}>
+                <Text style={styles.contactEmoji}>📧</Text>
+                <Text style={styles.contactLabel}>Contact us at:</Text>
+                <Text style={styles.contactEmail}>cyberpupsecurity@proton.me</Text>
+              </View>
+              
+              <Text style={styles.contactDescription}>
+                We're here to help! Reach out to us for any questions, feedback, or support you might need.
+              </Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -394,6 +434,71 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: Typography.sizes.md,
     color: Colors.textSecondary,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: Colors.overlayDark,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: Responsive.padding.screen,
+  },
+  modalContent: {
+    backgroundColor: Colors.surface,
+    borderRadius: Responsive.borderRadius.xlarge,
+    padding: Responsive.padding.modal,
+    width: '100%',
+    maxWidth: 400,
+    shadowColor: Colors.shadowColor,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 12,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Responsive.spacing.lg,
+  },
+  modalTitle: {
+    fontSize: Typography.sizes.xl,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textPrimary,
+  },
+  modalCloseButton: {
+    padding: Responsive.spacing.xs,
+  },
+  modalBody: {
+    alignItems: 'center',
+  },
+  contactInfo: {
+    alignItems: 'center',
+    marginBottom: Responsive.spacing.lg,
+  },
+  contactEmoji: {
+    fontSize: 48,
+    marginBottom: Responsive.spacing.md,
+  },
+  contactLabel: {
+    fontSize: Typography.sizes.md,
+    color: Colors.textSecondary,
+    marginBottom: Responsive.spacing.xs,
+  },
+  contactEmail: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.medium,
+    color: Colors.accent,
+    textAlign: 'center',
+  },
+  contactDescription: {
+    fontSize: Typography.sizes.md,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: Typography.sizes.md * 1.4,
   },
 });
 

@@ -26,6 +26,7 @@ import HeaderWithProgress from '../../../components/navigation/HeaderWithProgres
 import ExitModal from '../../../components/common/ExitModal';
 import { getCompletionMessage, getNextScreenName, getCompletionNavigation } from '../../../utils/completionMessages';
 import { CopywritingService } from '../../../utils/copywritingService';
+import { getChecklistConfig } from '../../../constants/checklistConfig';
 
 const Check1_2_5_PublicChargingScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Standard state management
@@ -43,52 +44,32 @@ const Check1_2_5_PublicChargingScreen = ({ navigation, route }) => {
       
       const publicChargingItems = [
         {
-          id: 'juice-jacking-awareness',
-          title: 'Understand Juice Jacking',
-          description: 'Learn about the risks of public USB charging stations',
+          id: 'bring-own-charger',
+          title: 'Get Your Own Charging Equipment',
+          description: 'Purchase and carry your own USB cable and wall adapter',
           completed: false,
           priority: 'critical',
-          category: 'awareness',
+          category: 'action',
           tips: [
-            'Juice jacking can steal your data or install malware',
-            'Public USB ports can be compromised by hackers',
-            'Your device can be infected just by plugging in',
-            'This attack is becoming more common in public places'
-          ],
-          steps: [
-            'Research juice jacking attacks online',
-            'Understand how data can be stolen via USB',
-            'Learn about recent juice jacking incidents',
-            'Recognize the signs of compromised charging stations'
-          ]
-        },
-        {
-          id: 'bring-own-charger',
-          title: 'Bring Your Own Charger',
-          description: 'Always carry your own USB cable and wall adapter',
-          completed: false,
-          priority: 'high',
-          category: 'prevention',
-          tips: [
-            'Use your own USB cable, not public ones',
+            'Never use public USB cables - they can steal your data',
             'Carry a portable power bank for emergencies',
-            'Use wall outlets instead of USB ports when possible',
-            'Keep a spare charger in your bag or car'
+            'Keep a spare charger in your bag or car',
+            'Test your equipment before leaving home'
           ],
           steps: [
-            'Purchase a reliable USB cable',
-            'Buy a portable power bank',
+            'Buy a reliable USB cable from a trusted store',
+            'Purchase a portable power bank (10,000mAh or higher)',
             'Pack your charger in your daily bag',
-            'Test your charger before leaving home'
+            'Test your charger works before leaving home'
           ]
         },
         {
           id: 'use-wall-outlets',
-          title: 'Prefer Wall Outlets',
-          description: 'Use AC power outlets instead of USB ports when available',
+          title: 'Use Wall Outlets Only',
+          description: 'Always use AC power outlets instead of USB ports in public',
           completed: false,
           priority: 'high',
-          category: 'prevention',
+          category: 'action',
           tips: [
             'Wall outlets are much safer than USB ports',
             'AC power cannot transmit data or malware',
@@ -96,19 +77,19 @@ const Check1_2_5_PublicChargingScreen = ({ navigation, route }) => {
             'Airports and cafes often have wall outlets available'
           ],
           steps: [
-            'Locate wall outlets in public spaces',
-            'Use your own AC adapter',
+            'Locate wall outlets in public spaces you visit',
+            'Use your own AC adapter with wall outlets',
             'Avoid USB charging stations entirely',
             'Plan charging stops at locations with wall outlets'
           ]
         },
         {
-          id: 'data-transfer-disabled',
-          title: 'Disable Data Transfer',
-          description: 'Configure your device to only charge, not transfer data',
+          id: 'disable-data-transfer',
+          title: 'Set Device to Charge-Only Mode',
+          description: 'Configure your device to only charge, not transfer data via USB',
           completed: false,
-          priority: 'medium',
-          category: 'device-settings',
+          priority: 'high',
+          category: 'action',
           tips: [
             'Set your device to "Charge Only" mode',
             'Disable USB debugging on Android devices',
@@ -116,90 +97,10 @@ const Check1_2_5_PublicChargingScreen = ({ navigation, route }) => {
             'Keep your device locked when charging'
           ],
           steps: [
-            'Check your device\'s USB connection settings',
+            'Go to your device\'s USB connection settings',
             'Set default USB behavior to "Charge Only"',
             'Disable USB debugging in developer options',
             'Test the setting with a trusted computer'
-          ]
-        },
-        {
-          id: 'recognize-suspicious-stations',
-          title: 'Spot Suspicious Stations',
-          description: 'Learn to identify potentially compromised charging stations',
-          completed: false,
-          priority: 'medium',
-          category: 'awareness',
-          tips: [
-            'Look for signs of tampering or modification',
-            'Avoid stations with unusual branding or placement',
-            'Be suspicious of free charging offers',
-            'Check for security cameras or monitoring devices'
-          ],
-          steps: [
-            'Learn what normal charging stations look like',
-            'Inspect USB ports for physical tampering',
-            'Avoid stations in isolated or unusual locations',
-            'Trust your instincts - if it seems suspicious, avoid it'
-          ]
-        },
-        {
-          id: 'emergency-charging-plan',
-          title: 'Emergency Charging Plan',
-          description: 'Have a backup plan for when you need to charge urgently',
-          completed: false,
-          priority: 'medium',
-          category: 'preparation',
-          tips: [
-            'Carry a portable power bank at all times',
-            'Know safe charging locations in your area',
-            'Have a trusted friend or family member\'s charger',
-            'Consider wireless charging as a safer alternative'
-          ],
-          steps: [
-            'Purchase a high-capacity power bank',
-            'Map out safe charging locations',
-            'Establish emergency charging contacts',
-            'Practice your emergency charging routine'
-          ]
-        },
-        {
-          id: 'device-security-updates',
-          title: 'Keep Device Updated',
-          description: 'Ensure your device has the latest security patches',
-          completed: false,
-          priority: 'high',
-          category: 'device-security',
-          tips: [
-            'Regular updates patch security vulnerabilities',
-            'Enable automatic updates when possible',
-            'Check for updates before traveling',
-            'Keep apps updated as well'
-          ],
-          steps: [
-            'Check for system updates on your device',
-            'Enable automatic security updates',
-            'Update all apps to latest versions',
-            'Set up update notifications'
-          ]
-        },
-        {
-          id: 'monitor-device-activity',
-          title: 'Monitor Device Activity',
-          description: 'Watch for unusual activity after using public charging',
-          completed: false,
-          priority: 'medium',
-          category: 'monitoring',
-          tips: [
-            'Check for unknown apps or files',
-            'Monitor battery usage and performance',
-            'Watch for unusual network activity',
-            'Check device settings for unauthorized changes'
-          ],
-          steps: [
-            'Review recently installed apps',
-            'Check device storage for unknown files',
-            'Monitor battery and performance metrics',
-            'Run a security scan if suspicious'
           ]
         }
       ];
@@ -369,6 +270,8 @@ const Check1_2_5_PublicChargingScreen = ({ navigation, route }) => {
               variant="enhanced"
               checkId="1-2-5"
               navigation={navigation}
+              customHeaderTitle="Let's Secure Your Charging"
+              {...getChecklistConfig('1-2-5')}
             />
           ) : (
             <View style={styles.fallbackContainer}>
@@ -432,11 +335,18 @@ const Check1_2_5_PublicChargingScreen = ({ navigation, route }) => {
           navigation={navigation}
           onContinue={() => {
             setIsCompleted(false);
-            navigation.navigate(getNextScreenName('1-2-5'));
+            // Use the new navigation logic for area completion
+            const completionNav = getCompletionNavigation('1-2-5');
+            if (completionNav.type === 'area_completion') {
+              navigation.navigate(completionNav.target, completionNav.params);
+            } else {
+              navigation.navigate(completionNav.target);
+            }
           }}
           variant="modal"
             onClose={() => setShowCompletionPopup(false)}
             checkId="1-2-5"
+            animationType="confetti"
           />
     </SafeAreaView>
   );

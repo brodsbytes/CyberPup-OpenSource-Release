@@ -65,28 +65,8 @@ const Check1_5_2_PrivacySettingsScreen = ({ navigation, route }) => {
     }
     
     try {
-      const devices = await DeviceCapabilities.getUserDevices();
-      console.log('📱 Retrieved devices:', devices);
-      
-      let allDevices = [...devices];
-      const hasCurrentDevice = devices.some(d => 
-        d.platform === currentDevice.platform && d.type === currentDevice.type
-      );
-      
-      if (!hasCurrentDevice) {
-        console.log('➕ Adding current device to device list');
-        allDevices.unshift({
-          id: 'current-device',
-          name: currentDevice.type,
-          type: currentDevice.platform === 'ios' || currentDevice.platform === 'android' ? 'mobile' : 'computer',
-          platform: currentDevice.platform,
-          tier2: currentDevice.platform,
-          autoDetected: true,
-          supportsDeepLinks: currentDevice.supportsDeepLinks,
-          icon: getDeviceIcon(currentDevice)
-        });
-      }
-
+      // Use the new smart deduplication method to prevent device duplicates
+      const allDevices = await DeviceCapabilities.getUserDevicesWithCurrentDevice();
       console.log('📋 Final device list:', allDevices);
       setUserDevices(allDevices);
 
@@ -593,7 +573,7 @@ const Check1_5_2_PrivacySettingsScreen = ({ navigation, route }) => {
       privacyActions.push(
         {
           id: `${device.id}-android-app-permissions`,
-          title: 'Manage App Permmissions',
+          title: 'Manage App Permissions',
           description: 'Review and control app permissions on your Android device',
           completed: false,
           priority: 'high',
@@ -610,7 +590,7 @@ const Check1_5_2_PrivacySettingsScreen = ({ navigation, route }) => {
             'Review permissions after app updates',
             'Disable permissions for apps you don\'t trust'
           ],
-          deepLink: 'android.settings.APPLICATION_DETAILS_SETTINGS'
+          deepLink: 'android.settings.APPLICATION_SETTINGS'
         },
         {
           id: `${device.id}-android-google-privacy`,
@@ -870,11 +850,21 @@ const Check1_5_2_PrivacySettingsScreen = ({ navigation, route }) => {
           navigation={navigation}
           onContinue={() => {
             setIsCompleted(false);
-            navigation.navigate(getNextScreenName('1-5-2'));
+            // Use the new navigation logic for level completion
+            const completionNav = getCompletionNavigation('1-5-2');
+            console.log('🎯 Check1_5_2 - Navigation decision:', completionNav);
+            if (completionNav.type === 'level_completion') {
+              console.log('🎯 Navigating to LevelCompletionScreen with params:', completionNav.params);
+              navigation.navigate(completionNav.target, completionNav.params);
+            } else {
+              console.log('🎯 Navigating to:', completionNav.target);
+              navigation.navigate(completionNav.target);
+            }
           }}
           variant="modal"
             onClose={() => setShowCompletionPopup(false)}
             checkId="1-5-2"
+            animationType="confetti"
           />
     </SafeAreaView>
   );

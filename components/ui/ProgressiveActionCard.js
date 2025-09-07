@@ -110,6 +110,55 @@ const ProgressiveActionCard = (props) => {
 
       updateStatus('in-progress');
 
+      // Check if this is a password manager action with non-native recommendation
+      const isPasswordManagerAction = action?.id?.includes('choose-manager');
+      const isNonNativeRecommendation = action?.recommendation?.primary?.type && 
+        action.recommendation.primary.type !== 'built-in';
+      
+      if (isPasswordManagerAction && isNonNativeRecommendation) {
+        // Redirect to app store for non-native password manager
+        const recommendedApp = action.recommendation.primary.name;
+        let appStoreUrl;
+        
+        // Create more specific app store URLs based on the recommended app
+        if (recommendedApp.toLowerCase().includes('bitwarden')) {
+          appStoreUrl = Platform.OS === 'ios' 
+            ? 'https://apps.apple.com/app/bitwarden-password-manager/id1137397744'
+            : 'https://play.google.com/store/apps/details?id=com.x8bit.bitwarden';
+        } else if (recommendedApp.toLowerCase().includes('1password')) {
+          appStoreUrl = Platform.OS === 'ios' 
+            ? 'https://apps.apple.com/app/1password-password-manager/id568903335'
+            : 'https://play.google.com/store/apps/details?id=com.agilebits.onepassword';
+        } else if (recommendedApp.toLowerCase().includes('proton')) {
+          appStoreUrl = Platform.OS === 'ios' 
+            ? 'https://apps.apple.com/app/proton-pass/id6443490629'
+            : 'https://play.google.com/store/apps/details?id=proton.android.pass';
+        } else {
+          // Fallback to general password manager search
+          appStoreUrl = Platform.OS === 'ios' 
+            ? 'https://apps.apple.com/search?term=password%20manager'
+            : 'https://play.google.com/store/search?q=password%20manager';
+        }
+        
+        console.log('📱 Redirecting to app store for', recommendedApp, ':', appStoreUrl);
+        
+        try {
+          const canOpen = await Linking.canOpenURL(appStoreUrl);
+          if (canOpen) {
+            await Linking.openURL(appStoreUrl);
+            console.log('📱 App store opened successfully');
+            // Give user time to install before showing verification
+            setTimeout(() => {
+              setShowVerification(true);
+              updateStatus('verification');
+            }, 2000);
+            return;
+          }
+        } catch (error) {
+          console.log('App store redirect failed:', error);
+        }
+      }
+
       // Try deep link first if available
       console.log('🔗 ProgressiveActionCard Debug:', { 
         hasDeepLink: !!action?.deepLink, 
@@ -240,6 +289,15 @@ const ProgressiveActionCard = (props) => {
 
   // Apply Phase 1 Lesson: Contextual button text adapts to device capabilities
   const getActionButtonText = () => {
+    // Check if this is a password manager action with non-native recommendation
+    const isPasswordManagerAction = action?.id?.includes('choose-manager');
+    const isNonNativeRecommendation = action?.recommendation?.primary?.type && 
+      action.recommendation.primary.type !== 'built-in';
+    
+    if (isPasswordManagerAction && isNonNativeRecommendation) {
+      return 'Install Password Manager';
+    }
+    
     if (action?.deepLink && device?.supportsDeepLinks) {
       return `Open ${device.platform === 'ios' ? 'Settings' : 'Settings'}`;
     }
@@ -406,8 +464,10 @@ const ProgressiveActionCard = (props) => {
               </TouchableOpacity>
             )}
             
-            {/* Open Settings Button (if deep link available) */}
-            {action?.deepLink && device?.supportsDeepLinks && !action?.completed && (
+            {/* Open Settings/Install Password Manager Button (if deep link available or non-native recommendation) */}
+            {((action?.deepLink && device?.supportsDeepLinks) || 
+              (action?.id?.includes('choose-manager') && action?.recommendation?.primary?.type !== 'built-in')) && 
+              !action?.completed && (
               <TouchableOpacity 
                 style={{
                   backgroundColor: Colors.accent,
@@ -422,13 +482,19 @@ const ProgressiveActionCard = (props) => {
                 }}
                 onPress={handlePrimaryAction}
               >
-                <Ionicons name="settings-outline" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
+                <Ionicons 
+                  name={action?.id?.includes('choose-manager') && action?.recommendation?.primary?.type !== 'built-in' 
+                    ? "download-outline" 
+                    : "settings-outline"} 
+                  size={Responsive.iconSizes.medium} 
+                  color={Colors.textPrimary} 
+                />
                 <Text style={{
                   fontSize: Typography.sizes.md,
                   fontWeight: Typography.weights.semibold,
                   color: Colors.textPrimary
                 }}>
-                  Open Settings
+                  {getActionButtonText()}
                 </Text>
               </TouchableOpacity>
             )}

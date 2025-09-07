@@ -96,7 +96,7 @@ const nextScreenMapping = {
   '1-2-5': SCREEN_NAMES.CHECK_1_3_1_CLOUD_BACKUP, // Area 1-2 complete → start Area 1-3
   '1-3-2': SCREEN_NAMES.CHECK_1_4_1_SCAM_RECOGNITION, // Area 1-3 complete → start Area 1-4
   '1-4-2': SCREEN_NAMES.CHECK_1_5_1_SHARING_AWARENESS, // Area 1-4 complete → start Area 1-5
-  '1-5-2': SCREEN_NAMES.WELCOME // All areas complete → back to welcome
+  '1-5-2': SCREEN_NAMES.LEVEL_COMPLETION // All Level 1 areas complete → level completion screen
 };
 
 /**
@@ -185,12 +185,30 @@ export const getNextAreaId = (areaId) => {
 };
 
 /**
- * Determine if navigation should go to AreaCompletionScreen or next check
+ * Check if this is the last check in the entire level
+ * @param {string} checkId - The check identifier
+ * @returns {boolean} True if this is the last check in the level
+ */
+export const isLastCheckInLevel = (checkId) => {
+  // For now, we only have Level 1, so check if it's the last check (1-5-2)
+  return checkId === '1-5-2';
+};
+
+/**
+ * Determine if navigation should go to AreaCompletionScreen, LevelCompletionScreen, or next check
  * @param {string} checkId - The completed check ID
  * @returns {Object} Navigation info with type and target
  */
 export const getCompletionNavigation = (checkId) => {
-  if (isLastCheckInArea(checkId)) {
+  if (isLastCheckInLevel(checkId)) {
+    // This is the last check in the level, show level completion screen
+    const levelId = parseInt(checkId.split('-')[0]);
+    return {
+      type: 'level_completion',
+      target: SCREEN_NAMES.LEVEL_COMPLETION,
+      params: { completedLevelId: levelId }
+    };
+  } else if (isLastCheckInArea(checkId)) {
     // This is the last check in the area, show area completion screen
     const areaId = getAreaIdFromCheckId(checkId);
     return {

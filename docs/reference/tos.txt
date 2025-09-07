@@ -1,0 +1,47 @@
+CyberPup Terms of Service
+Last Updated: September 2025
+1. INTRODUCTION
+Welcome to CyberPup (“we,” “our,” or “us”). These Terms of Service (“Terms”) govern your use of the CyberPup cybersecurity education mobile application (“App”).
+By downloading, installing, or using CyberPup, you agree to these Terms. If you do not agree, please do not use the App.
+2. PURPOSE OF THE APP
+CyberPup provides educational content and general cybersecurity guidance only. It does not provide professional cybersecurity services, guarantees of protection, or complete security solutions. Users are responsible for their own online safety and security practices.
+3. ELIGIBILITY
+You must be at least 13 years old to use the App. Users under 18 should do so with parental or guardian supervision.
+4. LICENSE TO USE THE APP
+    • We grant you a personal, non-exclusive, non-transferable, limited license to use CyberPup for educational purposes only.
+    • All content in the App (lessons, graphics, branding, educational materials, icons) is owned by CyberPup and protected by copyright law.
+    • You may not copy, reproduce, modify, or distribute content from the App without our written permission.
+5. USER RESTRICTIONS
+You agree not to:
+    • Misuse or spam the breach checking feature (e.g., automated queries beyond the API’s rate limit).
+    • Reverse engineer, decompile, or attempt to access the source code of the App.
+    • Modify or create derivative works of the App.
+    • Use the App for unlawful, harmful, or fraudulent purposes.
+6. DATA AND PRIVACY
+    • CyberPup collects minimal data. Progress, settings, and checks are stored locally on your device.
+    • The optional breach checker sends your entered email address to the third-party service XposedOrNot. This is not stored by CyberPup or retained by XposedOrNot.
+    • For full details, see our [Privacy Policy](link to policy).
+7. THIRD-PARTY LINKS AND SERVICES
+CyberPup may reference or link to third-party resources, including:
+    • Government sources (e.g., ACSC, CISA, NIST, FTC)
+    • Security services (e.g., XposedOrNot, RSS-to-JSON feeds)
+    • Security tools (e.g., password managers, authenticator apps)
+These references are for informational purposes only. We do not control, endorse, or take responsibility for third-party websites, content, or services.
+8. DISCLAIMERS
+    • CyberPup is provided on an “as is” and “as available” basis.
+    • We make no warranties that the App will be error-free, secure, or uninterrupted.
+    • All advice and recommendations are for general educational purposes only. Following them does not guarantee protection against cybersecurity threats.
+9. LIMITATION OF LIABILITY
+To the maximum extent permitted by law:
+    • CyberPup and its creators are not liable for any direct, indirect, incidental, consequential, or special damages arising from your use of the App.
+    • This includes, but is not limited to, loss of data, financial loss, breaches, scams, or security incidents.
+    • You use the App at your own risk, and you are responsible for how you apply its recommendations.
+10. TERMINATION
+We may suspend, restrict, or discontinue CyberPup at any time without notice. We may also terminate access immediately if you violate these Terms.
+11. FUTURE CHANGES
+CyberPup is currently free and contains no ads or monetization. If future versions include paid tiers or premium features, we will update these Terms accordingly and provide notice within the App.
+12. GOVERNING LAW
+These Terms are governed by the laws of Australia. Any disputes will be resolved under Australian law in the courts of Australia.
+13. CONTACT US
+If you have questions about these Terms, contact us:
+📧 cyberpupsecurity@proton.me

@@ -370,6 +370,130 @@ export class SettingsGuide {
   }
 
   /**
+   * Get device-specific cloud backup recommendations based on user's device ecosystem
+   * @param {Array} userDevices - Array of user's devices
+   * @returns {Object} Tailored recommendations with explanations
+   */
+  static getCloudBackupRecommendations(userDevices) {
+    const devicePlatforms = userDevices.map(device => device.platform || device.tier2);
+    const hasApple = devicePlatforms.includes('ios') || devicePlatforms.includes('macos');
+    const hasAndroid = devicePlatforms.includes('android');
+    const hasWindows = devicePlatforms.includes('windows');
+    const hasMixedPlatforms = new Set(devicePlatforms).size > 1;
+
+    // Determine recommendation strategy
+    if (hasApple && !hasAndroid && !hasWindows) {
+      // Pure Apple ecosystem
+      return {
+        primary: {
+          name: 'iCloud Backup + Time Machine',
+          type: 'built-in',
+          platforms: ['ios', 'macos'],
+          description: 'Complete Apple ecosystem backup solution',
+          whyRecommended: 'Seamlessly integrated across all your Apple devices with automatic photo, document, and system backup. Time Machine provides complete system recovery.',
+          setupSteps: [
+            'iPhone/iPad: Settings → [Your Name] → iCloud → iCloud Backup → Turn On',
+            'Mac: System Preferences → Apple ID → iCloud → Enable iCloud Drive',
+            'Mac: System Preferences → Time Machine → Select Backup Disk',
+            'Enable "Desktop & Documents Folders" in iCloud Drive options'
+          ],
+          pros: ['Free 5GB, affordable upgrades', 'Automatic sync', 'Complete system backup', 'End-to-end encryption'],
+          cons: ['Apple devices only', 'Storage costs for large amounts']
+        },
+        alternatives: [
+          {
+            name: 'Backblaze + iCloud',
+            type: 'premium',
+            description: 'Professional backup with iCloud',
+            whyConsider: 'Unlimited Mac backup + iCloud for mobile devices'
+          }
+        ]
+      };
+    } else if (hasAndroid && !hasApple && !hasWindows) {
+      // Pure Android ecosystem
+      return {
+        primary: {
+          name: 'Google Drive Backup + Google One',
+          type: 'built-in',
+          platforms: ['android'],
+          description: 'Complete Google ecosystem backup solution',
+          whyRecommended: 'Automatically backs up photos, contacts, app data, and settings. Google One provides additional storage and advanced features.',
+          setupSteps: [
+            'Settings → Google → Backup → Turn on "Back up to Google Drive"',
+            'Settings → Google → Backup → Select data to back up',
+            'Install Google One app for additional storage and features',
+            'Enable automatic photo backup in Google Photos'
+          ],
+          pros: ['Free 15GB', 'Automatic app data backup', 'Cross-device sync', 'Google Photos integration'],
+          cons: ['Google ecosystem only', 'Limited free storage']
+        },
+        alternatives: [
+          {
+            name: 'Samsung Cloud (Samsung devices)',
+            type: 'built-in',
+            description: 'Samsung-specific backup solution',
+            whyConsider: 'Optimized for Samsung devices with additional features'
+          }
+        ]
+      };
+    } else if (hasMixedPlatforms) {
+      // Mixed device ecosystem - recommend cross-platform solution
+      return {
+        primary: {
+          name: 'OneDrive + Native Backups',
+          type: 'cross-platform',
+          platforms: ['ios', 'android', 'windows', 'macos'],
+          description: 'Microsoft\'s cross-platform backup solution',
+          whyRecommended: 'Works seamlessly across all your devices with automatic photo backup, document sync, and native device backup integration.',
+          setupSteps: [
+            'Download OneDrive app on all devices',
+            'Sign in with Microsoft account',
+            'Enable automatic photo backup in OneDrive settings',
+            'Set up native backups: iCloud (iOS), Google Backup (Android), File History (Windows)',
+            'Configure OneDrive folder sync on computers'
+          ],
+          pros: ['Cross-platform', 'Free 5GB, affordable upgrades', 'Office integration', 'Automatic photo backup'],
+          cons: ['Requires Microsoft account', 'Limited free storage']
+        },
+        alternatives: [
+          {
+            name: 'Dropbox + Native Backups',
+            type: 'premium',
+            description: 'Popular cross-platform solution',
+            whyConsider: 'Excellent sync, good free tier, works everywhere'
+          },
+          {
+            name: 'Google Drive + Native Backups',
+            type: 'free',
+            description: 'Google\'s cross-platform solution',
+            whyConsider: 'Generous free storage, excellent integration with Google services'
+          }
+        ]
+      };
+    } else {
+      // Fallback for unknown scenarios
+      return {
+        primary: {
+          name: 'OneDrive',
+          type: 'cross-platform',
+          platforms: ['ios', 'android', 'windows', 'macos'],
+          description: 'Microsoft\'s cross-platform backup solution',
+          whyRecommended: 'The most versatile backup solution that works on any device you might use, with automatic photo backup and document sync.',
+          setupSteps: [
+            'Download OneDrive app from your device\'s app store',
+            'Create a Microsoft account or sign in',
+            'Enable automatic photo backup in OneDrive settings',
+            'Set up folder sync on computers'
+          ],
+          pros: ['Cross-platform', 'Free 5GB', 'Office integration', 'Automatic photo backup'],
+          cons: ['Requires Microsoft account', 'Limited free storage']
+        },
+        alternatives: []
+      };
+    }
+  }
+
+  /**
    * Get device-specific password manager recommendations based on user's device ecosystem
    * @param {Array} userDevices - Array of user's devices
    * @returns {Object} Tailored recommendations with explanations
@@ -599,6 +723,60 @@ export class SettingsGuide {
             url: 'market://details?id=com.authy.authy',
             description: 'Advanced 2FA with cloud sync',
             rating: 4.6
+          }
+        ]
+      },
+      'cloud-backup': {
+        ios: [
+          {
+            name: 'OneDrive',
+            identifier: 'id477537958',
+            url: 'itms-apps://itunes.apple.com/app/id477537958',
+            description: 'Microsoft cloud storage with automatic backup',
+            rating: 4.6,
+            type: 'free'
+          },
+          {
+            name: 'Google Drive',
+            identifier: 'id507874739',
+            url: 'itms-apps://itunes.apple.com/app/id507874739',
+            description: 'Google cloud storage with 15GB free',
+            rating: 4.5,
+            type: 'free'
+          },
+          {
+            name: 'Dropbox',
+            identifier: 'id327630330',
+            url: 'itms-apps://itunes.apple.com/app/id327630330',
+            description: 'Popular cloud storage with automatic photo backup',
+            rating: 4.4,
+            type: 'freemium'
+          }
+        ],
+        android: [
+          {
+            name: 'OneDrive',
+            identifier: 'com.microsoft.skydrive',
+            url: 'market://details?id=com.microsoft.skydrive',
+            description: 'Microsoft cloud storage with automatic backup',
+            rating: 4.5,
+            type: 'free'
+          },
+          {
+            name: 'Google Drive',
+            identifier: 'com.google.android.apps.docs',
+            url: 'market://details?id=com.google.android.apps.docs',
+            description: 'Google cloud storage with 15GB free',
+            rating: 4.4,
+            type: 'free'
+          },
+          {
+            name: 'Dropbox',
+            identifier: 'com.dropbox.android',
+            url: 'market://details?id=com.dropbox.android',
+            description: 'Popular cloud storage with automatic photo backup',
+            rating: 4.3,
+            type: 'freemium'
           }
         ]
       }

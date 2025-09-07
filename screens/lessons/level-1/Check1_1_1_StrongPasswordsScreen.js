@@ -25,6 +25,7 @@ import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 import ReferencesSection from '../../../components/ui/ReferencesSection';
 import { getReferencesForCheck } from '../../../data/references';
+import { getChecklistConfig } from '../../../constants/checklistConfig';
 
 const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Standard state management
@@ -67,27 +68,6 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
           ]
         },
         {
-          id: 'avoid-weak',
-          title: checklistContent.avoidWeak?.title || 'Avoid Weak Password Patterns',
-          description: checklistContent.avoidWeak?.description || 'Stay away from easily guessable passwords and personal information',
-          completed: false,
-          priority: 'high',
-          category: 'password-security',
-          tips: checklistContent.avoidWeak?.tips || [
-            'Never use birthdays, names, addresses, or phone numbers',
-            'Avoid common patterns like "123456" or "qwerty"',
-            'Don\'t use single words found in dictionaries',
-            'Reject passwords with obvious substitutions like "P@ssword"'
-          ],
-          steps: checklistContent.avoidWeak?.steps || [
-            'Check existing passwords for personal information (name, birthday, pet names)',
-            'Look for sequential patterns (123456, abcdef, qwerty)',
-            'Identify dictionary words or common phrases in current passwords',
-            'Replace any weak passwords immediately with strong passphrases',
-            'Test new passwords: ask yourself "could someone who knows me guess this?"'
-          ]
-        },
-        {
           id: 'unique-everywhere',
           title: checklistContent.uniqueEverywhere?.title || 'Use Unique Passwords Everywhere',
           description: checklistContent.uniqueEverywhere?.description || 'Every account gets its own password - no exceptions',
@@ -106,6 +86,27 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
             'Identify any shared passwords and mark accounts for updating',
             'Create new unique passphrases for accounts sharing passwords',
             'Verify uniqueness: write down the first 3 characters of each new password to confirm no duplicates'
+          ]
+        },
+        {
+          id: 'avoid-weak',
+          title: checklistContent.avoidWeak?.title || 'Avoid Weak Password Patterns',
+          description: checklistContent.avoidWeak?.description || 'Stay away from easily guessable passwords and personal information',
+          completed: false,
+          priority: 'high',
+          category: 'password-security',
+          tips: checklistContent.avoidWeak?.tips || [
+            'Never use birthdays, names, addresses, or phone numbers',
+            'Avoid common patterns like "123456" or "qwerty"',
+            'Don\'t use single words found in dictionaries',
+            'Reject passwords with obvious substitutions like "P@ssword"'
+          ],
+          steps: checklistContent.avoidWeak?.steps || [
+            'Check existing passwords for personal information (name, birthday, pet names)',
+            'Look for sequential patterns (123456, abcdef, qwerty)',
+            'Identify dictionary words or common phrases in current passwords',
+            'Replace any weak passwords immediately with strong passphrases',
+            'Test new passwords: ask yourself "could someone who knows me guess this?"'
           ]
         }
       ];
@@ -272,8 +273,9 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
               checklistItems={checklistItems}
               onActionComplete={handleChecklistItemComplete}
               variant="enhanced"
-              checkId="1-1-1-enhanced"
+              checkId="1-1-1"
               navigation={navigation}
+              {...getChecklistConfig('1-1-1')}
             />
           ) : (
             <View style={styles.fallbackContainer}>
@@ -367,6 +369,7 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
         onClose={() => setShowCompletionPopup(false)}
         variant="modal"
         checkId="1-1-1"
+        animationType="confetti"
       />
     </SafeAreaView>
   );

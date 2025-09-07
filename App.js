@@ -48,6 +48,7 @@ import ProfileScreen from './screens/ProfileScreen';
 import { SecurityAlertsService } from './utils/securityAlerts';
 import { BackgroundAlertsService } from './utils/backgroundAlerts';
 import AreaCompletionScreen from './components/gamification/AreaCompletionScreen';
+import LevelCompletionScreen from './components/gamification/LevelCompletionScreen';
 import MainTabsScreen from './components/navigation/MainTabsScreen';
 
 const Stack = createNativeStackNavigator();
@@ -139,6 +140,7 @@ export default function App() {
         
         {/* Gamification screens */}
         <Stack.Screen name={SCREEN_NAMES.AREA_COMPLETION} component={AreaCompletionScreen} />
+        <Stack.Screen name={SCREEN_NAMES.LEVEL_COMPLETION} component={LevelCompletionScreen} />
         
         {/* Level 1 Check screens */}
         <Stack.Screen name={SCREEN_NAMES.CHECK_1_1_1_STRONG_PASSWORDS} component={Check1_1_StrongPasswordsScreen} />

@@ -485,24 +485,24 @@ const DeviceAuditScreen = ({ navigation, route }) => {
               </View>
             )}
           </View>
+
+          {/* Save Changes Button - Now part of scrollable content */}
+          <View style={[styles.saveChangesSection, { paddingBottom: Math.max(insets.bottom, Responsive.spacing.lg) }]}>
+            <TouchableOpacity
+              style={[styles.continueButton, devices.length === 0 && styles.continueButtonDisabled]}
+              onPress={handleContinue}
+              disabled={devices.length === 0}
+            >
+              <Text style={styles.continueButtonText}>
+                {isFirstTime ? 'Continue to Security Checks' : 'Save Changes'}
+              </Text>
+              {isFirstTime && (
+                <Ionicons name="arrow-forward" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
-
-      {/* Footer */}
-      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, Responsive.spacing.lg) }]}>
-        <TouchableOpacity
-          style={[styles.continueButton, devices.length === 0 && styles.continueButtonDisabled]}
-          onPress={handleContinue}
-          disabled={devices.length === 0}
-        >
-          <Text style={styles.continueButtonText}>
-            {isFirstTime ? 'Continue to Security Checks' : 'Save Changes'}
-          </Text>
-          {isFirstTime && (
-            <Ionicons name="arrow-forward" size={Responsive.iconSizes.medium} color={Colors.textPrimary} />
-          )}
-        </TouchableOpacity>
-      </View>
 
       {/* Custom Remove Confirmation Modal */}
       {showRemoveConfirmation && (
@@ -892,12 +892,10 @@ const styles = StyleSheet.create({
     fontWeight: Typography.weights.semibold,
     color: Colors.textPrimary,
   },
-  footer: {
+  saveChangesSection: {
     paddingHorizontal: Responsive.padding.screen,
-    paddingVertical: Responsive.spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    backgroundColor: Colors.background,
+    paddingTop: Responsive.spacing.lg,
+    marginTop: Responsive.spacing.lg,
   },
   continueButton: {
     backgroundColor: Colors.accent,

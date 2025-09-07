@@ -24,6 +24,7 @@ import { AppStorage } from '../../../utils/storage';
 import CompletionPopup from '../../../components/gamification/CompletionPopup';
 import { getCompletionMessage, getNextScreenName, getCompletionNavigation } from '../../../utils/completionMessages';
 import { CopywritingService } from '../../../utils/copywritingService';
+import { getChecklistConfig } from '../../../constants/checklistConfig';
 import HeaderWithProgress from '../../../components/navigation/HeaderWithProgress';
 import ExitModal from '../../../components/common/ExitModal';
 
@@ -47,27 +48,8 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
   const initializeDeviceContent = async () => {
     try {
       setIsLoading(true);
-      const devices = await DeviceCapabilities.getUserDevices();
-      const currentDevice = DeviceCapabilities.getCurrentDevice();
-      
-      let allDevices = [...devices];
-      const hasCurrentDevice = devices.some(d => 
-        d.platform === currentDevice.platform && d.type === currentDevice.type
-      );
-      
-      if (!hasCurrentDevice) {
-        allDevices.unshift({
-          id: 'current-device',
-          name: currentDevice.type,
-          type: currentDevice.platform === 'ios' || currentDevice.platform === 'android' ? 'mobile' : 'computer',
-          platform: currentDevice.platform,
-          tier2: currentDevice.platform,
-          autoDetected: true,
-          supportsDeepLinks: currentDevice.supportsDeepLinks,
-          icon: getDeviceIcon(currentDevice)
-        });
-      }
-
+      // Use the new smart deduplication method to prevent device duplicates
+      const allDevices = await DeviceCapabilities.getUserDevicesWithCurrentDevice();
       setUserDevices(allDevices);
 
       // Create device-specific actions using SettingsGuide
@@ -355,57 +337,34 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
     return 'desktop';
   };
 
-  // ✅ CRITICAL: Avoid variable name conflicts
+  // ✅ REFINED: Simple, actionable local backup actions for non-technical users
   const createLocalBackupActions = async (device) => {
     const deviceActionsList = [];
     const platform = device.platform || device.tier2;
     const type = device.type;
-
-    // Debug logs removed for cleaner console
 
     // Add fallback for unknown platform or web
     if (platform === 'unknown' || !platform || platform === 'web') {
       deviceActionsList.push(
         {
           id: 'generic-backup-setup',
-          title: 'Set Up Local Backup',
-          description: 'Configure local backup solutions for your device to protect your data.',
+          title: 'Set Up Simple File Backup',
+          description: 'Create a backup of your important files using external storage.',
           completed: false,
           priority: 'high',
           category: 'backup',
           steps: [
-            'Identify important files and folders on your device',
-            'Connect an external storage device (USB drive, external hard drive)',
-            'Copy important files to the external storage',
-            'Set up automatic backup if available',
-            'Test the backup by accessing files from external storage'
+            'Connect a USB drive or external hard drive to your computer',
+            'Open your Documents, Pictures, and Downloads folders',
+            'Copy your important files to the external drive',
+            'Create a "Backup" folder on the external drive to stay organized',
+            'Test by opening a few files from the backup to make sure they work'
           ],
           tips: [
             'Focus on irreplaceable files like photos, documents, and personal data',
-            'Keep multiple backup copies for critical data',
-            'Store backups in a different physical location for disaster recovery',
-            'Backup regularly, especially before major updates'
-          ]
-        },
-        {
-          id: 'generic-backup-verification',
-          title: 'Verify Backup Integrity',
-          description: 'Ensure your backup was created successfully and files are accessible.',
-          completed: false,
-          priority: 'medium',
-          category: 'verification',
-          steps: [
-            'Open a few files from your backup to verify they work',
-            'Check that all important folders were copied',
-            'Verify backup size is reasonable for your data',
-            'Test accessing backup from a different device if possible',
-            'Set a reminder to backup regularly'
-          ],
-          tips: [
-            'Regular backups should be done weekly or monthly',
-            'Keep multiple backup versions for safety',
-            'Test restore process periodically',
-            'Document your backup process for future reference'
+            'Backup your files at least once a month',
+            'Keep the external drive in a safe place away from your computer',
+            'Consider making a second backup copy for extra safety'
           ]
         }
       );
@@ -416,126 +375,48 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
       if (platform === 'ios') {
         deviceActionsList.push(
           {
-            id: 'ios-itunes-backup',
-            title: 'Set Up iTunes Backup',
-            description: 'Configure iTunes to create local backups of your iPhone.',
+            id: 'ios-simple-backup',
+            title: 'Backup iPhone to Computer',
+            description: 'Create a simple backup of your iPhone using your computer.',
             completed: false,
             priority: 'high',
             category: 'backup',
             steps: [
-              'Connect your iPhone to your computer',
-              'Open iTunes (or Finder on macOS Catalina+)',
-              'Select your device from the sidebar',
-              'Check "Automatically backup when this iPhone is connected"',
-              'Click "Back Up Now" to create your first backup'
+              'Connect your iPhone to your computer with the charging cable',
+              'Open iTunes (or Finder on Mac)',
+              'Click on your iPhone when it appears',
+              'Click "Back Up Now" button',
+              'Wait for the backup to complete (may take 10-30 minutes)'
             ],
             tips: [
               'Keep your computer connected to power during backups',
-              'Backups may take 30-60 minutes for the first time',
-              'Ensure you have enough free space on your computer'
-            ]
-          },
-          {
-            id: 'ios-encrypted-backup',
-            title: 'Enable Encrypted Backups',
-            description: 'Protect your backup data with encryption.',
-            completed: false,
-            priority: 'medium',
-            category: 'security',
-            steps: [
-              'In iTunes/Finder, select your device',
-              'Check "Encrypt local backup"',
-              'Set a strong password for the backup',
-              'Write down the password in a secure location',
-              'Click "Back Up Now" to create encrypted backup'
-            ],
-            tips: [
-              'Encrypted backups include passwords and health data',
-              'Don\'t forget your backup password - it cannot be recovered',
-              'Use a password manager to store the backup password'
-            ]
-          },
-          {
-            id: 'ios-backup-verification',
-            title: 'Verify Backup Integrity',
-            description: 'Ensure your backup was created successfully.',
-            completed: false,
-            priority: 'medium',
-            category: 'verification',
-            steps: [
-              'Check the backup date in iTunes/Finder',
-              'Verify the backup size is reasonable',
-              'Test restoring a few photos or contacts',
-              'Note the backup location on your computer',
-              'Set a reminder to backup regularly'
-            ],
-            tips: [
-              'Regular backups should be done weekly',
-              'Keep multiple backup versions for safety',
-              'Test restore process periodically'
+              'Make sure you have enough free space on your computer',
+              'Do this backup at least once a month',
+              'The backup includes your photos, contacts, and app data'
             ]
           }
         );
       } else if (platform === 'android') {
         deviceActionsList.push(
           {
-            id: 'android-adb-backup',
-            title: 'Set Up ADB Backup',
-            description: 'Use Android Debug Bridge to create local backups.',
+            id: 'android-simple-backup',
+            title: 'Backup Android Photos and Files',
+            description: 'Copy your important photos and files to your computer.',
             completed: false,
             priority: 'high',
             category: 'backup',
             steps: [
-              'Enable Developer Options on your Android device',
-              'Enable USB Debugging in Developer Options',
-              'Connect device to computer via USB',
-              'Install ADB on your computer',
-              'Run backup command: adb backup -apk -shared -all'
+              'Connect your Android phone to your computer with a USB cable',
+              'On your phone, tap "File Transfer" or "MTP" when prompted',
+              'On your computer, open your phone\'s folder',
+              'Copy your Photos, Documents, and Downloads folders to your computer',
+              'Create a "Phone Backup" folder on your computer to stay organized'
             ],
             tips: [
-              'ADB backup requires technical knowledge',
-              'Backup files are stored on your computer',
-              'Keep backup files in a secure location'
-            ]
-          },
-          {
-            id: 'android-manual-backup',
-            title: 'Manual File Backup',
-            description: 'Manually copy important files to your computer.',
-            completed: false,
-            priority: 'medium',
-            category: 'backup',
-            steps: [
-              'Connect your Android device to computer',
-              'Enable file transfer mode on device',
-              'Navigate to device storage on computer',
-              'Copy important folders (Photos, Documents, etc.)',
-              'Verify files copied successfully'
-            ],
-            tips: [
-              'Focus on irreplaceable files first',
-              'Create organized folder structure on computer',
-              'Backup photos and videos regularly'
-            ]
-          },
-          {
-            id: 'android-backup-apps',
-            title: 'Backup App Data',
-            description: 'Use backup apps to protect app data and settings.',
-            completed: false,
-            priority: 'medium',
-            category: 'apps',
-            steps: [
-              'Install a backup app (e.g., Titanium Backup)',
-              'Grant necessary permissions to backup app',
-              'Select apps to backup',
-              'Configure backup schedule',
-              'Test restore process with a non-critical app'
-            ],
-            tips: [
-              'Some apps require root access for full backup',
-              'Backup app data before factory reset',
-              'Store backup files on external storage'
+              'Focus on photos and videos first - these are usually the most important',
+              'Do this backup at least once a month',
+              'Keep your phone connected until the copy is complete',
+              'Check that the files copied correctly by opening a few photos'
             ]
           }
         );
@@ -544,178 +425,54 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
       if (platform === 'macos') {
         deviceActionsList.push(
           {
-            id: 'macos-time-machine',
-            title: 'Set Up Time Machine',
-            description: 'Configure Time Machine for automatic local backups.',
+            id: 'macos-simple-backup',
+            title: 'Set Up Time Machine Backup',
+            description: 'Use Time Machine to automatically backup your Mac.',
             completed: false,
             priority: 'high',
             category: 'backup',
             steps: [
-              'Connect external hard drive to your Mac',
-              'Open System Preferences',
-              'Click Time Machine',
+              'Connect an external hard drive to your Mac',
+              'Open System Preferences (or System Settings on newer Macs)',
+              'Click "Time Machine"',
               'Click "Select Backup Disk"',
               'Choose your external drive and click "Use Disk"'
             ],
             tips: [
-              'Use a drive at least 2x the size of your data',
-              'Keep Time Machine drive connected regularly',
-              'Time Machine creates hourly backups automatically'
-            ]
-          },
-          {
-            id: 'macos-manual-backup',
-            title: 'Manual File Backup',
-            description: 'Create manual backups of important files.',
-            completed: false,
-            priority: 'medium',
-            category: 'backup',
-            steps: [
-              'Identify important files and folders',
-              'Create backup folder on external drive',
-              'Copy Documents, Pictures, and other important folders',
-              'Use rsync or cp command for efficient copying',
-              'Verify backup integrity'
-            ],
-            tips: [
-              'Focus on user-created content first',
-              'Use rsync for incremental backups',
-              'Create multiple backup copies for critical data'
-            ]
-          },
-          {
-            id: 'macos-system-backup',
-            title: 'Create System Image',
-            description: 'Create a complete system backup using Disk Utility.',
-            completed: false,
-            priority: 'low',
-            category: 'system',
-            steps: [
-              'Open Disk Utility from Applications > Utilities',
-              'Select your Mac\'s drive from the sidebar',
-              'Click "New Image" from the toolbar',
-              'Choose "DVD/CD Master" format',
-              'Save the image to external drive'
-            ],
-            tips: [
-              'System images are very large',
-              'Use for complete system recovery',
-              'Store system images securely'
+              'Use a drive that\'s at least twice the size of your Mac\'s storage',
+              'Keep the external drive connected for automatic backups',
+              'Time Machine will backup your files automatically every hour',
+              'You can restore individual files or your entire system if needed'
             ]
           }
         );
       } else if (platform === 'windows') {
         deviceActionsList.push(
           {
-            id: 'windows-file-history',
-            title: 'Set Up File History',
-            description: 'Configure Windows File History for automatic backups.',
+            id: 'windows-simple-backup',
+            title: 'Set Up File History Backup',
+            description: 'Use Windows File History to automatically backup your files.',
             completed: false,
             priority: 'high',
             category: 'backup',
             steps: [
-              'Connect external drive to your PC',
-              'Open Settings > Update & Security',
-              'Click Backup in the left sidebar',
+              'Connect an external drive to your PC',
+              'Open Settings (Windows key + I)',
+              'Go to Update & Security > Backup',
               'Click "Add a drive" under File History',
               'Select your external drive'
             ],
             tips: [
-              'File History backs up user files automatically',
-              'Keep external drive connected for regular backups',
-              'Configure backup frequency in advanced settings'
-            ]
-          },
-          {
-            id: 'windows-system-restore',
-            title: 'Create System Restore Point',
-            description: 'Set up System Restore for system recovery.',
-            completed: false,
-            priority: 'medium',
-            category: 'system',
-            steps: [
-              'Open System Properties (Win + Pause/Break)',
-              'Click "System Protection" tab',
-              'Click "Create" to make a restore point',
-              'Enter a description for the restore point',
-              'Click "Create" to finish'
-            ],
-            tips: [
-              'Create restore points before major changes',
-              'System Restore doesn\'t affect personal files',
-              'Keep multiple restore points for safety'
-            ]
-          },
-          {
-            id: 'windows-manual-backup',
-            title: 'Manual File Backup',
-            description: 'Manually copy important files to external storage.',
-            completed: false,
-            priority: 'medium',
-            category: 'backup',
-            steps: [
-              'Connect external drive to your PC',
-              'Open File Explorer',
-              'Navigate to important folders (Documents, Pictures, etc.)',
-              'Copy folders to external drive',
-              'Verify files copied successfully'
-            ],
-            tips: [
-              'Focus on user files and documents',
-              'Create organized folder structure',
-              'Backup regularly, especially before updates'
-            ]
-          }
-        );
-      } else if (platform === 'web') {
-        deviceActionsList.push(
-          {
-            id: 'web-browser-backup',
-            title: 'Browser Data Backup',
-            description: 'Backup your browser bookmarks, passwords, and settings.',
-            completed: false,
-            priority: 'high',
-            category: 'backup',
-            steps: [
-              'Export bookmarks from your browser',
-              'Export saved passwords (if using browser password manager)',
-              'Export browser settings and extensions',
-              'Save exported files to a secure location',
-              'Consider using a dedicated password manager'
-            ],
-            tips: [
-              'Use browser sync features for automatic backup',
-              'Export data regularly before browser updates',
-              'Store backup files in cloud storage for safety',
-              'Consider switching to dedicated password managers'
-            ]
-          },
-          {
-            id: 'web-file-backup',
-            title: 'Local File Backup',
-            description: 'Backup important files from your computer.',
-            completed: false,
-            priority: 'medium',
-            category: 'backup',
-            steps: [
-              'Identify important files and folders',
-              'Connect external storage device',
-              'Copy important files to external storage',
-              'Verify files copied successfully',
-              'Set up regular backup schedule'
-            ],
-            tips: [
-              'Focus on irreplaceable files first',
-              'Use cloud storage as additional backup',
-              'Keep multiple backup copies',
-              'Test restore process periodically'
+              'File History will automatically backup your Documents, Pictures, and other folders',
+              'Keep the external drive connected for regular backups',
+              'You can restore previous versions of files if they get deleted or changed',
+              'Check the backup is working by looking for recent backup dates'
             ]
           }
         );
       }
     }
 
-    // Debug logs removed for cleaner console
     return deviceActionsList;
   };
 
@@ -749,10 +506,10 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
           {/* Title and Description */}
           <View style={styles.titleSection}>
             <Text style={styles.title}>Local Backup Setup</Text>
-        <Text style={styles.description}>
-              Create local backups of your important data. This checklist will guide you through setting up backup solutions for all your devices to protect against data loss.
-        </Text>
-      </View>
+            <Text style={styles.description}>
+              Create simple backups of your important files using external storage. This guide will show you the easiest way to backup your data without technical complexity.
+            </Text>
+          </View>
 
       {/* Learn More Section */}
       <TouchableOpacity
@@ -777,31 +534,23 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
         </View>
       )}
 
-          {/* Backup Checklist */}
-          {isLoading ? (
-            <View style={styles.fallbackContainer}>
-              <Text style={styles.fallbackTitle}>Loading Backup Solutions...</Text>
-              <Text style={styles.fallbackText}>
-                We're preparing personalized backup recommendations for your devices.
-              </Text>
-            </View>
-          ) : userDevices.length > 0 && checklistItems.length > 0 ? (
+          {/* ✅ REFINED: Simple backup checklist */}
+          {!isLoading && checklistItems.length > 0 ? (
             <InteractiveChecklist
-              userDevices={userDevices}
-              deviceActions={deviceActions}
+              checklistItems={checklistItems}
               onActionComplete={handleChecklistItemComplete}
-              variant="checklist"
+              variant="enhanced"
               checkId="1-3-2"
               navigation={navigation}
-              checklistItems={checklistItems}
+              customHeaderTitle="Let's Set Up Local Backup"
+              {...getChecklistConfig('1-3-2')}
             />
           ) : (
             <View style={styles.fallbackContainer}>
-              <Text style={styles.fallbackTitle}>Setting Up Backup Solutions</Text>
+              <Text style={styles.fallbackTitle}>Setting Up Local Backup</Text>
               <Text style={styles.fallbackText}>
-                We're preparing personalized backup recommendations for your devices.
+                We're preparing simple backup solutions for your devices.
               </Text>
-
               <TouchableOpacity
                 style={styles.retryButton}
                 onPress={initializeDeviceContent}
@@ -848,6 +597,7 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
             onClose={() => setShowCompletionPopup(false)}
             variant="modal"
             checkId="1-3-2"
+            animationType="confetti"
             onContinue={() => {
               setShowCompletionPopup(false);
               setIsCompleted(false);

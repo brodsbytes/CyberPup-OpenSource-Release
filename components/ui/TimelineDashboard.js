@@ -76,6 +76,9 @@ const TimelineDashboard = ({
   const [milestoneProgress, setMilestoneProgress] = useState({});
   const [showMilestoneDetails, setShowMilestoneDetails] = useState(false);
   
+  // 🔧 FIX: Track completing state to prevent milestone flash during completion animation
+  const [completingMilestone, setCompletingMilestone] = useState(null);
+  
   // Auto-expand first milestone when component loads
   useEffect(() => {
     if (userDevices.length > 0 && Object.keys(deviceActions).length > 0) {
@@ -184,6 +187,15 @@ const TimelineDashboard = ({
   
   // Handle timeline action completion
   const handleTimelineActionComplete = async (deviceId, actionId, completed) => {
+    // 🔧 FIX: Set completing state before calling onActionComplete to prevent milestone flash
+    if (completed) {
+      setCompletingMilestone({
+        currentMilestone: selectedMilestone,
+        actionId,
+        timestamp: Date.now()
+      });
+    }
+    
     if (showUnifiedView) {
       // For unified view, only call onActionComplete once
       // The screen's handler will take care of marking all devices
@@ -212,6 +224,8 @@ const TimelineDashboard = ({
       // If there's a next milestone, advance to it
       if (nextMilestoneIndex < milestones.length) {
         setTimeout(() => {
+          // Clear completing state and advance to next milestone
+          setCompletingMilestone(null);
           setSelectedMilestone(nextMilestoneIndex);
           // Keep the details open for the next milestone
           // The key prop on ProgressiveActionCard will force a re-render
@@ -219,6 +233,7 @@ const TimelineDashboard = ({
       } else {
         // If this was the last milestone, close the details
         setTimeout(() => {
+          setCompletingMilestone(null);
           setShowMilestoneDetails(false);
         }, 1000);
       }
@@ -371,17 +386,23 @@ const TimelineDashboard = ({
           <View style={styles.actionCard}>
             {(() => {
               try {
-                const sanitizedAction = sanitizeActionData(milestones[selectedMilestone].action);
-                const sanitizedDevice = sanitizeDeviceData(milestones[selectedMilestone].device);
+                // 🔧 FIX: Use completing milestone if available to prevent flash
+                const currentMilestoneIndex = completingMilestone ? completingMilestone.currentMilestone : selectedMilestone;
+                const currentMilestone = milestones[currentMilestoneIndex];
+                
+                if (!currentMilestone) return null;
+                
+                const sanitizedAction = sanitizeActionData(currentMilestone.action);
+                const sanitizedDevice = sanitizeDeviceData(currentMilestone.device);
                 
                 
                 return (
                   <ProgressiveActionCardWrapper
-                    key={milestones[selectedMilestone].action.id} // Force re-render when milestone changes
+                    key={currentMilestone.action.id} // Force re-render when milestone changes
                     action={sanitizedAction}
                     device={sanitizedDevice}
                     onComplete={(actionId, completed) => 
-                      stableOnComplete(milestones[selectedMilestone].device.id, actionId, completed)
+                      stableOnComplete(currentMilestone.device.id, actionId, completed)
                     }
                     onStatusChange={stableOnStatusChange}
                     variant="timeline"
@@ -401,14 +422,18 @@ const TimelineDashboard = ({
 
           
           {/* Milestone Tips */}
-          {milestones[selectedMilestone].action.tips && (
-            <View style={styles.milestoneTips}>
-              <Text style={styles.tipsTitle}>💡 Tips:</Text>
-              {milestones[selectedMilestone].action.tips.map((tip, tipIndex) => (
-                <Text key={tipIndex} style={styles.tipText}>• {tip}</Text>
-              ))}
-            </View>
-          )}
+          {(() => {
+            const currentMilestoneIndex = completingMilestone ? completingMilestone.currentMilestone : selectedMilestone;
+            const currentMilestone = milestones[currentMilestoneIndex];
+            return currentMilestone?.action.tips && (
+              <View style={styles.milestoneTips}>
+                <Text style={styles.tipsTitle}>💡 Tips:</Text>
+                {currentMilestone.action.tips.map((tip, tipIndex) => (
+                  <Text key={tipIndex} style={styles.tipText}>• {tip}</Text>
+                ))}
+              </View>
+            );
+          })()}
         </View>
       )}
     </View>

@@ -308,7 +308,7 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
           'List all banking and credit card accounts you access online',
           'Add cloud storage accounts (Google Drive, iCloud, Dropbox, OneDrive)',
           'Include work email and any business accounts you manage',
-          'Add social media accounts with large followings or sensitive content',
+          '(Optional) Add social media accounts',
           'Verify each account: ask "would losing this cause major problems?"'
         ],
         tips: Array.isArray(deviceActionsContent.identifyAccounts?.tips) ? deviceActionsContent.identifyAccounts.tips : [
@@ -352,8 +352,7 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
           'Enable 2FA using your bank\'s preferred method (SMS, app, or calls)',
           'Test the setup by logging out and back in',
           'Repeat for credit cards, investment accounts, and payment services (PayPal, Venmo)',
-          'Enable account alerts for logins and transactions over $50',
-          'Set up low-balance alerts to catch unauthorized transfers quickly'
+          'Enable alerts for account logins',
         ],
         tips: Array.isArray(deviceActionsContent.enableBankingMFA?.tips) ? deviceActionsContent.enableBankingMFA.tips : [
           'Banks often use SMS 2FA - it\'s better than no 2FA at all',
@@ -510,6 +509,7 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
         onClose={() => setShowCompletionPopup(false)}
         variant="modal"
         checkId="1-1-2"
+        animationType="confetti"
       />
     </SafeAreaView>
   );

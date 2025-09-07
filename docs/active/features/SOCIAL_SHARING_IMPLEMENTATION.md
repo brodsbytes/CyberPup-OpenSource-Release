@@ -262,6 +262,9 @@ export class ShareableContentService {
 - Various content templates
 - Different messaging approaches
 
+#### 8.3 Update Privacy Policy & TOS
+- Provide necessary technical details for legal team to update the privacy policy and terms of service
+
 ## Implementation Checklist
 
 ### Pre-Implementation

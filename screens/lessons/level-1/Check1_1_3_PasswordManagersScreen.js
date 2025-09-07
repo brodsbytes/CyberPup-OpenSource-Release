@@ -564,6 +564,7 @@ const Check1_3_PasswordManagersScreen = ({ navigation, route }) => {
           variant="modal"
             onClose={() => setShowCompletionPopup(false)}
             checkId="1-1-3"
+            animationType="confetti"
           />
           {/* References Section */}
           <ReferencesSection references={getReferencesForCheck('1-1-3')} />

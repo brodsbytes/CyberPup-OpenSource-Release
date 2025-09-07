@@ -585,6 +585,7 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
             onClose={() => setShowCompletionPopup(false)}
             variant="modal"
             checkId="1-1-5"
+            animationType="confetti"
             onContinue={() => {
               // Use the new navigation logic for area completion
               const completionNav = getCompletionNavigation('1-1-5');
