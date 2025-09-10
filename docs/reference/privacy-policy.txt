@@ -17,7 +17,6 @@ We do not collect, store, or process the following:
     • Financial or payment details
     • Social media accounts or profiles
     • Device identifiers for tracking
-    • Analytics or behavioral tracking data
 2.3 Local Data Storage
 We store the following only on your device:
     • Lesson and progress data
@@ -51,12 +50,18 @@ The App may fetch general cybersecurity news and alerts from public RSS feeds. N
 4.2 RSS-to-JSON Services
     • Used to fetch cybersecurity news and alerts
     • No personal information is shared
-4.3 No Analytics or Tracking Services
+4.3 Analytics Services (Optional)
+We use PostHog, a privacy-focused analytics platform, only with your explicit consent:
+    • What we collect: Anonymous usage patterns, feature interactions, and app performance data
+    • What we DON'T collect: Personal information, device data you enter, or any sensitive security information
+    • Purpose: To improve the app and create better cybersecurity experiences
+    • Your control: You can opt out at any time in Settings
+    • Data handling: All data is anonymized and encrypted, no personal identifiers are used
+    • Third-party: PostHog processes data according to their privacy policy at posthog.com/privacy
 We do not use:
-    • Analytics platforms (Google, Facebook, etc.)
-    • Crash reporting services
-    • User behavior tracking
-    • Advertising networks
+    • Advertising networks or tracking for marketing purposes
+    • Social media tracking pixels
+    • Cross-app tracking or data brokers
 5. DATA SECURITY
 We implement safeguards to protect your information:
 5.1 Technical Safeguards

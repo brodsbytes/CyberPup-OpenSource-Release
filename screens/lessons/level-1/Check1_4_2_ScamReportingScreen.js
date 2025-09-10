@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { trackCheckScreenView, trackCheckProgress, trackCheckCompletion } from '../../../utils/checkAnalytics';
 import {
   View,
   Text,
@@ -147,6 +148,9 @@ const Check1_4_2_ScamReportingScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Standard focus effect
   useFocusEffect(
     React.useCallback(() => {
+    // Track check screen view
+    trackCheckScreenView('1-4-2', 'Scam Reporting', 1, 'awareness');
+
       loadProgress();
       initializeChecklistContent();
       // Reset completion state when screen comes into focus
@@ -196,6 +200,9 @@ const Check1_4_2_ScamReportingScreen = ({ navigation, route }) => {
 
   // ✅ STANDARD: Completion celebration
   const celebrateCompletion = () => {
+    // Track check completion
+    trackCheckCompletion('1-4-2', 'Scam Reporting', 1, 'awareness');
+
     console.log('🎉 Celebrating completion of Check 1.4.2');
     // Always show CompletionPopup first, let user click "Continue" to go to AreaCompletionScreen
     setShowCompletionPopup(true);

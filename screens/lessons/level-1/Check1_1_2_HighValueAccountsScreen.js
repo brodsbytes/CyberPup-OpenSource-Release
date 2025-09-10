@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { trackCheckScreenView, trackCheckProgress, trackCheckCompletion } from '../../../utils/checkAnalytics';
 import {
   View,
   Text,
@@ -138,6 +139,9 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Standard focus effect
   useFocusEffect(
     React.useCallback(() => {
+    // Track check screen view
+    trackCheckScreenView('1-1-2', 'High Value Accounts', 1, 'passwords');
+
       const initializeScreen = async () => {
         await loadProgress();
         await initializeDeviceContent();
@@ -252,6 +256,9 @@ const Check1_1_2_HighValueAccountsScreen = ({ navigation, route }) => {
 
   // ✅ PRESERVE: Completion celebration
   const celebrateCompletion = () => {
+    // Track check completion
+    trackCheckCompletion('1-1-2', 'High Value Accounts', 1, 'passwords');
+
     console.log('🎉 Check 1.1.2 High-Value Accounts completed!');
     setShowCompletionPopup(true);
   };

@@ -14,6 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Responsive, CommonStyles } from '../../../theme';
 import { ToolService } from '../../../utils/toolService';
+import { trackToolUsage, trackEvent } from '../../../utils/analytics';
 
 const ToolDetailScreen = ({ navigation, route }) => {
   const { id: toolId } = route.params || {};
@@ -26,6 +27,13 @@ const ToolDetailScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     loadToolDetail();
+    
+    // Track tool detail view
+    if (toolId) {
+      trackToolUsage(toolId, 'detail_viewed', {
+        source: 'tool_detail_screen'
+      });
+    }
   }, [toolId]);
 
   const loadToolDetail = async () => {

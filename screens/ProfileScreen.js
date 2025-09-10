@@ -22,6 +22,7 @@ import StickyGamificationBar from '../components/gamification/StickyGamification
 import StreakDetailsModal from './StreakDetailsScreen';
 import BadgesModal from './BadgesScreen';
 import CatalogueModal from '../components/navigation/CatalogueModal';
+import { analyticsService } from '../utils/analytics';
 
 const ProfileScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
@@ -30,6 +31,7 @@ const ProfileScreen = ({ navigation }) => {
   const [showBadges, setShowBadges] = useState(false);
   const [showCatalogue, setShowCatalogue] = useState(false);
   const [showHelpSupport, setShowHelpSupport] = useState(false);
+  const [analyticsEnabled, setAnalyticsEnabled] = useState(false);
   const [activityData, setActivityData] = useState({
     streak: {
       currentStreak: 0,
@@ -44,6 +46,11 @@ const ProfileScreen = ({ navigation }) => {
     try {
       // Load streak data
       const streakData = await getStreakStats();
+      
+      // Load analytics status
+      const consentStatus = await analyticsService.getConsentStatus();
+      const hasOptedOut = await analyticsService.hasUserOptedOut();
+      setAnalyticsEnabled(consentStatus === 'granted' && !hasOptedOut);
       
       // Load last breach check date
       const breachProgressData = await AsyncStorage.getItem('check_1-1-5_progress');
@@ -65,7 +72,7 @@ const ProfileScreen = ({ navigation }) => {
         lastBreachCheck
       });
     } catch (error) {
-      console.log('Error loading activity data:', error);
+      cyberPupLogger.error(LOG_CATEGORIES.STORAGE, 'Error loading activity data', { error: error.message });
     } finally {
       setIsLoading(false);
     }
@@ -106,13 +113,28 @@ const ProfileScreen = ({ navigation }) => {
       if (supported) {
         await Linking.openURL(url);
       } else {
-        console.log('Cannot open URL:', url);
+        cyberPupLogger.warn(LOG_CATEGORIES.GENERAL, 'Cannot open URL', { url });
       }
     } catch (error) {
-      console.log('Error opening URL:', error);
+      cyberPupLogger.error(LOG_CATEGORIES.GENERAL, 'Error opening URL', { error: error.message });
     }
   };
 
+  const handleAnalyticsToggle = async () => {
+    try {
+      if (analyticsEnabled) {
+        // User wants to opt out
+        await analyticsService.optOut();
+        setAnalyticsEnabled(false);
+      } else {
+        // User wants to opt back in
+        await analyticsService.setConsent(true);
+        setAnalyticsEnabled(true);
+      }
+    } catch (error) {
+      cyberPupLogger.error(LOG_CATEGORIES.ANALYTICS, 'Error toggling analytics', { error: error.message });
+    }
+  };
 
 
   const renderActivityCard = (title, subtitle, icon, value, color = Colors.accent, onPress = null) => (
@@ -214,6 +236,26 @@ const ProfileScreen = ({ navigation }) => {
                 
                 <TouchableOpacity 
                   style={styles.settingItem}
+                  onPress={handleAnalyticsToggle}
+                >
+                  <Ionicons 
+                    name={analyticsEnabled ? "analytics" : "analytics-outline"} 
+                    size={Responsive.iconSizes.medium} 
+                    color={analyticsEnabled ? Colors.textSecondary : Colors.textSecondary} 
+                  />
+                  <Text style={styles.settingText}>Analytics</Text>
+                  <View style={styles.toggleContainer}>
+                    <Text style={[styles.toggleStatus, { color: analyticsEnabled ? Colors.accent : Colors.textSecondary }]}>
+                      {analyticsEnabled ? 'Enabled' : 'Disabled'}
+                    </Text>
+                    <View style={[styles.toggle, analyticsEnabled && styles.toggleActive]}>
+                      <View style={[styles.toggleThumb, analyticsEnabled && styles.toggleThumbActive]} />
+                    </View>
+                  </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.settingItem}
                   onPress={() => handleOpenLink('https://github.com/CyberPupSecurity/cyberpup/blob/8962267bc4b177bb445a130183f5073a8c21372b/Privacy%20Policy%202025')}
                 >
                   <Ionicons name="shield-checkmark" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
@@ -229,6 +271,7 @@ const ProfileScreen = ({ navigation }) => {
                   <Text style={styles.settingText}>Terms of Service</Text>
                   <Ionicons name="chevron-forward" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
                 </TouchableOpacity>
+
               </View>
             </>
           )}
@@ -391,6 +434,36 @@ const styles = StyleSheet.create({
     fontSize: Typography.sizes.md,
     color: Colors.textPrimary,
     marginLeft: Responsive.spacing.sm,
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Responsive.spacing.sm,
+  },
+  toggleStatus: {
+    fontSize: Typography.sizes.sm,
+    fontWeight: Typography.weights.medium,
+  },
+  toggle: {
+    width: 44,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: Colors.border,
+    justifyContent: 'center',
+    paddingHorizontal: 2,
+  },
+  toggleActive: {
+    backgroundColor: Colors.accent,
+  },
+  toggleThumb: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: Colors.textPrimary,
+    alignSelf: 'flex-start',
+  },
+  toggleThumbActive: {
+    alignSelf: 'flex-end',
   },
   profileSection: {
     flexDirection: 'row',

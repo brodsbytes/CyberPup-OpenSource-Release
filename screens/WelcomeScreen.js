@@ -457,7 +457,7 @@ const WelcomeScreen = ({ navigation }) => {
         onStreakPress={() => setShowStreakDetails(true)}
         onBadgesPress={() => setShowBadges(true)}
         activeLevel={activeLevel}
-        onRefresh={setBadgeRefreshFunction}
+        onRefresh={(refreshFn) => setBadgeRefreshFunction(() => refreshFn)}
       />
       
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>

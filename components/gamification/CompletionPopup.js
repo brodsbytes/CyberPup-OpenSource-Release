@@ -73,14 +73,11 @@ const CompletionPopup = ({
     Array.from({ length: 3 }, () => new Animated.Value(0.8))
   )).current;
   
-  // Modern confetti animation refs with physics
+  // Modern confetti animation refs with physics (simplified for iOS performance)
   const confetti = useRef(Array.from({ length: 50 }, () => new Animated.Value(0))).current;
-  const confettiRotationsX = useRef(Array.from({ length: 50 }, () => new Animated.Value(0))).current;
-  const confettiRotationsY = useRef(Array.from({ length: 50 }, () => new Animated.Value(0))).current;
   const confettiRotationsZ = useRef(Array.from({ length: 50 }, () => new Animated.Value(0))).current;
   const confettiScales = useRef(Array.from({ length: 50 }, () => new Animated.Value(0))).current;
   const confettiOpacities = useRef(Array.from({ length: 50 }, () => new Animated.Value(1))).current;
-  const confettiGravity = useRef(Array.from({ length: 50 }, () => new Animated.Value(0))).current;
   
   // Trophy/Icon breathing and floating animation refs
   const iconBreathing = useRef(new Animated.Value(1)).current;
@@ -131,12 +128,9 @@ const CompletionPopup = ({
     fireworkTrailOpacities.forEach(trailOp => trailOp.forEach(to => to.setValue(0.8)));
     
     confetti.forEach(c => c.setValue(0));
-    confettiRotationsX.forEach(cr => cr.setValue(0));
-    confettiRotationsY.forEach(cr => cr.setValue(0));
     confettiRotationsZ.forEach(cr => cr.setValue(0));
     confettiScales.forEach(cs => cs.setValue(0));
     confettiOpacities.forEach(co => co.setValue(1));
-    confettiGravity.forEach(cg => cg.setValue(0));
     
     // Reset icon animations
     iconBreathing.setValue(1);
@@ -200,7 +194,7 @@ const CompletionPopup = ({
       startIconContinuousAnimations();
     });
     } catch (error) {
-      console.error('Entrance animation error:', error);
+      cyberPupLogger.error(LOG_CATEGORIES.ANIMATION, 'Entrance animation error', { error: error.message });
       // Fallback: show content without animations
       modalScale.setValue(1);
       modalOpacity.setValue(1);
@@ -334,88 +328,85 @@ const CompletionPopup = ({
 
     Animated.parallel(animations).start();
     } catch (error) {
-      console.error('Fireworks animation error:', error);
+      cyberPupLogger.error(LOG_CATEGORIES.ANIMATION, 'Fireworks animation error', { error: error.message });
     }
   };
 
   const startConfettiAnimation = () => {
     try {
-      const animations = confetti.map((confettiPiece, index) => {
-      const delay = (index * 50) + (index % 3) * 100; // Reduced delays for faster confetti appearance
-      const fallDuration = 3000 + (index % 4) * 500; // More predictable durations
-      const horizontalDistance = ((index % 7) - 3) * 50; // More predictable distances
-      const verticalDistance = 500 + (index % 5) * 80; // More predictable distances
-      const rotationSpeed = 600 + (index % 6) * 100; // More predictable rotation speeds
-      const airResistance = 0.7 + (index % 3) * 0.1; // More predictable air resistance
+      // Pre-calculate all confetti properties to avoid Math.random() during render
+      const confettiConfigs = confetti.map((_, index) => {
+        const delay = (index * 50) + (index % 3) * 100; // Reduced delays for faster confetti appearance
+        const fallDuration = 3000 + (index % 4) * 500; // More predictable durations
+        const horizontalDistance = ((index % 7) - 3) * 50; // More predictable distances
+        const verticalDistance = 500 + (index % 5) * 80; // More predictable distances
+        const rotationSpeed = 600 + (index % 6) * 100; // More predictable rotation speeds
+        const airResistance = 0.7 + (index % 3) * 0.1; // More predictable air resistance
+        
+        // Pre-calculate confetti piece properties
+        const width = 8 + (index % 6) * 1; // More predictable width
+        const height = 4 + (index % 3) * 1; // More predictable height
+        const isRectangle = index % 3 !== 0;
+        
+        return {
+          delay,
+          fallDuration,
+          horizontalDistance,
+          verticalDistance,
+          rotationSpeed,
+          airResistance,
+          width,
+          height,
+          isRectangle
+        };
+      });
       
-      return Animated.sequence([
-        Animated.delay(delay),
-        Animated.parallel([
-          // Horizontal movement with air resistance
-          Animated.timing(confettiPiece, {
-            toValue: 1,
-            duration: fallDuration,
-            easing: Easing.out(Easing.quad), // Smoother easing
-            useNativeDriver: true, // Transform can use native driver
-          }),
-          // Gravity effect - accelerating downward
-          Animated.timing(confettiGravity[index], {
-            toValue: 1,
-            duration: fallDuration,
-            easing: Easing.in(Easing.cubic), // More realistic gravity acceleration
-            useNativeDriver: true, // Transform can use native driver
-          }),
-          // Scale entrance with more natural timing
-          Animated.timing(confettiScales[index], {
-            toValue: 1,
-            duration: fallDuration * 0.2, // Slightly longer entrance
-            easing: Easing.out(Easing.back(1.1)), // Subtle bounce effect
-            useNativeDriver: true, // Scale can use native driver
-          }),
-          // 3D tumbling rotation - X axis
-          Animated.loop(
-            Animated.timing(confettiRotationsX[index], {
+      const animations = confetti.map((confettiPiece, index) => {
+        const config = confettiConfigs[index];
+      
+        return Animated.sequence([
+          Animated.delay(config.delay),
+          Animated.parallel([
+            // Horizontal movement with air resistance
+            Animated.timing(confettiPiece, {
               toValue: 1,
-              duration: rotationSpeed,
-              easing: Easing.linear,
-              useNativeDriver: true, // Rotation can use native driver
-            })
-          ),
-          // 3D tumbling rotation - Y axis
-          Animated.loop(
-            Animated.timing(confettiRotationsY[index], {
-              toValue: 1,
-              duration: rotationSpeed * 1.3,
-              easing: Easing.linear,
-              useNativeDriver: true, // Rotation can use native driver
-            })
-          ),
-          // 3D tumbling rotation - Z axis
-          Animated.loop(
-            Animated.timing(confettiRotationsZ[index], {
-              toValue: 1,
-              duration: rotationSpeed * 0.8,
-              easing: Easing.linear,
-              useNativeDriver: true, // Rotation can use native driver
-            })
-          ),
-          // Fade out with air resistance timing
-          Animated.sequence([
-            Animated.delay(fallDuration * 0.5), // Longer hold time
-            Animated.timing(confettiOpacities[index], {
-              toValue: 0,
-              duration: fallDuration * 0.5,
-              easing: Easing.in(Easing.quad), // Smoother fade out
-              useNativeDriver: true, // Opacity can use native driver
+              duration: config.fallDuration,
+              easing: Easing.out(Easing.quad), // Smoother easing
+              useNativeDriver: true, // Transform can use native driver
             }),
+            // Scale entrance with more natural timing
+            Animated.timing(confettiScales[index], {
+              toValue: 1,
+              duration: config.fallDuration * 0.2, // Slightly longer entrance
+              easing: Easing.out(Easing.back(1.1)), // Subtle bounce effect
+              useNativeDriver: true, // Scale can use native driver
+            }),
+            // Simplified rotation - only Z axis for better iOS performance
+            Animated.loop(
+              Animated.timing(confettiRotationsZ[index], {
+                toValue: 1,
+                duration: config.rotationSpeed,
+                easing: Easing.linear,
+                useNativeDriver: true, // Rotation can use native driver
+              })
+            ),
+            // Fade out with air resistance timing
+            Animated.sequence([
+              Animated.delay(config.fallDuration * 0.5), // Longer hold time
+              Animated.timing(confettiOpacities[index], {
+                toValue: 0,
+                duration: config.fallDuration * 0.5,
+                easing: Easing.in(Easing.quad), // Smoother fade out
+                useNativeDriver: true, // Opacity can use native driver
+              }),
+            ]),
           ]),
-        ]),
-      ]);
+        ]);
     });
 
     Animated.parallel(animations).start();
     } catch (error) {
-      console.error('Confetti animation error:', error);
+      cyberPupLogger.error(LOG_CATEGORIES.ANIMATION, 'Confetti animation error', { error: error.message });
     }
   };
 
@@ -430,7 +421,7 @@ const CompletionPopup = ({
       try {
         await AsyncStorage.setItem(`check_${checkId}_completed`, 'completed');
       } catch (error) {
-        console.error('Error marking check as completed:', error);
+        cyberPupLogger.error(LOG_CATEGORIES.PROGRESS, 'Error marking check as completed', { error: error.message });
       }
     }
     
@@ -569,10 +560,11 @@ const CompletionPopup = ({
     
     return confetti.map((confettiPiece, index) => {
       const colorSet = confettiColors[index % confettiColors.length];
-      const horizontalDistance = (Math.random() - 0.5) * 400;
-      const verticalDistance = 500 + Math.random() * 400;
-      const width = 8 + Math.random() * 6;
-      const height = 4 + Math.random() * 3;
+      // Use predictable values instead of Math.random() to avoid iOS artifacts
+      const horizontalDistance = ((index % 7) - 3) * 50;
+      const verticalDistance = 500 + (index % 5) * 80;
+      const width = 8 + (index % 6) * 1;
+      const height = 4 + (index % 3) * 1;
       const isRectangle = index % 3 !== 0;
       
       return (
@@ -593,32 +585,14 @@ const CompletionPopup = ({
                     outputRange: [0, horizontalDistance],
                   }),
                 },
-                // Vertical movement with gravity
+                // Simplified vertical movement for better iOS performance
                 {
-                  translateY: Animated.add(
-                    confettiPiece.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [-50, verticalDistance * 0.6],
-                    }),
-                    confettiGravity[index].interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, verticalDistance * 0.4],
-                    })
-                  ),
-                },
-                // 3D tumbling rotations
-                {
-                  rotateX: confettiRotationsX[index].interpolate({
+                  translateY: confettiPiece.interpolate({
                     inputRange: [0, 1],
-                    outputRange: ['0deg', '360deg'],
+                    outputRange: [-50, verticalDistance],
                   }),
                 },
-                {
-                  rotateY: confettiRotationsY[index].interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ['0deg', '360deg'],
-                  }),
-                },
+                // Simplified rotation - only Z axis for better iOS performance
                 {
                   rotateZ: confettiRotationsZ[index].interpolate({
                     inputRange: [0, 1],

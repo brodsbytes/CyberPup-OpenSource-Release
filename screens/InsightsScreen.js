@@ -20,6 +20,8 @@ import StickyGamificationBar from '../components/gamification/StickyGamification
 import StreakDetailsModal from './StreakDetailsScreen';
 import BadgesModal from './BadgesScreen';
 import CatalogueModal from '../components/navigation/CatalogueModal';
+import { trackEvent, trackScreenView, trackToolUsage, trackGuideView } from '../utils/analytics';
+import { cyberPupLogger, LOG_CATEGORIES } from '../utils/logger';
 
 const InsightsScreen = ({ navigation }) => {
   const [tab, setTab] = useState(0); // 0 = Learn, 1 = Tools
@@ -32,11 +34,22 @@ const InsightsScreen = ({ navigation }) => {
   const segments = ['Learn', 'Tools'];
 
   useEffect(() => {
-    console.log('🔍 InsightsScreen: Component mounted');
+    cyberPupLogger.debug(LOG_CATEGORIES.NAVIGATION, 'InsightsScreen: Component mounted');
+    
+    // Track screen view
+    trackScreenView('insights_screen', {
+      tab: tab === 0 ? 'learn' : 'tools'
+    });
   }, []);
 
   useEffect(() => {
-    console.log(`🔍 InsightsScreen: Tab changed to ${tab === 0 ? 'Learn' : 'Tools'}`);
+    cyberPupLogger.debug(LOG_CATEGORIES.NAVIGATION, `InsightsScreen: Tab changed to ${tab === 0 ? 'Learn' : 'Tools'}`);
+    
+    // Track tab changes
+    trackEvent('insights_tab_changed', {
+      tab_name: tab === 0 ? 'learn' : 'tools',
+      previous_tab: tab === 0 ? 'tools' : 'learn'
+    });
   }, [tab]);
 
   const handleTabChange = (index) => {
@@ -52,7 +65,7 @@ const InsightsScreen = ({ navigation }) => {
   };
 
   const handleTabPress = (screen) => {
-    console.log('InsightsScreen - Tab pressed:', screen);
+    cyberPupLogger.debug(LOG_CATEGORIES.NAVIGATION, 'InsightsScreen - Tab pressed', { screen });
     if (screen === 'Welcome') {
       navigation.navigate(SCREEN_NAMES.WELCOME);
     } else if (screen === 'ProfileScreen') {

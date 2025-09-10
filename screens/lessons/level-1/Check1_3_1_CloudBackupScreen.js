@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { trackCheckScreenView, trackCheckProgress, trackCheckCompletion } from '../../../utils/checkAnalytics';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
@@ -56,6 +57,9 @@ const Check1_3_1_CloudBackupScreen = ({ navigation, route }) => {
 
   useFocusEffect(
     React.useCallback(() => {
+    // Track check screen view
+    trackCheckScreenView('1-3-1', 'Cloud Backup', 1, 'data_protection');
+
       loadProgress();
       // Reset completion state when screen comes into focus
       // This ensures the completion popup doesn't stay visible after navigation
@@ -408,6 +412,9 @@ const Check1_3_1_CloudBackupScreen = ({ navigation, route }) => {
   };
 
   const celebrateCompletion = () => {
+    // Track check completion
+    trackCheckCompletion('1-3-1', 'Cloud Backup', 1, 'data_protection');
+
     console.log('🎉 Celebrating completion of Check 1.3.1');
     setShowCompletionPopup(true);
   };

@@ -136,7 +136,7 @@ const StickyGamificationBar = ({
   // Expose refresh function to parent component
   useEffect(() => {
     if (onRefresh) {
-      onRefresh(refreshBadges);
+      onRefresh(() => refreshBadges);
     }
   }, []);
 

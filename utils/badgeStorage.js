@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { trackBadgeEarned } from './analytics';
 
 // Badge types
 export const BADGE_TYPES = {
@@ -197,6 +198,15 @@ export const unlockBadge = async (badgeId) => {
       
       // Add to history
       await addToBadgeHistory(badgeId, now);
+      
+      // Track badge earned event
+      const badge = userBadges[badgeIndex];
+      trackBadgeEarned(badge.name, {
+        badge_id: badgeId,
+        badge_type: badge.type,
+        badge_category: badge.category || 'general',
+        total_badges_earned: userBadges.filter(b => b.isEarned).length
+      });
       
       return userBadges[badgeIndex];
     }

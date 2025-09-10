@@ -8,13 +8,13 @@ const CACHE_EXPIRY_KEY = 'security_alerts_expiry';
 const CACHE_DURATION = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
 
 export class SecurityAlertsService {
-  // Main method to get alerts with caching
+  // Main method to get alerts with caching - now fetches from both US and AU sources
   static async getSecurityAlerts(userCountry = 'US', forceRefresh = false) {
     try {
       // For insights tab, always fetch fresh data to avoid showing cached mock data
       console.log(`🔄 getSecurityAlerts: forceRefresh=${forceRefresh}, always fetching fresh data for insights`);
       
-      const alerts = await this.fetchFreshAlerts(userCountry);
+      const alerts = await this.fetchFreshAlertsFromMultipleSources();
       await this.cacheAlerts(alerts);
       return alerts;
     } catch (error) {
@@ -25,7 +25,66 @@ export class SecurityAlertsService {
     }
   }
 
-  // Fetch fresh alerts from government sources
+  // Fetch fresh alerts from multiple sources (US and AU)
+  static async fetchFreshAlertsFromMultipleSources() {
+    // Detect if running in browser (for development/testing)
+    const isBrowser = typeof window !== 'undefined';
+    
+    console.log(`🔄 SecurityAlertsService: Starting fetchFreshAlertsFromMultipleSources`);
+    console.log(`🌐 Browser detected: ${isBrowser}`);
+    
+    if (isBrowser) {
+      console.log('🌐 Browser detected - RSS feeds may have CORS limitations');
+    }
+    
+    try {
+      // Fetch alerts from both US (CISA) and AU (ACSC) sources
+      console.log(`🔄 Attempting to fetch real RSS feeds from both US and AU sources...`);
+      const [usAlerts, auAlerts] = await Promise.allSettled([
+        this.fetchRealRSSFeeds('US'),
+        this.fetchRealRSSFeeds('AU')
+      ]);
+      
+      const allAlerts = [];
+      
+      // Process US alerts
+      if (usAlerts.status === 'fulfilled' && usAlerts.value && usAlerts.value.length > 0) {
+        console.log(`✅ Successfully fetched ${usAlerts.value.length} alerts from US (CISA)`);
+        allAlerts.push(...usAlerts.value);
+      } else {
+        console.log(`⚠️ Failed to fetch US alerts: ${usAlerts.reason?.message || 'No alerts returned'}`);
+      }
+      
+      // Process AU alerts
+      if (auAlerts.status === 'fulfilled' && auAlerts.value && auAlerts.value.length > 0) {
+        console.log(`✅ Successfully fetched ${auAlerts.value.length} alerts from AU (ACSC)`);
+        allAlerts.push(...auAlerts.value);
+      } else {
+        console.log(`⚠️ Failed to fetch AU alerts: ${auAlerts.reason?.message || 'No alerts returned'}`);
+      }
+      
+      if (allAlerts.length > 0) {
+        console.log(`✅ Successfully fetched ${allAlerts.length} total alerts from multiple sources`);
+        return allAlerts;
+      } else {
+        console.log('⚠️ No real alerts found from any source, falling back to mock data');
+      }
+    } catch (error) {
+      console.log(`❌ RSS feed fetch failed with error: ${error.message}`);
+      if (isBrowser) {
+        console.log('⚠️ RSS feeds blocked by browser CORS policy (expected in development)');
+        console.log('   Real RSS feeds will work properly in mobile app environment');
+      } else {
+        console.log('⚠️ RSS feed fetch failed:', error.message);
+      }
+    }
+    
+    // No mock data fallback - return empty array if RSS feeds fail
+    console.log('⚠️ RSS feeds unavailable - returning empty alerts array');
+    return [];
+  }
+
+  // Fetch fresh alerts from government sources (legacy method for single country)
   static async fetchFreshAlerts(userCountry) {
     // Detect if running in browser (for development/testing)
     const isBrowser = typeof window !== 'undefined';
@@ -553,7 +612,7 @@ export class SecurityAlertsService {
   }
 
   // Get individual alert details for detail screen
-  static async getAlertById(alertId, userCountry = 'US') {
+  static async getAlertById(alertId) {
     try {
       // First check cached alerts
       const cachedAlerts = await this.getCachedAlerts();
@@ -564,8 +623,8 @@ export class SecurityAlertsService {
         }
       }
 
-      // If not in cache, fetch fresh alerts and search
-      const freshAlerts = await this.getSecurityAlerts(userCountry, true);
+      // If not in cache, fetch fresh alerts from multiple sources and search
+      const freshAlerts = await this.getSecurityAlerts();
       const alert = freshAlerts.find(a => a.id === alertId);
       
       if (alert) {
@@ -616,15 +675,32 @@ export class SecurityAlertsService {
           country: 'US',
           trusted: true
         }
+        // Additional US feeds tested but return 403 Forbidden errors
+        // {
+        //   name: 'CISA News and Updates',
+        //   url: 'https://www.cisa.gov/news.xml',
+        //   source: 'CISA',
+        //   country: 'US',
+        //   trusted: true
+        // },
+        // {
+        //   name: 'US-CERT Alerts',
+        //   url: 'https://www.us-cert.gov/ncas/alerts.xml',
+        //   source: 'US-CERT',
+        //   country: 'US',
+        //   trusted: true
+        // }
       ],
       'AU': [
-        {
-          name: 'ACSC Cyber Security Alerts',
-          url: 'https://www.cyber.gov.au/alerts.xml',
-          source: 'ACSC', 
-          country: 'AU',
-          trusted: true
-        }
+        // ACSC RSS feed temporarily disabled due to 404 errors
+        // Will re-enable once correct URL is found
+        // {
+        //   name: 'ACSC Cyber Security Alerts',
+        //   url: 'https://www.cyber.gov.au/alerts.xml',
+        //   source: 'ACSC', 
+        //   country: 'AU',
+        //   trusted: true
+        // }
       ],
       'UK': [
         {
@@ -689,7 +765,7 @@ export class SecurityAlertsService {
     const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}&count=20&api_key=null`;
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // Reduced timeout for faster fallback
 
     try {
       const response = await fetch(apiUrl, {
@@ -721,21 +797,17 @@ export class SecurityAlertsService {
     }
   }
 
-  // Strategy 2: Use alternative RSS-to-JSON services
+  // Strategy 2: Use alternative RSS-to-JSON services (optimized for speed)
   static async fetchViaSecureCORSProxy(feed) {
-    // Try multiple CORS-friendly RSS services for browser compatibility
+    // Try only the most reliable CORS-friendly RSS services
     const rssServices = [
       {
-        name: 'RSS2JSON Alternative',
-        url: `https://rss2json.com/api.json?rss_url=${encodeURIComponent(feed.url)}&api_key=null`
+        name: 'CORS Proxy',
+        url: `https://corsproxy.io/?${encodeURIComponent(feed.url)}`
       },
       {
         name: 'AllOrigins',
         url: `https://api.allorigins.win/get?url=${encodeURIComponent(feed.url)}`
-      },
-      {
-        name: 'CORS Proxy',
-        url: `https://corsproxy.io/?${encodeURIComponent(feed.url)}`
       }
     ];
 
@@ -744,7 +816,7 @@ export class SecurityAlertsService {
         console.log(`Trying ${service.name} for ${feed.name}...`);
         
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // Reduced timeout
 
         const response = await fetch(service.url, {
           method: 'GET',
@@ -828,12 +900,12 @@ export class SecurityAlertsService {
       return {
         id: this.generateSecureId(item.link || item.guid || item.title),
         title: this.sanitizeText(item.title || 'Untitled Alert'),
-        summary: this.sanitizeText(item.description || item.content || ''),
+        summary: this.sanitizeHTMLForSummary(item.description || item.content || ''),
         fullContent: this.sanitizeHTML(item.content || item.description || ''),
         source: feed.source,
         country: feed.country,
         severity: this.extractSeverity(item.title, item.description),
-        publishedDate: item.pubDate || new Date().toISOString(),
+        publishedDate: this.parseAndValidateDate(item.pubDate) || new Date().toISOString(),
         category: this.extractCategory(item.title, item.description),
         consumerRelevant: this.isConsumerRelevant(item.title, item.description),
         originalUrl: item.link,
@@ -852,12 +924,12 @@ export class SecurityAlertsService {
         return {
           id: this.generateSecureId(item.link || item.guid || item.title),
           title: this.sanitizeText(item.title || 'Untitled Alert'),
-          summary: this.sanitizeText(item.description || ''),
+          summary: this.sanitizeHTMLForSummary(item.description || ''),
           fullContent: this.sanitizeHTML(item.description || ''),
           source: feed.source,
           country: feed.country,
           severity: this.extractSeverity(item.title, item.description),
-          publishedDate: item.pubDate || new Date().toISOString(),
+          publishedDate: this.parseAndValidateDate(item.pubDate) || new Date().toISOString(),
           category: this.extractCategory(item.title, item.description),
           consumerRelevant: this.isConsumerRelevant(item.title, item.description),
           originalUrl: item.link,
@@ -916,6 +988,51 @@ export class SecurityAlertsService {
     return `alert-${Math.abs(hash)}-${Date.now()}`.replace(/[^a-zA-Z0-9-]/g, '');
   }
 
+  // Parse and validate date from RSS feeds
+  static parseAndValidateDate(dateString) {
+    if (!dateString) return null;
+    
+    try {
+      // Clean up the date string
+      let cleanDate = dateString.trim();
+      
+      // Fix 2-digit years (e.g., "25" -> "2025")
+      cleanDate = cleanDate.replace(/\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{2})\b/g, (match, day, month, year) => {
+        const fullYear = parseInt(year) < 50 ? `20${year}` : `19${year}`;
+        return `${day} ${month} ${fullYear}`;
+      });
+      
+      // Handle common RSS date formats
+      // RFC 2822 format: "Wed, 05 Sep 2025 10:00:00 GMT"
+      // ISO format: "2025-09-05T10:00:00Z"
+      // Simple format: "September 5, 2025"
+      
+      const date = new Date(cleanDate);
+      
+      // Validate the date is reasonable (not in the far future or past)
+      const now = new Date();
+      const year = date.getFullYear();
+      const currentYear = now.getFullYear();
+      
+      // Check if year is reasonable (between 2020 and current year + 1)
+      if (year < 2020 || year > currentYear + 1) {
+        console.log(`⚠️ Invalid date year detected: ${year} from "${dateString}" -> "${cleanDate}"`);
+        return null;
+      }
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        console.log(`⚠️ Invalid date format: "${dateString}" -> "${cleanDate}"`);
+        return null;
+      }
+      
+      return date.toISOString();
+    } catch (error) {
+      console.log(`⚠️ Error parsing date "${dateString}":`, error.message);
+      return null;
+    }
+  }
+
   // Security: Sanitize text content
   static sanitizeText(text) {
     if (!text) return '';
@@ -935,16 +1052,67 @@ export class SecurityAlertsService {
   static sanitizeHTML(html) {
     if (!html) return '';
     
-    // Allow only safe HTML tags
-    const allowedTags = ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'h1', 'h2', 'h3'];
-    const tagRegex = /<(?!\/?(?:p|br|strong|em|ul|ol|li|h[1-3])\b)[^>]*>/gi;
+    // Allow only safe HTML tags and remove all others
+    const allowedTags = ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'b', 'i', 'u'];
+    const tagRegex = /<(?!\/?(?:p|br|strong|em|ul|ol|li|h[1-3]|b|i|u)\b)[^>]*>/gi;
     
     return html
       .replace(tagRegex, '') // Remove disallowed tags
       .replace(/on\w+="[^"]*"/gi, '') // Remove event handlers
       .replace(/javascript:/gi, '') // Remove javascript: urls
+      .replace(/href="javascript:[^"]*"/gi, '') // Remove javascript: hrefs
+      .replace(/style="[^"]*"/gi, '') // Remove style attributes
+      .replace(/class="[^"]*"/gi, '') // Remove class attributes
+      .replace(/id="[^"]*"/gi, '') // Remove id attributes
+      .replace(/&lt;/g, '<') // Decode HTML entities
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
+      .replace(/&mdash;/g, '—') // Replace em dash
+      .replace(/&ndash;/g, '–') // Replace en dash
+      .replace(/&hellip;/g, '…') // Replace ellipsis
       .trim()
       .substring(0, 2000); // Limit length
+  }
+
+  // Security: Sanitize HTML content for summary display (convert to plain text)
+  static sanitizeHTMLForSummary(html) {
+    if (!html) return '';
+    
+    // Debug: Log original HTML content to help identify remaining issues
+    if (html.includes('<') || html.includes('&')) {
+      console.log('🔍 Original HTML content:', html.substring(0, 200));
+    }
+    
+    // More robust approach: First decode HTML entities, then remove all HTML tags
+    let sanitized = html
+      // First decode HTML entities to get actual HTML tags
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&mdash;/g, '—')
+      .replace(/&ndash;/g, '–')
+      .replace(/&hellip;/g, '…')
+      // Remove any remaining HTML entities
+      .replace(/&[a-zA-Z0-9#]+;/g, ' ')
+      // Now remove ALL HTML tags completely
+      .replace(/<[^>]*>/g, ' ')
+      // Clean up whitespace
+      .replace(/\s+/g, ' ')
+      .trim()
+      .substring(0, 300); // Limit length for summary
+    
+    // Debug: Log sanitized content to help identify remaining issues
+    if (sanitized.includes('<') || sanitized.includes('&')) {
+      console.log('🔍 Sanitized content still contains HTML:', sanitized.substring(0, 200));
+    }
+    
+    return sanitized;
   }
 
   // Extract severity from content

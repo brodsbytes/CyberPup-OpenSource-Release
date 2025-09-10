@@ -7,11 +7,9 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "description": "Your personal cybersecurity health check. Complete interactive security checks, learn best practices, and protect your digital life with step-by-step guidance.",
-    "keywords": ["cybersecurity", "security", "privacy", "education", "protection", "digital safety", "password security", "device security"],
+    "description": "CyberPup is your personal cybersecurity coach. Complete interactive security checks, learn best practices, and protect your digital life with step-by-step guidance.",
     "primaryColor": "#1a73e8",
     "backgroundColor": "#ffffff",
-    "privacy": "public",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",

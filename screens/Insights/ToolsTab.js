@@ -54,10 +54,8 @@ const ToolsTab = ({ query, navigation, scrollRef, scrollPosition, onScrollPositi
       setAlertsLoading(true);
       setAlertsError(null);
 
-      const detectedCountry = await LocationUtils.getUserCountry();
-      setUserCountry(detectedCountry);
-
-      const securityAlerts = await SecurityAlertsService.getSecurityAlerts(detectedCountry);
+      // Fetch alerts from multiple sources (US + AU)
+      const securityAlerts = await SecurityAlertsService.getSecurityAlerts();
       setAlerts(securityAlerts);
     } catch (error) {
       console.log('Error loading security alerts:', error);
@@ -72,9 +70,8 @@ const ToolsTab = ({ query, navigation, scrollRef, scrollPosition, onScrollPositi
     setRefreshing(true);
     try {
       setAlertsError(null);
-      const detectedCountry = await LocationUtils.getUserCountry();
-      setUserCountry(detectedCountry);
-      const freshAlerts = await SecurityAlertsService.refreshAlerts(detectedCountry);
+      // Force refresh alerts from multiple sources
+      const freshAlerts = await SecurityAlertsService.refreshAlerts();
       setAlerts(freshAlerts);
     } catch (error) {
       console.log('Error refreshing alerts:', error);

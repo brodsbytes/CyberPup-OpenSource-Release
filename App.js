@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import WelcomeScreen from './screens/WelcomeScreen';
 import InsightsScreen from './screens/InsightsScreen';
 import LoadingScreen from './components/ui/LoadingScreen';
@@ -50,6 +51,11 @@ import { BackgroundAlertsService } from './utils/backgroundAlerts';
 import AreaCompletionScreen from './components/gamification/AreaCompletionScreen';
 import LevelCompletionScreen from './components/gamification/LevelCompletionScreen';
 import MainTabsScreen from './components/navigation/MainTabsScreen';
+import { analyticsService, trackEvent, trackScreenView, trackPerformance, trackError } from './utils/analytics';
+import { PostHogProvider } from 'posthog-react-native';
+import PostHogInitializer from './components/common/PostHogInitializer';
+import ErrorBoundary from './components/common/ErrorBoundary';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -60,8 +66,25 @@ export default function App() {
   const [initialRoute, setInitialRoute] = useState(APP_CONSTANTS.NAVIGATION.INITIAL_ROUTES.AUDIT);
 
   useEffect(() => {
+    const appStartTime = Date.now();
     cyberPupLogger.info(LOG_CATEGORIES.GENERAL, 'App starting up', { timestamp: new Date().toISOString() });
+    
+    // Initialize analytics (will check consent first)
+    analyticsService.initialize().catch(error => {
+      cyberPupLogger.warn(LOG_CATEGORIES.GENERAL, 'Analytics initialization failed', { error: error.message });
+      trackError(error, { context: 'analytics_initialization' });
+    });
+    
     checkAuditStatus();
+    
+    // Track app startup performance
+    setTimeout(() => {
+      const startupTime = Date.now() - appStartTime;
+      trackPerformance('app_startup_time', startupTime, {
+        platform: Platform.OS,
+        app_version: '1.0.0'
+      });
+    }, 1000);
   }, []);
 
   useEffect(() => {
@@ -110,9 +133,39 @@ export default function App() {
     return <LoadingScreen message="Loading CyberPup..." />;
   }
 
+  const handleNavigationStateChange = (state) => {
+    // Track screen views for analytics
+    try {
+      const route = state?.routes[state.index];
+      if (route?.name) {
+        trackScreenView(route.name, {
+          previous_screen: state?.routes[state.index - 1]?.name || null,
+        });
+      }
+    } catch (error) {
+      cyberPupLogger.warn(LOG_CATEGORIES.NAVIGATION, 'Failed to track screen view', { error: error.message });
+    }
+  };
+
   return (
-    <SafeAreaProvider>
-      <NavigationContainer>
+    <PostHogProvider
+      apiKey={process.env.EXPO_PUBLIC_POSTHOG_API_KEY || 'phc_A4Tac3vWpiHdPPPq4qv0jDesz6Ng4BVmsqMd6stsZ2C'}
+      options={{
+        host: 'https://app.posthog.com',
+        debug: __DEV__,
+        capture_pageview: false,
+        capture_screen_views: false,
+        disable_session_recording: true,
+        ip: false,
+        flush_at: 1,
+        flush_interval: 5000,
+        disable_automatic_navigation_tracking: true,
+      }}
+    >
+      <PostHogInitializer />
+      <ErrorBoundary screenName="app_root">
+        <SafeAreaProvider>
+        <NavigationContainer onStateChange={handleNavigationStateChange}>
         <Stack.Navigator
           initialRouteName={initialRoute}
           screenOptions={{
@@ -171,6 +224,8 @@ export default function App() {
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>
+      </ErrorBoundary>
+    </PostHogProvider>
   );
 }
 

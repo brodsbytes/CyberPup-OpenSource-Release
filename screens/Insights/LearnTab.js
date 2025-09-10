@@ -56,11 +56,8 @@ const LearnTab = ({ query, navigation, scrollRef, scrollPosition, onScrollPositi
       setAlertsLoading(true);
       setAlertsError(null);
       
-      // Automatically detect user's country
-      const detectedCountry = await LocationUtils.getUserCountry();
-      setUserCountry(detectedCountry);
-      
-      const securityAlerts = await SecurityAlertsService.getSecurityAlerts(detectedCountry);
+      // Fetch alerts from multiple sources (US + AU)
+      const securityAlerts = await SecurityAlertsService.getSecurityAlerts();
       setAlerts(securityAlerts);
     } catch (error) {
       console.log('Error loading security alerts:', error);
@@ -76,10 +73,8 @@ const LearnTab = ({ query, navigation, scrollRef, scrollPosition, onScrollPositi
     setRefreshing(true);
     try {
       setAlertsError(null);
-      // Force refresh alerts with detected country
-      const detectedCountry = await LocationUtils.getUserCountry();
-      setUserCountry(detectedCountry);
-      const freshAlerts = await SecurityAlertsService.refreshAlerts(detectedCountry);
+      // Force refresh alerts from multiple sources
+      const freshAlerts = await SecurityAlertsService.refreshAlerts();
       setAlerts(freshAlerts);
     } catch (error) {
       console.log('Error refreshing alerts:', error);

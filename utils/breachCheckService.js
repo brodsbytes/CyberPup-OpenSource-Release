@@ -94,7 +94,7 @@ export class BreachCheckService {
       };
 
     } catch (error) {
-      console.log('Breach check error:', error.message);
+      // Error will be handled by the calling component
       
       // Return user-friendly error messages
       if (error.name === 'AbortError') {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { trackCheckScreenView, trackCheckProgress, trackCheckCompletion } from '../../../utils/checkAnalytics';
 import {
   View,
   Text,
@@ -26,6 +27,7 @@ import HeaderWithProgress from '../../../components/navigation/HeaderWithProgres
 import ReferencesSection from '../../../components/ui/ReferencesSection';
 import { getReferencesForCheck } from '../../../data/references';
 import { getChecklistConfig } from '../../../constants/checklistConfig';
+import { trackSecurityCheck, trackEvent } from '../../../utils/analytics';
 
 const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Standard state management
@@ -156,8 +158,18 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Standard focus effect
   useFocusEffect(
     React.useCallback(() => {
+    // Track check screen view
+    trackCheckScreenView('1-1-1', 'Strong Passwords', 1, 'passwords');
+
       loadProgress();
       initializeChecklistContent();
+      
+      // Track security check start for analytics
+      trackSecurityCheck('check_1-1-1_strong_passwords', 'started', {
+        check_name: 'Strong Passwords',
+        level: 1,
+        category: 'passwords',
+      });
     }, [])
   );
 
@@ -200,7 +212,20 @@ const Check1_1_1_StrongPasswordsEnhancedScreen = ({ navigation, route }) => {
 
   // ✅ STANDARD: Completion celebration
   const celebrateCompletion = () => {
+    // Track check completion
+    trackCheckCompletion('1-1-1', 'Strong Passwords', 1, 'passwords');
+
     console.log('🎉 Check 1.1.1 Enhanced completed!');
+    
+    // Track security check completion for analytics
+    trackSecurityCheck('check_1-1-1_strong_passwords', 'completed', {
+      check_name: 'Strong Passwords',
+      level: 1,
+      category: 'passwords',
+      completed_items: checklistItems.filter(item => item.completed).length,
+      total_items: checklistItems.length,
+    });
+    
     setShowCompletionPopup(true);
   };
 

@@ -16,6 +16,7 @@ import SectionHeader from '../../components/insights/SectionHeader';
 import AlertCard from '../../components/insights/AlertCard';
 import TopicChip from '../../components/insights/TopicChip';
 import ToolCard from '../../components/insights/ToolCard';
+import { trackToolUsage, trackEvent } from '../../utils/analytics';
 
 const ToolsTabContent = ({ query, navigation }) => {
   const [selectedTopics, setSelectedTopics] = useState([]);
@@ -38,14 +39,9 @@ const ToolsTabContent = ({ query, navigation }) => {
       setAlertsLoading(true);
       setAlertsError(null);
 
-      console.log('🌍 ToolsTabContent: Getting user country...');
-      const detectedCountry = await LocationUtils.getUserCountry();
-      console.log(`📍 ToolsTabContent: Detected country: ${detectedCountry}`);
-      setUserCountry(detectedCountry);
-
-      console.log('📡 ToolsTabContent: Fetching fresh security alerts (clearing cache)...');
-      const securityAlerts = await SecurityAlertsService.clearCacheAndRefresh(detectedCountry);
-      console.log(`✅ ToolsTabContent: Successfully loaded ${securityAlerts.length} alerts`);
+      console.log('📡 ToolsTabContent: Fetching fresh security alerts from multiple sources (US + AU)...');
+      const securityAlerts = await SecurityAlertsService.clearCacheAndRefresh();
+      console.log(`✅ ToolsTabContent: Successfully loaded ${securityAlerts.length} alerts from multiple sources`);
       setAlerts(securityAlerts);
     } catch (error) {
       console.log('❌ ToolsTabContent: Error loading security alerts:', error);
@@ -60,9 +56,7 @@ const ToolsTabContent = ({ query, navigation }) => {
   const onRefreshAlerts = async () => {
     try {
       setAlertsError(null);
-      const detectedCountry = await LocationUtils.getUserCountry();
-      setUserCountry(detectedCountry);
-      const freshAlerts = await SecurityAlertsService.clearCacheAndRefresh(detectedCountry);
+      const freshAlerts = await SecurityAlertsService.clearCacheAndRefresh();
       setAlerts(freshAlerts);
     } catch (error) {
       console.log('Error refreshing alerts:', error);
@@ -94,12 +88,28 @@ const ToolsTabContent = ({ query, navigation }) => {
   };
 
   const handleAlertPress = (alert) => {
+    // Track alert interaction
+    trackEvent('alert_viewed', {
+      alert_id: alert.id,
+      alert_title: alert.title,
+      alert_source: alert.source,
+      alert_tag: alert.tag,
+      source: 'insights_tools_tab'
+    });
+    
     navigation.navigate(SCREEN_NAMES.ALERT_DETAIL, { 
       alertId: alert.id 
     });
   };
 
   const handleToolPress = (tool) => {
+    // Track tool usage
+    trackToolUsage(tool.id, 'opened', {
+      tool_title: tool.title,
+      tool_category: tool.category,
+      source: 'insights_tools_tab'
+    });
+    
     navigation.navigate(SCREEN_NAMES.TOOL_DETAIL, { id: tool.id });
   };
 

@@ -17,6 +17,7 @@ import SectionHeader from '../../components/insights/SectionHeader';
 import AlertCard from '../../components/insights/AlertCard';
 import TopicChip from '../../components/insights/TopicChip';
 import GuideCard from '../../components/insights/GuideCard';
+import { trackGuideView, trackEvent } from '../../utils/analytics';
 
 const LearnTabContent = ({ query, navigation }) => {
   const [selectedTopics, setSelectedTopics] = useState([]);
@@ -39,14 +40,9 @@ const LearnTabContent = ({ query, navigation }) => {
       setAlertsLoading(true);
       setAlertsError(null);
       
-      console.log('🌍 LearnTabContent: Getting user country...');
-      const detectedCountry = await LocationUtils.getUserCountry();
-      console.log(`📍 LearnTabContent: Detected country: ${detectedCountry}`);
-      setUserCountry(detectedCountry);
-      
-      console.log('📡 LearnTabContent: Fetching fresh security alerts (clearing cache)...');
-      const securityAlerts = await SecurityAlertsService.clearCacheAndRefresh(detectedCountry);
-      console.log(`✅ LearnTabContent: Successfully loaded ${securityAlerts.length} alerts`);
+      console.log('📡 LearnTabContent: Fetching fresh security alerts from multiple sources (US + AU)...');
+      const securityAlerts = await SecurityAlertsService.clearCacheAndRefresh();
+      console.log(`✅ LearnTabContent: Successfully loaded ${securityAlerts.length} alerts from multiple sources`);
       setAlerts(securityAlerts);
     } catch (error) {
       console.log('❌ LearnTabContent: Error loading security alerts:', error);
@@ -61,9 +57,7 @@ const LearnTabContent = ({ query, navigation }) => {
   const onRefreshAlerts = async () => {
     try {
       setAlertsError(null);
-      const detectedCountry = await LocationUtils.getUserCountry();
-      setUserCountry(detectedCountry);
-      const freshAlerts = await SecurityAlertsService.clearCacheAndRefresh(detectedCountry);
+      const freshAlerts = await SecurityAlertsService.clearCacheAndRefresh();
       setAlerts(freshAlerts);
     } catch (error) {
       console.log('Error refreshing alerts:', error);
@@ -101,6 +95,13 @@ const LearnTabContent = ({ query, navigation }) => {
   };
 
   const handleGuidePress = (guide) => {
+    // Track guide view
+    trackGuideView(guide.title, {
+      guide_id: guide.id,
+      guide_category: guide.category,
+      source: 'insights_learn_tab'
+    });
+    
     navigation.navigate(SCREEN_NAMES.GUIDE_DETAIL, { id: guide.id });
   };
 

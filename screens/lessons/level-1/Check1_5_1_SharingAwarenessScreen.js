@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { trackCheckScreenView, trackCheckProgress, trackCheckCompletion } from '../../../utils/checkAnalytics';
 import {
   View,
   Text,
@@ -150,6 +151,9 @@ const Check1_5_1_SharingAwarenessScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Standard focus effect
   useFocusEffect(
     React.useCallback(() => {
+    // Track check screen view
+    trackCheckScreenView('1-5-1', 'Sharing Awareness', 1, 'privacy');
+
       loadProgress();
       initializeChecklistContent();
       // Reset completion state when screen comes into focus
@@ -199,6 +203,9 @@ const Check1_5_1_SharingAwarenessScreen = ({ navigation, route }) => {
 
   // ✅ STANDARD: Completion celebration
   const celebrateCompletion = () => {
+    // Track check completion
+    trackCheckCompletion('1-5-1', 'Sharing Awareness', 1, 'privacy');
+
     console.log('🎉 Celebrating completion of Check 1.5.1');
     setShowCompletionPopup(true);
   };

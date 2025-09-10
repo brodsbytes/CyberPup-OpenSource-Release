@@ -34,7 +34,7 @@ export const LOG_CATEGORIES = {
 // Configuration
 const LOG_CONFIG = {
   severity: __DEV__ ? 'debug' : 'warn', // Only show warnings/errors in production
-  transport: __DEV__ ? console.log : null, // Use console in dev, file in production
+  transport: __DEV__ ? console.log : console.log, // Always use console.log, but severity controls what shows
   transportOptions: {
     colors: {
       info: 'blue',

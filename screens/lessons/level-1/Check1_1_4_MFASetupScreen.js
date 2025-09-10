@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { trackCheckScreenView, trackCheckProgress, trackCheckCompletion } from '../../../utils/checkAnalytics';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
@@ -55,6 +56,9 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
 
   useFocusEffect(
     React.useCallback(() => {
+    // Track check screen view
+    trackCheckScreenView('1-1-4', 'MFA Setup', 1, 'authentication');
+
       loadProgress();
       // Reset completion state when screen comes into focus
       // This ensures the completion popup doesn't stay visible after navigation
@@ -330,6 +334,9 @@ const Check1_4_MFASetupScreen = ({ navigation, route }) => {
   };
 
   const celebrateCompletion = () => {
+    // Track check completion
+    trackCheckCompletion('1-1-4', 'MFA Setup', 1, 'authentication');
+
     console.log('🎉 Celebrating completion of Check 1.1.4');
     setShowCompletionPopup(true);
   };

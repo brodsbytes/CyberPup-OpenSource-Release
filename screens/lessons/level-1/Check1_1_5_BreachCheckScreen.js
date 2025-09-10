@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { trackCheckScreenView, trackCheckProgress, trackCheckCompletion } from '../../../utils/checkAnalytics';
 import {
   View,
   Text,
@@ -27,6 +28,7 @@ import { CopywritingService } from '../../../utils/copywritingService';
 import ExitModal from '../../../components/common/ExitModal';
 import ReferencesSection from '../../../components/ui/ReferencesSection';
 import { getReferencesForCheck } from '../../../data/references';
+import { trackSecurityCheck, trackEvent } from '../../../utils/analytics';
 
 const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
 
@@ -70,6 +72,9 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
   // Add focus listener to refresh progress when returning to this screen
   useFocusEffect(
     React.useCallback(() => {
+    // Track check screen view
+    trackCheckScreenView('1-1-5', 'Breach Check', 1, 'passwords');
+
       loadProgress();
     }, [])
   );
@@ -78,7 +83,7 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
     try {
       const progressData = await AsyncStorage.getItem('check_1-1-5_progress');
       const completedData = await AsyncStorage.getItem('check_1-1-5_completed');
-      console.log('📥 Loading progress for Check 1.1.5:', { progressData: !!progressData, completedData });
+      cyberPupLogger.debug(LOG_CATEGORIES.STORAGE, 'Loading progress for Check 1.1.5', { progressData: !!progressData, completedData });
       
       if (progressData) {
         const data = JSON.parse(progressData);
@@ -87,12 +92,12 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
         setEmail(data.email || '');
         setBreachResult(data.breachResult || null);
         setFlowCompleted(data.flowCompleted || false);
-        console.log('📊 Loaded progress data:', { isCompleted: data.isCompleted, checklistItems: data.checklistItems?.length });
+        cyberPupLogger.debug(LOG_CATEGORIES.STORAGE, 'Loaded progress data', { isCompleted: data.isCompleted, checklistItems: data.checklistItems?.length });
       }
       
       // Also check the completion status directly
       if (completedData === 'completed') {
-        console.log('✅ Check 1.1.5 is marked as completed in storage');
+        cyberPupLogger.info(LOG_CATEGORIES.STORAGE, 'Check 1.1.5 is marked as completed in storage');
         setIsCompleted(true);
         setFlowCompleted(true);
         // Don't automatically show completion popup when loading progress
@@ -101,7 +106,7 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
       
 
     } catch (error) {
-      console.log('Error loading progress:', error);
+      cyberPupLogger.error(LOG_CATEGORIES.STORAGE, 'Error loading progress', { error: error.message });
     }
   };
 
@@ -122,13 +127,13 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
       
       if (completionStatus) {
         await AsyncStorage.setItem('check_1-1-5_completed', 'completed');
-        console.log('✅ Check 1.1.5 marked as completed');
+        cyberPupLogger.info(LOG_CATEGORIES.STORAGE, 'Check 1.1.5 marked as completed');
       } else {
         await AsyncStorage.removeItem('check_1-1-5_completed');
-        console.log('❌ Check 1.1.5 completion removed');
+        cyberPupLogger.info(LOG_CATEGORIES.STORAGE, 'Check 1.1.5 completion removed');
       }
     } catch (error) {
-      console.log('Error saving progress:', error);
+      cyberPupLogger.error(LOG_CATEGORIES.STORAGE, 'Error saving progress', { error: error.message });
     }
   };
 
@@ -154,10 +159,9 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
 
     // Check if all items are completed
     const allCompleted = updatedItems.every(item => item.completed);
-    console.log(`📋 All items completed: ${allCompleted}, current isCompleted: ${isCompleted}`);
     
     if (allCompleted && !isCompleted) {
-      console.log('🎯 Marking check as completed!');
+      cyberPupLogger.info(LOG_CATEGORIES.PROGRESS, 'Marking check as completed');
       // Update state and save progress with the new completion status
       const newIsCompleted = true;
       setIsCompleted(newIsCompleted);
@@ -166,13 +170,16 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
       await saveProgress(updatedItems, newIsCompleted);
       celebrateCompletion();
     } else {
-      console.log('💾 Saving partial progress');
+      cyberPupLogger.debug(LOG_CATEGORIES.STORAGE, 'Saving partial progress');
       // Save progress for partial completion
       await saveProgress(updatedItems, isCompleted);
     }
   };
 
   const celebrateCompletion = async () => {
+    // Track check completion
+    trackCheckCompletion('1-1-5', 'Breach Check', 1, 'passwords');
+
     console.log('🎉 Celebrating completion of Check 1.1.5');
     // Ensure completion is saved before showing alert
     await saveProgress(checklistItems, true);
@@ -343,7 +350,6 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
   };
 
   const handleStepComplete = (stepId, validationResult) => {
-    console.log('📋 Step completed:', stepId, validationResult);
     
     if (stepId === 'breach-check') {
       console.log('🔍 Breach check step completed, validation result:', {
@@ -412,9 +418,9 @@ const Check1_5_BreachCheckScreen = ({ navigation, route }) => {
         onClose={() => setShowExitModal(false)}
         onKeepLearning={handleKeepLearning}
         onExit={handleExitLesson}
-        icon="😢"
+        icon="🔍"
         title="Wait, don't go!"
-        message="You're doing well! If you quit now, you'll lose your progress for this lesson."
+        message="You're about to discover if your data has been compromised in breaches. This knowledge could save you from identity theft and account takeovers!"
       />
 
       {/* Breach Result Modal */}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { trackCheckScreenView, trackCheckProgress, trackCheckCompletion } from '../../../utils/checkAnalytics';
 import {
   View,
   Text,
@@ -150,6 +151,9 @@ const Check1_2_2_RemoteLockScreen = ({ navigation, route }) => {
   };
 
   const celebrateCompletion = () => {
+    // Track check completion
+    trackCheckCompletion('1-2-2', 'Remote Lock', 1, 'device_security');
+
     console.log('🎉 Celebrating completion of Check 1.2.2');
     setShowCompletionPopup(true);
   };
@@ -180,6 +184,9 @@ const Check1_2_2_RemoteLockScreen = ({ navigation, route }) => {
   // ✅ FIXED: Reset completion state properly when screen loads
   useFocusEffect(
     React.useCallback(() => {
+    // Track check screen view
+    trackCheckScreenView('1-2-2', 'Remote Lock', 1, 'device_security');
+
       const initializeScreen = async () => {
         // First initialize device content
         await initializeDeviceContent();

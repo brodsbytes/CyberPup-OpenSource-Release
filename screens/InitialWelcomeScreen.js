@@ -10,17 +10,21 @@ import {
   Dimensions,
   Image,
   Animated,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Responsive, CommonStyles } from '../theme';
 import { SCREEN_NAMES } from '../constants';
+import AnalyticsConsentModal from '../components/common/AnalyticsConsentModal';
+import { analyticsService } from '../utils/analytics';
 
 const { width } = Dimensions.get('window');
 
 const InitialWelcomeScreen = ({ navigation }) => {
   const [currentStep, setCurrentStep] = useState(0);
+  const [showAnalyticsConsent, setShowAnalyticsConsent] = useState(false);
   const scrollViewRef = useRef(null);
   const pulseAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
@@ -44,7 +48,17 @@ const InitialWelcomeScreen = ({ navigation }) => {
     pulseAnimation.start();
     
     // Pre-load the mascot image for the final step to prevent loading delay
-    Image.prefetch(Image.resolveAssetSource(require('../assets/images/cyberpup-mascot.png')).uri);
+    // Only prefetch on native platforms (web doesn't support Image.resolveAssetSource)
+    if (Platform.OS !== 'web') {
+      try {
+        const imageSource = Image.resolveAssetSource(require('../assets/images/cyberpup-mascot.png'));
+        if (imageSource && imageSource.uri) {
+          Image.prefetch(imageSource.uri);
+        }
+      } catch (error) {
+        console.log('Image prefetch failed:', error);
+      }
+    }
     
     return () => pulseAnimation.stop();
   }, [pulseAnim]);
@@ -73,12 +87,37 @@ const InitialWelcomeScreen = ({ navigation }) => {
       await AsyncStorage.setItem('badge_cyberpup_scout_earned_date', new Date().toISOString());
       // Mark the welcome check as completed for progress tracking
       await AsyncStorage.setItem('check_1-0-1_completed', 'completed');
-      // Navigate to device audit screen
-      navigation.replace(SCREEN_NAMES.DEVICE_AUDIT);
+      
+      // Check if user has already made a consent decision
+      const consentStatus = await analyticsService.getConsentStatus();
+      if (consentStatus === null) {
+        // Show analytics consent modal
+        setShowAnalyticsConsent(true);
+      } else {
+        // User has already decided, proceed to device audit
+        navigation.replace(SCREEN_NAMES.DEVICE_AUDIT);
+      }
     } catch (error) {
       console.log('Error completing welcome:', error);
       navigation.replace(SCREEN_NAMES.DEVICE_AUDIT);
     }
+  };
+
+  const handleAnalyticsConsent = async (granted) => {
+    try {
+      await analyticsService.setConsent(granted);
+      // Track onboarding completion
+      if (granted) {
+        analyticsService.trackEvent('onboarding_completed', {
+          consent_given: true,
+          steps_completed: 4,
+        });
+      }
+    } catch (error) {
+      console.log('Error setting analytics consent:', error);
+    }
+    // Always proceed to device audit regardless of consent
+    navigation.replace(SCREEN_NAMES.DEVICE_AUDIT);
   };
 
   const renderSection1 = () => (
@@ -380,6 +419,14 @@ const InitialWelcomeScreen = ({ navigation }) => {
           )}
         </TouchableOpacity>
       </View>
+
+      {/* Analytics Consent Modal */}
+      <AnalyticsConsentModal
+        visible={showAnalyticsConsent}
+        onAccept={() => handleAnalyticsConsent(true)}
+        onDecline={() => handleAnalyticsConsent(false)}
+        onClose={() => setShowAnalyticsConsent(false)}
+      />
     </SafeAreaView>
   );
 };
@@ -627,8 +674,15 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accent,
     opacity: 0.1,
     zIndex: -2,
-    boxShadow: `0px 0px 20px ${Colors.accent}80`, // 80 = 50% opacity in hex
-    elevation: 10,
+    ...(Platform.OS === 'web' ? {
+      boxShadow: `0px 0px 20px ${Colors.accent}80`, // 80 = 50% opacity in hex
+    } : {
+      shadowColor: Colors.accent,
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.5,
+      shadowRadius: 20,
+      elevation: 10,
+    }),
   },
   pulseGlowInner: {
     position: 'absolute',
@@ -638,8 +692,15 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.accent,
     opacity: 0.2,
     zIndex: -1,
-    boxShadow: `0px 0px 15px ${Colors.accent}4D`, // 4D = 30% opacity in hex
-    elevation: 8,
+    ...(Platform.OS === 'web' ? {
+      boxShadow: `0px 0px 15px ${Colors.accent}4D`, // 4D = 30% opacity in hex
+    } : {
+      shadowColor: Colors.accent,
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.3,
+      shadowRadius: 15,
+      elevation: 8,
+    }),
   },
   finalMascotImage: {
     width: '100%',

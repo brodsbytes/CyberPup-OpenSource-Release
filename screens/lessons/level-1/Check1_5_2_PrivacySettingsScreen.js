@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { trackCheckScreenView, trackCheckProgress, trackCheckCompletion } from '../../../utils/checkAnalytics';
 import {
   View,
   Text,
@@ -345,6 +346,9 @@ const Check1_5_2_PrivacySettingsScreen = ({ navigation, route }) => {
   // ✅ PRESERVE: Standard focus effect
   useFocusEffect(
     React.useCallback(() => {
+    // Track check screen view
+    trackCheckScreenView('1-5-2', 'Privacy Settings', 1, 'privacy');
+
       // For web testing, don't load progress - use fresh content
       const currentDevice = DeviceCapabilities.getCurrentDevice();
       if (currentDevice.platform === 'web' || currentDevice.platform === 'unknown') {
@@ -482,6 +486,9 @@ const Check1_5_2_PrivacySettingsScreen = ({ navigation, route }) => {
 
   // ✅ STANDARD: Completion celebration
   const celebrateCompletion = () => {
+    // Track check completion
+    trackCheckCompletion('1-5-2', 'Privacy Settings', 1, 'privacy');
+
     console.log('🎉 Celebrating completion of Check 1.5.2');
     // Always show CompletionPopup first, let user click "Continue" to go to AreaCompletionScreen
     setShowCompletionPopup(true);

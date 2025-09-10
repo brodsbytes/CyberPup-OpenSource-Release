@@ -35,9 +35,8 @@ const AlertDetailScreen = ({ navigation, route }) => {
         throw new Error('No alert ID provided');
       }
 
-      // Get user's country for context
-      const userCountry = await LocationUtils.getUserCountry();
-      const alertDetail = await SecurityAlertsService.getAlertById(alertId, userCountry);
+      // Get alert detail (now works with alerts from multiple sources)
+      const alertDetail = await SecurityAlertsService.getAlertById(alertId);
       
       setAlert(alertDetail);
     } catch (err) {

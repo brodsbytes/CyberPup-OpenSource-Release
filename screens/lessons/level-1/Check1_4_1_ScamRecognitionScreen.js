@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { trackCheckScreenView, trackCheckProgress, trackCheckCompletion } from '../../../utils/checkAnalytics';
 import {
   View,
   Text,
@@ -56,6 +57,9 @@ const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
   // Add focus listener to refresh progress when returning to this screen
   useFocusEffect(
     React.useCallback(() => {
+    // Track check screen view
+    trackCheckScreenView('1-4-1', 'Scam Recognition', 1, 'awareness');
+
       loadProgress();
     }, [])
   );
@@ -116,6 +120,9 @@ const Check1_4_1_ScamRecognitionScreen = ({ navigation, route }) => {
   };
 
   const celebrateCompletion = async () => {
+    // Track check completion
+    trackCheckCompletion('1-4-1', 'Scam Recognition', 1, 'awareness');
+
     console.log('🎉 Celebrating completion of Check 1.4.1');
     // Ensure completion is saved before showing alert
     await saveProgress(checklistItems, true);

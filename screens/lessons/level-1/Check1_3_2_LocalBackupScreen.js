@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { trackCheckScreenView, trackCheckProgress, trackCheckCompletion } from '../../../utils/checkAnalytics';
 import {
   View,
   Text,
@@ -198,6 +199,9 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
   // ✅ FIXED: Standard focus effect
   useFocusEffect(
     React.useCallback(() => {
+    // Track check screen view
+    trackCheckScreenView('1-3-2', 'Local Backup', 1, 'data_protection');
+
       const initializeScreen = async () => {
         // First load progress to preserve existing state
         await loadProgress();
@@ -318,6 +322,9 @@ const Check1_3_2_LocalBackupScreen = ({ navigation, route }) => {
 
   // ✅ PRESERVE: Completion celebration
   const celebrateCompletion = () => {
+    // Track check completion
+    trackCheckCompletion('1-3-2', 'Local Backup', 1, 'data_protection');
+
     console.log('🎉 Celebrating completion of Check 1.3.2');
     // Always show CompletionPopup first, let user click "Continue" to go to AreaCompletionScreen
     setShowCompletionPopup(true);

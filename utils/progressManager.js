@@ -2,6 +2,7 @@
 // Handles progress tracking, persistence, and analytics for Pattern C flows
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { analyticsService } from './analytics';
 
 export class ProgressManager {
   /**
@@ -21,6 +22,13 @@ export class ProgressManager {
       
       await AsyncStorage.setItem(key, JSON.stringify(dataToSave));
       console.log(`📊 Flow progress saved: ${flowId}`);
+      
+      // Track lesson progress for analytics
+      analyticsService.trackLessonProgress(flowId, 'started', {
+        progress_percentage: progressData.completionPercentage || 0,
+        step_count: progressData.steps?.length || 0,
+      });
+      
       return true;
     } catch (error) {
       console.error('Error saving flow progress:', error);
@@ -159,6 +167,15 @@ export class ProgressManager {
       await AsyncStorage.setItem('user_flow_progress', JSON.stringify(overallProgress));
       
       console.log(`📈 Overall progress updated: ${overallProgress.totalFlows} flows completed`);
+      
+      // Track lesson completion for analytics
+      analyticsService.trackLessonProgress(flowId, 'completed', {
+        score: completionRecord.score || 0,
+        time_spent: completionRecord.timeSpent || 0,
+        total_flows_completed: overallProgress.totalFlows,
+        average_score: overallProgress.averageScore,
+      });
+      
       return true;
     } catch (error) {
       console.error('Error updating overall progress:', error);
