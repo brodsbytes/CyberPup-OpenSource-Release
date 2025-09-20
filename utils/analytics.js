@@ -158,20 +158,26 @@ class AnalyticsService {
         timestamp: new Date().toISOString(),
       };
 
-      this.posthog.capture(eventName, enrichedProperties);
-      cyberPupLogger.info(LOG_CATEGORIES.GENERAL, `✅ Analytics event tracked: ${eventName}`, eventProperties);
+      // Safely capture event with additional error handling
+      if (this.posthog && typeof this.posthog.capture === 'function') {
+        this.posthog.capture(eventName, enrichedProperties);
+        cyberPupLogger.info(LOG_CATEGORIES.GENERAL, `✅ Analytics event tracked: ${eventName}`, eventProperties);
 
-      // Force flush to ensure event is sent
-      setTimeout(() => {
-        this.flush().catch(err => {
-          cyberPupLogger.warn(LOG_CATEGORIES.GENERAL, 'Failed to flush analytics events', { error: err.message });
-        });
-      }, 1000);
+        // Force flush to ensure event is sent (with timeout protection)
+        setTimeout(() => {
+          this.flush().catch(err => {
+            cyberPupLogger.warn(LOG_CATEGORIES.GENERAL, 'Failed to flush analytics events', { error: err.message });
+          });
+        }, 1000);
+      } else {
+        cyberPupLogger.warn(LOG_CATEGORIES.GENERAL, `PostHog capture method not available for event: ${eventName}`);
+      }
 
     } catch (error) {
       cyberPupLogger.error(LOG_CATEGORIES.GENERAL, `Failed to track event: ${eventName}`, {
         error: error.message,
-        eventProperties
+        eventProperties,
+        stack: error.stack
       });
     }
   }

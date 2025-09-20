@@ -19,6 +19,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.cyberpup.security",
       "buildNumber": "1",
+      "newArchEnabled": false,
       "infoPlist": {
         "NSCameraUsageDescription": "This app does not use the camera.",
         "NSMicrophoneUsageDescription": "This app does not use the microphone.",
@@ -57,9 +58,15 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-localization"
+      "expo-localization",
+      "expo-font"
     ],
-    "owner": "CyberPupSecurity",
-    "githubUrl": "https://github.com/CyberPupSecurity/cyberpup"
+    "owner": "brodsbytes",
+    "githubUrl": "https://github.com/CyberPupSecurity/cyberpup",
+    "extra": {
+      "eas": {
+        "projectId": "66c0c60e-d23f-449b-b360-a1ebf8f50ad8"
+      }
+    }
   }
 }

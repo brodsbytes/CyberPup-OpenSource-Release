@@ -22,13 +22,26 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    // Track error in analytics
-    trackError(error, {
+    // Enhanced error tracking for native module crashes
+    const errorContext = {
       error_boundary: true,
       component_stack: errorInfo.componentStack,
       screen_name: this.props.screenName || 'unknown',
       error_info: JSON.stringify(errorInfo, null, 2).slice(0, 500), // Limit size
-    });
+      error_type: error.name || 'Unknown',
+      is_native_module_error: error.message?.includes('TurboModule') || 
+                             error.message?.includes('RCT') ||
+                             error.message?.includes('native') ||
+                             false
+    };
+
+    // Track error in analytics with enhanced context
+    try {
+      trackError(error, errorContext);
+    } catch (analyticsError) {
+      // If analytics fails, at least log it
+      console.log('Failed to track error in analytics:', analyticsError);
+    }
 
     // Store error details for display
     this.setState({
@@ -40,7 +53,8 @@ class ErrorBoundary extends React.Component {
     cyberPupLogger.error(LOG_CATEGORIES.GENERAL, 'ErrorBoundary caught an error', { 
       error: error.message, 
       stack: error.stack,
-      componentStack: errorInfo.componentStack 
+      componentStack: errorInfo.componentStack,
+      isNativeModuleError: errorContext.is_native_module_error
     });
   }
 

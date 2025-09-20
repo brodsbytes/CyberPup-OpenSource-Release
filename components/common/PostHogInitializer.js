@@ -12,16 +12,27 @@ const PostHogInitializer = () => {
   const posthog = usePostHog();
 
   useEffect(() => {
-    if (posthog) {
-      cyberPupLogger.info(LOG_CATEGORIES.GENERAL, 'PostHog instance received from provider');
-      analyticsService.setPostHogInstance(posthog);
-      
-      // Initialize analytics after PostHog instance is set
-      analyticsService.initialize().catch(error => {
-        cyberPupLogger.warn(LOG_CATEGORIES.GENERAL, 'Analytics initialization failed', { error: error.message });
-      });
-    } else {
-      cyberPupLogger.warn(LOG_CATEGORIES.GENERAL, 'PostHog instance not available from provider');
+    try {
+      if (posthog) {
+        cyberPupLogger.info(LOG_CATEGORIES.GENERAL, 'PostHog instance received from provider');
+        
+        // Safely set PostHog instance with error handling
+        try {
+          analyticsService.setPostHogInstance(posthog);
+        } catch (error) {
+          cyberPupLogger.error(LOG_CATEGORIES.GENERAL, 'Failed to set PostHog instance', { error: error.message });
+          return; // Exit early if we can't set the instance
+        }
+        
+        // Initialize analytics after PostHog instance is set
+        analyticsService.initialize().catch(error => {
+          cyberPupLogger.warn(LOG_CATEGORIES.GENERAL, 'Analytics initialization failed', { error: error.message });
+        });
+      } else {
+        cyberPupLogger.warn(LOG_CATEGORIES.GENERAL, 'PostHog instance not available from provider');
+      }
+    } catch (error) {
+      cyberPupLogger.error(LOG_CATEGORIES.GENERAL, 'PostHog initializer error', { error: error.message });
     }
   }, [posthog]);
 

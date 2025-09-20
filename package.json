@@ -60,7 +60,8 @@
     "react-native-web": "^0.20.0",
     "expo-file-system": "~18.1.11",
     "expo-application": "~6.1.5",
-    "expo-device": "~7.1.4"
+    "expo-device": "~7.1.4",
+    "expo-font": "~13.3.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

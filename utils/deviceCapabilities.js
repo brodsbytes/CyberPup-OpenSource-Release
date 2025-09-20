@@ -12,7 +12,15 @@ export class DeviceCapabilities {
   static async getUserDevices() {
     try {
       const savedDevices = await AsyncStorage.getItem('user_devices');
-      return savedDevices ? JSON.parse(savedDevices) : [];
+      if (savedDevices) {
+        try {
+          return JSON.parse(savedDevices);
+        } catch (parseError) {
+          console.log('Error parsing user devices JSON:', parseError);
+          return [];
+        }
+      }
+      return [];
     } catch (error) {
       console.log('Error loading user devices:', error);
       return [];
