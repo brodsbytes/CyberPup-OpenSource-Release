@@ -2,11 +2,11 @@
   "expo": {
     "name": "CyberPup",
     "slug": "CyberPup",
-    "version": "1.0.0",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "description": "CyberPup is your personal cybersecurity coach. Complete interactive security checks, learn best practices, and protect your digital life with step-by-step guidance.",
     "primaryColor": "#1a73e8",
     "backgroundColor": "#ffffff",
@@ -16,7 +16,7 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.cyberpup.security",
       "buildNumber": "1",
       "newArchEnabled": false,

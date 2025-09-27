@@ -202,7 +202,7 @@ const CollapsibleDeviceSection = ({
               {device.name || device.type}
             </Text>
             <Text style={styles.devicePlatform}>
-              {device.platform} {device.version ? ` • ${device.version}` : ''}
+              {device.platform === 'ios' ? 'iOS' : device.platform === 'android' ? 'Android' : device.platform} {device.version ? ` • ${device.version}` : ''}
             </Text>
             {device.autoDetected && (
               <View style={styles.autoDetectedBadge}>

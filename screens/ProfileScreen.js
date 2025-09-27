@@ -256,7 +256,7 @@ const ProfileScreen = ({ navigation }) => {
 
                 <TouchableOpacity 
                   style={styles.settingItem}
-                  onPress={() => handleOpenLink('https://github.com/CyberPupSecurity/cyberpup/blob/8962267bc4b177bb445a130183f5073a8c21372b/Privacy%20Policy%202025')}
+                  onPress={() => handleOpenLink('https://cyberpupsecurity.com/privacy-policy/')}
                 >
                   <Ionicons name="shield-checkmark" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
                   <Text style={styles.settingText}>Privacy Policy</Text>
@@ -265,7 +265,7 @@ const ProfileScreen = ({ navigation }) => {
                 
                 <TouchableOpacity 
                   style={styles.settingItem}
-                  onPress={() => handleOpenLink('https://github.com/CyberPupSecurity/cyberpup/blob/8962267bc4b177bb445a130183f5073a8c21372b/Terms%20of%20Service%202025')}
+                  onPress={() => handleOpenLink('https://cyberpupsecurity.com/terms-of-service/')}
                 >
                   <Ionicons name="document-text" size={Responsive.iconSizes.medium} color={Colors.textSecondary} />
                   <Text style={styles.settingText}>Terms of Service</Text>
@@ -320,7 +320,7 @@ const ProfileScreen = ({ navigation }) => {
               <View style={styles.contactInfo}>
                 <Text style={styles.contactEmoji}>📧</Text>
                 <Text style={styles.contactLabel}>Contact us at:</Text>
-                <Text style={styles.contactEmail}>cyberpupsecurity@proton.me</Text>
+                <Text style={styles.contactEmail}>contact@cyberpupsecurity.com</Text>
               </View>
               
               <Text style={styles.contactDescription}>

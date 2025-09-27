@@ -376,7 +376,7 @@ const ProgressiveActionCard = (props) => {
               marginLeft: Responsive.spacing.sm,
               flex: 1
             }}>
-              {String(device?.name || 'Device')} • {String(device?.platform || 'Unknown')}
+              {String(device?.name || 'Device')} • {String(device?.platform === 'ios' ? 'iOS' : device?.platform === 'android' ? 'Android' : device?.platform || 'Unknown')}
             </Text>
           </View>
 
