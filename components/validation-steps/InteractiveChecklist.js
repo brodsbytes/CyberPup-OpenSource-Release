@@ -99,7 +99,9 @@ const InteractiveChecklist = ({
           const priorityOrder = { critical: 3, high: 2, medium: 1, low: 0 };
           return priorityOrder[b.priority] - priorityOrder[a.priority];
         case 'device':
-          return a.device.localeCompare(b.device);
+          const deviceA = a.device || '';
+          const deviceB = b.device || '';
+          return deviceA.localeCompare(deviceB);
         case 'status':
           return a.completed ? 1 : -1;
         default:
