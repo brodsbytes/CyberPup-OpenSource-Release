@@ -1,13 +1,13 @@
 {
   "expo": {
-    "name": "CyberPup",
-    "slug": "CyberPup",
-    "version": "1.0.4",
+    "name": "CyberPup Secure",
+    "slug": "CyberPup-Secure",
+    "version": "1.0.7",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
-    "description": "CyberPup is your personal cybersecurity coach. Complete interactive security checks, learn best practices, and protect your digital life with step-by-step guidance.",
+    "description": "CyberPup Secure is your personal cybersecurity coach. Complete interactive security checks, learn best practices, and protect your digital life with step-by-step guidance.",
     "primaryColor": "#1a73e8",
     "backgroundColor": "#ffffff",
     "splash": {
@@ -18,7 +18,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.cyberpup.security",
-      "buildNumber": "1",
+      "buildNumber": "7",
       "newArchEnabled": false,
       "infoPlist": {
         "NSCameraUsageDescription": "This app does not use the camera.",

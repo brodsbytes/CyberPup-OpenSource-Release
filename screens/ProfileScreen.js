@@ -203,11 +203,10 @@ const ProfileScreen = ({ navigation }) => {
                 {/* Last Breach Check */}
                 {renderActivityCard(
                   'Last Breach Audit',
-                  'Check for compromised accounts',
+                  'The last time you checked for compromised accounts',
                   'shield-checkmark',
                   formatDate(activityData.lastBreachCheck),
-                  activityData.lastBreachCheck ? Colors.success : Colors.textSecondary,
-                  () => navigation.navigate(SCREEN_NAMES.CHECK_1_5_BREACH_CHECK)
+                  activityData.lastBreachCheck ? Colors.success : Colors.textSecondary
                 )}
 
                 {/* Device Management Section */}
