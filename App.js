@@ -147,10 +147,13 @@ export default function App() {
     }
   };
 
-  return (
-    <PostHogProvider
-      apiKey={process.env.EXPO_PUBLIC_POSTHOG_API_KEY || 'phc_A4Tac3vWpiHdPPPq4qv0jDesz6Ng4BVmsqMd6stsZ2C'}
-      options={{
+  const posthogApiKey = process.env.EXPO_PUBLIC_POSTHOG_API_KEY;
+
+  if (!posthogApiKey) {
+    cyberPupLogger.warn(LOG_CATEGORIES.GENERAL, 'PostHog API key is not set. Analytics provider will be disabled.');
+  }
+
+  const posthogOptions = {
         host: 'https://app.posthog.com',
         debug: __DEV__,
         capture_pageview: false,
@@ -160,70 +163,220 @@ export default function App() {
         flush_at: 1,
         flush_interval: 5000,
         disable_automatic_navigation_tracking: true,
-      }}
+      };
+
+  if (!posthogApiKey) {
+    return (
+      <ErrorBoundary screenName="app_root">
+        <SafeAreaProvider>
+          <NavigationContainer onStateChange={handleNavigationStateChange}>
+            <Stack.Navigator
+              initialRouteName={initialRoute}
+              screenOptions={{
+                headerShown: false,
+              }}
+            >
+              <Stack.Screen name={SCREEN_NAMES.INITIAL_WELCOME} component={InitialWelcomeScreen} />
+              <Stack.Screen name={SCREEN_NAMES.DEVICE_AUDIT} component={DeviceAuditScreen} />
+              <Stack.Screen name="MainTabs" component={MainTabsScreen} />
+              <Stack.Screen
+                name={SCREEN_NAMES.WELCOME}
+                component={MainTabsScreen}
+                initialParams={{ initialTab: SCREEN_NAMES.WELCOME }}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.INSIGHTS}
+                component={MainTabsScreen}
+                initialParams={{ initialTab: SCREEN_NAMES.INSIGHTS }}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.PROFILE}
+                component={MainTabsScreen}
+                initialParams={{ initialTab: SCREEN_NAMES.PROFILE }}
+              />
+              <Stack.Screen name={SCREEN_NAMES.GUIDE_DETAIL} component={GuideDetailScreen} />
+              <Stack.Screen name={SCREEN_NAMES.TOOL_DETAIL} component={ToolDetailScreen} />
+              <Stack.Screen name={SCREEN_NAMES.ALERT_DETAIL} component={AlertDetailScreen} />
+              <Stack.Screen name={SCREEN_NAMES.AREA_COMPLETION} component={AreaCompletionScreen} />
+              <Stack.Screen name={SCREEN_NAMES.LEVEL_COMPLETION} component={LevelCompletionScreen} />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_1_1_STRONG_PASSWORDS}
+                component={Check1_1_StrongPasswordsScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_1_2_HIGH_VALUE_ACCOUNTS}
+                component={Check1_2_HighValueAccountsScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_1_3_PASSWORD_MANAGERS}
+                component={Check1_1_3_PasswordManagersScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_1_4_MFA_SETUP}
+                component={Check1_1_4_MFASetupScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_4_1_SCAM_RECOGNITION}
+                component={Check1_4_1_ScamRecognitionScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_1_5_BREACH_CHECK}
+                component={Check1_1_5_BreachCheckScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_2_1_SCREEN_LOCK}
+                component={Check1_2_1_ScreenLockScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_3_1_CLOUD_BACKUP}
+                component={Check1_3_1_CloudBackupScreen}
+              />
+              <Stack.Screen name={SCREEN_NAMES.PHISHING_PRACTICE} component={PhishingPracticeScreen} />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_2_2_REMOTE_LOCK}
+                component={Check1_2_2_RemoteLockScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_2_3_DEVICE_UPDATES}
+                component={Check1_2_3_DeviceUpdatesScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_2_4_BLUETOOTH_WIFI}
+                component={Check1_2_4_BluetoothWifiScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_5_2_PRIVACY_SETTINGS}
+                component={Check1_5_2_PrivacySettingsScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_3_2_LOCAL_BACKUP}
+                component={Check1_3_2_LocalBackupScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_4_2_SCAM_REPORTING}
+                component={Check1_4_2_ScamReportingScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_2_5_PUBLIC_CHARGING}
+                component={Check1_2_5_PublicChargingScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_5_1_SHARING_AWARENESS}
+                component={Check1_5_1_SharingAwarenessScreen}
+              />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </SafeAreaProvider>
+      </ErrorBoundary>
+    );
+  }
+
+  return (
+    <PostHogProvider
+      apiKey={posthogApiKey}
+      options={posthogOptions}
     >
       <PostHogInitializer />
       <ErrorBoundary screenName="app_root">
         <SafeAreaProvider>
-        <NavigationContainer onStateChange={handleNavigationStateChange}>
-        <Stack.Navigator
-          initialRouteName={initialRoute}
-          screenOptions={{
-            headerShown: false,
-          }}
-        >
-        <Stack.Screen name={SCREEN_NAMES.INITIAL_WELCOME} component={InitialWelcomeScreen} />
-        <Stack.Screen name={SCREEN_NAMES.DEVICE_AUDIT} component={DeviceAuditScreen} />
-        
-        {/* Main tabs with swipe navigation */}
-        <Stack.Screen name="MainTabs" component={MainTabsScreen} />
-        
-        {/* Individual screens for backward compatibility and deep linking */}
-        <Stack.Screen name={SCREEN_NAMES.WELCOME} component={MainTabsScreen} 
-          initialParams={{ initialTab: SCREEN_NAMES.WELCOME }} />
-        <Stack.Screen name={SCREEN_NAMES.INSIGHTS} component={MainTabsScreen} 
-          initialParams={{ initialTab: SCREEN_NAMES.INSIGHTS }} />
-        <Stack.Screen name={SCREEN_NAMES.PROFILE} component={MainTabsScreen} 
-          initialParams={{ initialTab: SCREEN_NAMES.PROFILE }} />
-        
-        {/* Insights detail screens */}
-        <Stack.Screen name={SCREEN_NAMES.GUIDE_DETAIL} component={GuideDetailScreen} />
-        <Stack.Screen name={SCREEN_NAMES.TOOL_DETAIL} component={ToolDetailScreen} />
-        <Stack.Screen name={SCREEN_NAMES.ALERT_DETAIL} component={AlertDetailScreen} />
-        
-        {/* Gamification screens */}
-        <Stack.Screen name={SCREEN_NAMES.AREA_COMPLETION} component={AreaCompletionScreen} />
-        <Stack.Screen name={SCREEN_NAMES.LEVEL_COMPLETION} component={LevelCompletionScreen} />
-        
-        {/* Level 1 Check screens */}
-        <Stack.Screen name={SCREEN_NAMES.CHECK_1_1_1_STRONG_PASSWORDS} component={Check1_1_StrongPasswordsScreen} />
-        <Stack.Screen name={SCREEN_NAMES.CHECK_1_1_2_HIGH_VALUE_ACCOUNTS} component={Check1_2_HighValueAccountsScreen} />
-        <Stack.Screen name={SCREEN_NAMES.CHECK_1_1_3_PASSWORD_MANAGERS} component={Check1_1_3_PasswordManagersScreen} />
-        <Stack.Screen name={SCREEN_NAMES.CHECK_1_1_4_MFA_SETUP} component={Check1_1_4_MFASetupScreen} />
-        <Stack.Screen name={SCREEN_NAMES.CHECK_1_4_1_SCAM_RECOGNITION} component={Check1_4_1_ScamRecognitionScreen} />
-        <Stack.Screen name={SCREEN_NAMES.CHECK_1_1_5_BREACH_CHECK} component={Check1_1_5_BreachCheckScreen} />
-        <Stack.Screen name={SCREEN_NAMES.CHECK_1_2_1_SCREEN_LOCK} component={Check1_2_1_ScreenLockScreen} />
-        <Stack.Screen name={SCREEN_NAMES.CHECK_1_3_1_CLOUD_BACKUP} component={Check1_3_1_CloudBackupScreen} />
-        <Stack.Screen name={SCREEN_NAMES.PHISHING_PRACTICE} component={PhishingPracticeScreen} />
-        
-        {/* 🎯 Phase 4 Wizard Variant Screens */}
-        <Stack.Screen name={SCREEN_NAMES.CHECK_1_2_2_REMOTE_LOCK} component={Check1_2_2_RemoteLockScreen} />
-        <Stack.Screen name={SCREEN_NAMES.CHECK_1_2_3_DEVICE_UPDATES} component={Check1_2_3_DeviceUpdatesScreen} />
-        <Stack.Screen name={SCREEN_NAMES.CHECK_1_2_4_BLUETOOTH_WIFI} component={Check1_2_4_BluetoothWifiScreen} />
-        
-        {/* 🎯 Phase 4 Timeline Variant Screens */}
-        <Stack.Screen name={SCREEN_NAMES.CHECK_1_5_2_PRIVACY_SETTINGS} component={Check1_5_2_PrivacySettingsScreen} />
-        
-        {/* 🎯 Phase 4 Checklist Variant Screens */}
-        <Stack.Screen name={SCREEN_NAMES.CHECK_1_3_2_LOCAL_BACKUP} component={Check1_3_2_LocalBackupScreen} />
-        <Stack.Screen name={SCREEN_NAMES.CHECK_1_4_2_SCAM_REPORTING} component={Check1_4_2_ScamReportingScreen} />
-        
-        {/* 🎯 Phase 4 Pattern A Enhanced Screens */}
-        <Stack.Screen name={SCREEN_NAMES.CHECK_1_2_5_PUBLIC_CHARGING} component={Check1_2_5_PublicChargingScreen} />
-        <Stack.Screen name={SCREEN_NAMES.CHECK_1_5_1_SHARING_AWARENESS} component={Check1_5_1_SharingAwarenessScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </SafeAreaProvider>
+          <NavigationContainer onStateChange={handleNavigationStateChange}>
+            <Stack.Navigator
+              initialRouteName={initialRoute}
+              screenOptions={{
+                headerShown: false,
+              }}
+            >
+              <Stack.Screen name={SCREEN_NAMES.INITIAL_WELCOME} component={InitialWelcomeScreen} />
+              <Stack.Screen name={SCREEN_NAMES.DEVICE_AUDIT} component={DeviceAuditScreen} />
+              <Stack.Screen name="MainTabs" component={MainTabsScreen} />
+              <Stack.Screen
+                name={SCREEN_NAMES.WELCOME}
+                component={MainTabsScreen}
+                initialParams={{ initialTab: SCREEN_NAMES.WELCOME }}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.INSIGHTS}
+                component={MainTabsScreen}
+                initialParams={{ initialTab: SCREEN_NAMES.INSIGHTS }}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.PROFILE}
+                component={MainTabsScreen}
+                initialParams={{ initialTab: SCREEN_NAMES.PROFILE }}
+              />
+              <Stack.Screen name={SCREEN_NAMES.GUIDE_DETAIL} component={GuideDetailScreen} />
+              <Stack.Screen name={SCREEN_NAMES.TOOL_DETAIL} component={ToolDetailScreen} />
+              <Stack.Screen name={SCREEN_NAMES.ALERT_DETAIL} component={AlertDetailScreen} />
+              <Stack.Screen name={SCREEN_NAMES.AREA_COMPLETION} component={AreaCompletionScreen} />
+              <Stack.Screen name={SCREEN_NAMES.LEVEL_COMPLETION} component={LevelCompletionScreen} />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_1_1_STRONG_PASSWORDS}
+                component={Check1_1_StrongPasswordsScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_1_2_HIGH_VALUE_ACCOUNTS}
+                component={Check1_2_HighValueAccountsScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_1_3_PASSWORD_MANAGERS}
+                component={Check1_1_3_PasswordManagersScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_1_4_MFA_SETUP}
+                component={Check1_1_4_MFASetupScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_4_1_SCAM_RECOGNITION}
+                component={Check1_4_1_ScamRecognitionScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_1_5_BREACH_CHECK}
+                component={Check1_1_5_BreachCheckScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_2_1_SCREEN_LOCK}
+                component={Check1_2_1_ScreenLockScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_3_1_CLOUD_BACKUP}
+                component={Check1_3_1_CloudBackupScreen}
+              />
+              <Stack.Screen name={SCREEN_NAMES.PHISHING_PRACTICE} component={PhishingPracticeScreen} />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_2_2_REMOTE_LOCK}
+                component={Check1_2_2_RemoteLockScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_2_3_DEVICE_UPDATES}
+                component={Check1_2_3_DeviceUpdatesScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_2_4_BLUETOOTH_WIFI}
+                component={Check1_2_4_BluetoothWifiScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_5_2_PRIVACY_SETTINGS}
+                component={Check1_5_2_PrivacySettingsScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_3_2_LOCAL_BACKUP}
+                component={Check1_3_2_LocalBackupScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_4_2_SCAM_REPORTING}
+                component={Check1_4_2_ScamReportingScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_2_5_PUBLIC_CHARGING}
+                component={Check1_2_5_PublicChargingScreen}
+              />
+              <Stack.Screen
+                name={SCREEN_NAMES.CHECK_1_5_1_SHARING_AWARENESS}
+                component={Check1_5_1_SharingAwarenessScreen}
+              />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </SafeAreaProvider>
       </ErrorBoundary>
     </PostHogProvider>
   );

@@ -1,13 +1,7 @@
 /**
- * Copywriting Data - Centralized user-facing text content
+ * Centralized user-facing text content
  * 
- * This file contains all user-facing text rewritten to match the desired tone:
- * - Trustworthy & Professional
- * - Friendly & Approachable  
- * - Action-First
- * - Non-Technical
- * - Gamified & Motivational
- * - Mobile-Friendly
+ * This file contains all user-facing text
  */
 
 export const COPYWRITING = {

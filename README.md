@@ -1,287 +1,148 @@
 # CyberPup
 
-A React Native mobile application built with Expo for comprehensive cybersecurity remediations and sometimes education.
+**A free, open-source cybersecurity app for everyday people.**
 
-## Mission
+CyberPup helps non-technical users lock down their digital lives through guided checklists, bite-sized lessons, and tools like breach checking. All guidance is grounded in well-known frameworks from ACSC, CISA, and NIST - translated into plain language that anyone can actually follow through on.
 
-CyberPup helps users complete a comprehensive cybersecurity health check with an action-first approach. The app is designed for non-technical audiences to understand and complete security improvements immediately, with learning provided only when absolutely required.
+Most personal cybersecurity tools are either too technical, only solve one piece of the puzzle, or a complete scam. CyberPup tries to guide someone through the whole picture: passwords, email security, device hygiene, social media, and breach checking.
 
-## Features
+The app is live on the [iOS App Store](https://apps.apple.com/au/app/cyberpup-secure/id6752377981) with ~500 installs. It works, but it's not actively maintained. This repo is an open invitation - to contributors, maintainers, or anyone who wants to take it somewhere.
 
-- **Progressive Security Levels**: Three-tier system (Scout 🐾, Watchdog 👁️, Guardian 🛡)
-- **Interactive Checklists**: Step-by-step security actions with progress persistence
-- **Progress Tracking**: Visual progress indicators and completion celebrations
-- **Platform-Specific Guidance**: Tailored instructions for iOS/Android
-- **Action-First Design**: Direct integration with device settings where possible
-- **Modern UI**: Clean, professional design with smooth animations
-- **Responsive Design**: Optimized for all screen sizes including iPhone SE
-- **Gamification System**: Streak tracking, badge collection, and achievement milestones
-- **Security Check Catalogue**: Comprehensive overview of all checks with direct navigation
-- **Sticky Gamification Bar**: Quick access to progress, streaks, and badges
+---
 
-## Screens
+## What it does
 
-### Welcome Screen
-- Overall progress dashboard with circular progress indicator
-- Sticky gamification bar with quick access to catalogue, streaks, and badges
-- Active level display with area-based check lists
-- Security Check Catalogue modal for comprehensive check overview
-- Real-time progress updates and completion tracking
+- **Progressive security levels** - Scout, Watchdog, and Guardian tiers that guide users from basics to advanced
+- **Interactive checklists** - step-by-step security actions with persistent progress tracking
+- **Platform-specific guidance** - tailored instructions for iOS, Android, macOS, and Windows
+- **Breach checking** - integration with HaveIBeenPwned-style APIs to check if accounts are compromised
+- **Gamification** - streaks, badges, and achievement milestones to keep users engaged
+- **Bite-sized lessons** - optional "learn more" content that doesn't get in the way of action
 
-### Check Screens
-- Interactive checklists with persistent progress saving
-- Platform-specific action buttons (e.g., open device settings)
-- Completion celebrations with navigation to next checks
-- "Learn more" collapsible content for additional education
+---
 
-### Category Screen
-- Level-based organization of security checks
-- Visual progress indicators for each level
-- Badge system for completed areas
+## Tech stack
 
-### Gamification Screens
-- **Streak Details**: Comprehensive streak tracking with milestone achievements
-- **Badge Collection**: Visual display of earned badges and achievements
-- **Security Check Catalogue**: Hierarchical overview of all checks with direct navigation
+- **React Native** + **Expo** - cross-platform mobile (iOS & Android)
+- **React Navigation** - screen navigation
+- **AsyncStorage** - local progress persistence
+- **PostHog** - privacy-conscious analytics (with user consent and opt-out)
 
-## Tech Stack
+---
 
-- **React Native**: Cross-platform mobile development
-- **Expo**: Development platform and tools
-- **React Navigation**: Screen navigation with focus effects
-- **AsyncStorage**: Persistent progress tracking and device storage
-- **React Native Screens**: Native screen components
-- **React Native Safe Area Context**: Safe area handling
+## The web app opportunity
 
-## Getting Started
+Because this is built in React Native with Expo, running it as a **web app is a very real possibility** - `npm run web` already works in development. A proper web build would make CyberPup accessible to anyone without needing an App Store install, which dramatically widens the audience for a tool aimed at non-technical people.
+
+This is one of the most impactful things a contributor could take on.
+
+---
+
+## Roadmap
+
+These are ideas and things left on the to-do list that never got built. They're here to give you a sense of where the project could go - not a spec, just a starting point.
+
+**Polish & fixes**
+- Make privacy policy readable inline instead of opening a link
+- Device updates section: fix bluetooth/wifi retry setup
+- App loading/onboarding screen (first startup experience)
+- Light mode support
+
+**Engagement**
+- Share progress when completing a security level
+- Badge achievement popup on completion
+- Monthly security reminder push notifications
+- Expand content in the Insights tab
+
+**New tools**
+- Password strength checker with real-time feedback
+- Phishing link checker - analyze suspicious URLs
+- Scam message detection for texts and emails
+- HIBP paid API integration for richer breach data (pending pricing viability)
+- Scam call/SMS detection guidance based on mobile OS
+
+**Bigger ideas**
+- Web app (see above)
+- CyberPup as a more prominent character/guide within the app (subtle animations, personality)
+- Privacy settings scanner
+
+---
+
+## Getting started
 
 ### Prerequisites
 
-- Node.js (v14 or higher)
+- Node.js 18+
 - npm or yarn
-- Expo CLI (optional, but recommended)
+- [Expo Go](https://expo.dev/go) on your phone for quick testing, or a simulator/emulator
 
-### Installation
+### Run it locally
 
-1. Clone the repository:
 ```bash
-git clone <repository-url>
-cd CyberPup
-```
-
-2. Install dependencies:
-```bash
+git clone https://github.com/YOUR_ORG/cyberpup.git
+cd cyberpup
 npm install
-```
-
-3. Start the development server:
-```bash
 npm start
 ```
 
-4. Run on your preferred platform:
-```bash
-# For Android
-npm run android
+Then scan the QR code with Expo Go, or press `i` for iOS simulator / `a` for Android emulator / `w` for web.
 
-# For iOS (requires macOS)
-npm run ios
+### Environment variables
 
-# For web
-npm run web
+Create a `.env.local` file in the project root:
+
+```
+EXPO_PUBLIC_POSTHOG_API_KEY=your_key_here
 ```
 
+Analytics will silently no-op if the key is absent, so this is optional for local development.
 
-## Project Structure
+---
+
+## Project structure
 
 ```
 CyberPup/
-├── App.js                           # Main app component with navigation setup
+├── App.js                    # Root component, navigation setup
 ├── screens/
-│   ├── WelcomeScreen.js            # Main dashboard with progress tracking and gamification bar
-│   ├── CategoryScreen.js           # Level-based check organization
-│   ├── ModuleListScreen.js         # Area-based check lists
-│   ├── ProfileScreen.js            # User profile and achievements
-│   ├── StreakDetailsScreen.js      # Streak tracking and milestone achievements
-│   ├── BadgesScreen.js             # Badge collection and achievements
-│   └── lessons/
-│       ├── level-1/                # Level 1 check screens
-│       │   ├── Check1_1_StrongPasswordsScreen.js
-│       │   ├── Check1_2_HighValueAccountsScreen.js
-│       │   └── ...
-│       └── README.md               # Lesson development guide
-├── components/                     # Reusable UI components
-├── data/                          # Course content and structure
-├── utils/                         # Storage utilities
-│   ├── streakStorage.js            # Streak tracking and milestone logic
-│   ├── badgeStorage.js             # Badge system and achievement tracking
-│   ├── storage.js                  # General storage utilities
-│   └── responsive.js               # Responsive design system
-├── theme.js                       # Design system and colors
-└── package.json                   # Dependencies and scripts
+│   ├── WelcomeScreen.js      # Main dashboard
+│   ├── CategoryScreen.js     # Level-based check organisation
+│   ├── ModuleListScreen.js   # Area-based check lists
+│   ├── ProfileScreen.js      # User profile and achievements
+│   ├── StreakDetailsScreen.js
+│   ├── BadgesScreen.js
+│   └── lessons/              # All individual check screens
+│       ├── level-1/
+│       ├── level-2/
+│       └── level-3/
+├── components/               # Reusable UI components
+├── data/                     # Content and app structure data
+├── utils/                    # Storage, analytics, badge logic
+├── theme.js                  # Design system (colours, typography, spacing)
+├── docs/                     # Architecture and development guides
+└── assets/                   # Images and animations
 ```
 
-## Responsive Design System
+See [`docs/`](docs/) for architecture references, development guides, and implementation notes.
 
-CyberPup implements a comprehensive responsive design system to ensure optimal user experience across all device sizes, particularly optimized for iPhone SE (375x667) and larger screens.
-
-### Key Features
-
-- **Screen Size Detection**: Automatic detection of small, medium, and large screens
-- **Responsive Scaling**: Proportional scaling based on device dimensions
-- **Conservative Typography**: Text sizes that remain readable on small screens
-- **Touch Target Optimization**: Minimum 44px touch targets for accessibility
-- **Modal Sizing**: Properly sized modals with adequate margins
-
-### Implementation
-
-#### 1. Import Responsive Utilities
-```javascript
-import { Colors, Typography, Responsive, CommonStyles } from '../theme';
-```
-
-#### 2. Use Responsive Constants
-```javascript
-const styles = StyleSheet.create({
-  container: {
-    padding: Responsive.padding.screen,
-    marginBottom: Responsive.spacing.lg,
-  },
-  title: {
-    fontSize: Typography.sizes.xxl,
-    fontWeight: Typography.weights.bold,
-  },
-  button: {
-    minHeight: Responsive.buttonHeight.medium,
-    borderRadius: Responsive.borderRadius.medium,
-  },
-  icon: {
-    size: Responsive.iconSizes.large,
-  },
-});
-```
-
-#### 3. Responsive Constants Available
-
-**Typography:**
-- `Typography.sizes.xs` (12px) - `Typography.sizes.xxxl` (32px)
-- `Typography.weights.normal` - `Typography.weights.bold`
-
-**Spacing:**
-- `Responsive.spacing.xs` (4px) - `Responsive.spacing.xxl` (48px)
-
-**Padding:**
-- `Responsive.padding.screen` (16-20px)
-- `Responsive.padding.card` (12-16px)
-- `Responsive.padding.button` (10-12px)
-- `Responsive.padding.modal` (16-24px)
-
-**Border Radius:**
-- `Responsive.borderRadius.small` (6px) - `Responsive.borderRadius.xxlarge` (20px)
-
-**Icon Sizes:**
-- `Responsive.iconSizes.small` (16px) - `Responsive.iconSizes.xxlarge` (48px)
-
-**Button Heights:**
-- `Responsive.buttonHeight.small` (36px) - `Responsive.buttonHeight.large` (52px)
-
-**Screen Detection:**
-- `Responsive.isSmallScreen` (≤375px width)
-- `Responsive.isMediumScreen` (376-414px width)
-- `Responsive.isLargeScreen` (>414px width)
-
-### Best Practices
-
-1. **Always use responsive constants** instead of hardcoded pixel values
-2. **Test on iPhone SE simulator** to verify small screen compatibility
-3. **Use conservative scaling** for typography to maintain readability
-4. **Ensure proper touch targets** (minimum 44px height)
-5. **Size modals appropriately** with adequate margins
-6. **Use line height multipliers** for better text readability
-
-### Files Using Responsive Design
-
-All screens have been updated with responsive design:
-- ✅ WelcomeScreen.js
-- ✅ Check1_1_StrongPasswordsScreen.js
-- ✅ Check1_2_HighValueAccountsScreen.js
-- ✅ Check1_3_PasswordManagersScreen.js
-- ✅ Check1_4_MFASetupScreen.js
-- ✅ Check1_2_1_ScreenLockScreen.js
-- ✅ Check1_5_BreachCheckScreen.js
-- ✅ PhishingPracticeScreen.js
-
-## Progress Saving
-
-The app uses AsyncStorage for persistent progress tracking with the following pattern:
-
-- **Storage Keys**: `check_X-Y-Z_progress` (JSON data) and `check_X-Y-Z_completed` (completion status)
-- **Race Condition Prevention**: Custom parameters in save functions to avoid state update timing issues
-- **Focus Effects**: Automatic progress refresh when returning to screens
-- **Testing**: Comprehensive testing checklist for progress persistence
-
-See `screens/lessons/README.md` for detailed implementation patterns.
-
-## Device Management
-
-The app includes a comprehensive device audit system for personalized security recommendations:
-
-- **Device Storage**: User devices are stored in AsyncStorage under the key `user_devices`
-- **Device Types**: Supports Mobile Devices (iOS/Android) and Computers (macOS/Windows)  
-- **Hierarchical Selection**: Three-tier device selection system (Type → Platform → Model)
-- **Auto-Detection**: Automatically detects current mobile device during onboarding
-- **Profile Management**: Users can update their device list from the Profile tab
-
-Device data structure:
-```javascript
-{
-  id: string,           // Unique identifier
-  name: string,         // Device display name (e.g., "iPhone 15 Pro", "MacBook Air M3")
-  type: string,         // 'mobile' or 'computer'
-  tier1: string,        // Device category
-  tier2: string,        // Platform/brand (apple, android, macos, windows)
-  tier3: string,        // Specific model/version (optional)
-  autoDetected: boolean // Whether device was auto-detected
-}
-```
-
-## Design System
-
-### Colors
-- Primary Blue: `#3498db`
-- Dark Text: `#2c3e50`
-- Medium Text: `#34495e`
-- Light Text: `#7f8c8d`
-- Background: `#f8f9fa`
-- White: `#ffffff`
-
-### Typography
-- Title: 42px, Bold (700)
-- Header: 20px, Semi-bold (600)
-- Body: 16-20px, Medium (500-600)
-- Subtitle: 14-16px, Regular (400)
-
-### Spacing
-- Consistent padding and margins throughout
-- Proper safe area handling for different devices
-- Responsive design considerations
-
-## Future Enhancements
-
-- Implement actual cybersecurity assessment questions
-- Add progress tracking and scoring
-- Include security recommendations and tips
-- Add user authentication and profile management
-- Implement data persistence for assessment results
+---
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly on multiple screen sizes
-5. Submit a pull request
+Contributions are welcome - bug fixes, new checks, UI improvements, the web build, or anything from the roadmap above.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to get set up and submit changes.
+
+If you're interested in taking on a larger role (maintainer, taking the project in a new direction), feel free to open an issue or reach out directly.
+
+---
+
+## Website
+
+[cyberpupsecurity.com](https://cyberpupsecurity.com)
+
+---
 
 ## License
 
-This project is licensed under the MIT License. 
+[MIT](LICENSE)

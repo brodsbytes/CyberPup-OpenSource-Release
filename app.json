@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "CyberPup Secure",
-    "slug": "CyberPup-Secure",
+    "name": "CyberPup",
+    "slug": "CyberPup",
     "version": "1.0.7",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -61,8 +61,7 @@
       "expo-localization",
       "expo-font"
     ],
-    "owner": "brodsbytes",
-    "githubUrl": "https://github.com/CyberPupSecurity/cyberpup",
+    "githubUrl": "https://github.com/YOUR_ORG/cyberpup",
     "extra": {
       "eas": {
         "projectId": "66c0c60e-d23f-449b-b360-a1ebf8f50ad8"
