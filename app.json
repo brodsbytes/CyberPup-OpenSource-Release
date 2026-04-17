@@ -61,7 +61,7 @@
       "expo-localization",
       "expo-font"
     ],
-    "githubUrl": "https://github.com/YOUR_ORG/cyberpup",
+    "githubUrl": "https://github.com/brodsbytes/cyberpup",
     "extra": {
       "eas": {
         "projectId": "66c0c60e-d23f-449b-b360-a1ebf8f50ad8"

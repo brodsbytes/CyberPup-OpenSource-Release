@@ -79,7 +79,7 @@ These are ideas and things left on the to-do list that never got built. They're 
 ### Run it locally
 
 ```bash
-git clone https://github.com/YOUR_ORG/cyberpup.git
+git clone https://github.com/brodsbytes/cyberpup.git
 cd cyberpup
 npm install
 npm start
